@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V2 Chess Engine - Self-Learning AI</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
+
+    // V2 LEARNING SYSTEM
+    const createLearning = () => ({
+      versions: {
+        A: { name: 'Safe', wins: 0, losses: 0, score: 50 },
+        B: { name: 'Balanced', wins: 0, losses: 0, score: 50 },
+        C: { name: 'Attack', wins: 0, losses: 0, score: 50 },
+        D: { name: 'Explorer', wins: 0, losses: 0, score: 50 },
+        E: { name: 'Meta', wins: 0, losses: 0, score: 50 }
+      },
+      winningMoves: [],
+      losingMoves: [],
+      humanPatterns: {},
+      positionMemory: {},
+      gamesPlayed: 0,
+      gamesWon: 0,
+      gamesLost: 0,
+      learningRate: 1.0
+    });
+
+    const PIECE_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+    const PAWN_TABLE = [0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0];
+    const KNIGHT_TABLE = [-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50];
+
+    // Black at top, White at bottom
+    const INIT_BOARD = [
+      ['r','n','b','q','k','b','n','r'],
+      ['p','p','p','p','p','p','p','p'],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      ['P','P','P','P','P','P','P','P'],
+      ['R','N','B','Q','K','B','N','R']
+    ];
+
+    const SYMBOLS = { K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙', k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' };
+    const NAMES = { K:'King', Q:'Queen', R:'Rook', B:'Bishop', N:'Knight', P:'Pawn', k:'King', q:'Queen', r:'Rook', b:'Bishop', n:'Knight', p:'Pawn' };
+
+    const HUMAN = 'white';
+    const AI = 'black';
+
+    function ChessV2() {
+      const [board, setBoard] = useState(() => INIT_BOARD.map(r => [...r]));
+      const [turn, setTurn] = useState('white');
+      const [selected, setSelected] = useState(null);
+      const [validMoves, setValidMoves] = useState([]);
+      const [mode, setMode] = useState('menu');
+      const [status, setStatus] = useState('playing');
+      const [learning, setLearning] = useState(createLearning);
+      const [moves, setMoves] = useState([]);
+      const [gameMoves, setGameMoves] = useState([]);
+      const [thinking, setThinking] = useState(false);
+      const [info, setInfo] = useState('');
+      const [selfSpeed, setSelfSpeed] = useState(500);
+      const [playing, setPlaying] = useState(false);
+
+      // Get valid moves for a piece
+      const getMoves = useCallback((b, r, c, p) => {
+        if (!p) return [];
+        const moves = [];
+        const isW = p === p.toUpperCase();
+        
+        const canGo = (row, col) => {
+          if (row < 0 || row > 7 || col < 0 || col > 7) return false;
+          const t = b[row][col];
+          if (!t) return true;
+          return isW ? t === t.toLowerCase() : t === t.toUpperCase();
+        };
+
+        const slide = (dr, dc) => {
+          for (let i = 1; i < 8; i++) {
+            const nr = r + dr * i, nc = c + dc * i;
+            if (!canGo(nr, nc)) break;
+            moves.push([nr, nc]);
+            if (b[nr]?.[nc]) break;
+          }
+        };
+
+        const type = p.toLowerCase();
+
+        if (type === 'p') {
+          const dir = isW ? -1 : 1;
+          const start = isW ? 6 : 1;
+          // Forward
+          if (b[r + dir]?.[c] === null) {
+            moves.push([r + dir, c]);
+            if (r === start && b[r + 2 * dir]?.[c] === null) {
+              moves.push([r + 2 * dir, c]);
+            }
+          }
+          // Captures
+          [-1, 1].forEach(dc => {
+            const nr = r + dir, nc = c + dc;
+            if (nr >= 0 && nr <= 7 && nc >= 0 && nc <= 7) {
+              const t = b[nr][nc];
+              if (t && (isW ? t === t.toLowerCase() : t === t.toUpperCase())) {
+                moves.push([nr, nc]);
+              }
+            }
+          });
+        } else if (type === 'n') {
+          [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc]) => {
+            if (canGo(r+dr, c+dc)) moves.push([r+dr, c+dc]);
+          });
+        } else if (type === 'b') {
+          [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr,dc]) => slide(dr,dc));
+        } else if (type === 'r') {
+          [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr,dc]) => slide(dr,dc));
+        } else if (type === 'q') {
+          [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr,dc]) => slide(dr,dc));
+        } else if (type === 'k') {
+          [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc]) => {
+            if (canGo(r+dr, c+dc)) moves.push([r+dr, c+dc]);
+          });
+        }
+
+        return moves;
+      }, []);
+
+      // Get all moves for a player
+      const getAllMoves = useCallback((b, player) => {
+        const allMoves = [];
+        const isW = player === 'white';
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const p = b[r][c];
+            if (p && (isW ? p === p.toUpperCase() : p === p.toLowerCase())) {
+              getMoves(b, r, c, p).forEach(([tr, tc]) => {
+                allMoves.push({ from: [r, c], to: [tr, tc], piece: p });
+              });
+            }
+          }
+        }
+        return allMoves;
+      }, [getMoves]);
+
+      // Apply move
+      const doMove = useCallback((b, from, to) => {
+        const nb = b.map(r => [...r]);
+        const [fr, fc] = from;
+        const [tr, tc] = to;
+        const p = nb[fr][fc];
+        const cap = nb[tr][tc];
+        
+        // Promotion
+        if (p?.toLowerCase() === 'p' && (tr === 0 || tr === 7)) {
+          nb[tr][tc] = p === 'P' ? 'Q' : 'q';
+        } else {
+          nb[tr][tc] = p;
+        }
+        nb[fr][fc] = null;
+        return { board: nb, captured: cap };
+      }, []);
+
+      // Evaluate position for a version
+      const evaluate = useCallback((b, ver, learn) => {
+        let score = 0;
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const p = b[r][c];
+            if (!p) continue;
+            const isW = p === p.toUpperCase();
+            const val = PIECE_VALUES[p.toLowerCase()] || 0;
+            const sign = isW ? 1 : -1;
+            score += sign * val;
+
+            const type = p.toLowerCase();
+            const tr = isW ? r : 7 - r;
+            const idx = tr * 8 + c;
+            if (type === 'p') score += sign * PAWN_TABLE[idx];
+            else if (type === 'n') score += sign * KNIGHT_TABLE[idx];
+
+            // Center bonus
+            if ((r === 3 || r === 4) && (c === 3 || c === 4)) score += sign * 12;
+          }
+        }
+
+        // Version-specific adjustments
+        const boost = 1 + learn.gamesPlayed * 0.03;
+        if (ver === 'A') score *= 0.9; // Conservative
+        else if (ver === 'C') score *= 1.1 * boost; // Aggressive
+        else if (ver === 'D') score += (Math.random() - 0.5) * 30; // Random
+        else if (ver === 'E') score *= boost; // Meta
+
+        return score;
+      }, []);
+
+      // Minimax
+      const minimax = useCallback((b, depth, alpha, beta, isMax, ver, learn) => {
+        if (depth === 0) return evaluate(b, ver, learn);
+
+        const player = isMax ? 'white' : 'black';
+        const allMoves = getAllMoves(b, player);
+        if (allMoves.length === 0) return isMax ? -50000 : 50000;
+
+        if (isMax) {
+          let max = -Infinity;
+          for (const m of allMoves) {
+            const { board: nb } = doMove(b, m.from, m.to);
+            max = Math.max(max, minimax(nb, depth - 1, alpha, beta, false, ver, learn));
+            alpha = Math.max(alpha, max);
+            if (beta <= alpha) break;
+          }
+          return max;
+        } else {
+          let min = Infinity;
+          for (const m of allMoves) {
+            const { board: nb } = doMove(b, m.from, m.to);
+            min = Math.min(min, minimax(nb, depth - 1, alpha, beta, true, ver, learn));
+            beta = Math.min(beta, min);
+            if (beta <= alpha) break;
+          }
+          return min;
+        }
+      }, [evaluate, getAllMoves, doMove]);
+
+      // V2 AI: 5 versions vote
+      const pickAIMove = useCallback((b, learn) => {
+        const allMoves = getAllMoves(b, AI);
+        if (allMoves.length === 0) return null;
+
+        const depth = 2 + Math.min(2, Math.floor(learn.gamesPlayed / 5));
+        setInfo(`Analyzing ${allMoves.length} moves at depth ${depth}...`);
+
+        const versions = ['A', 'B', 'C', 'D', 'E'];
+        const votes = {};
+
+        versions.forEach(ver => {
+          let bestMove = null;
+          let bestScore = Infinity;
+
+          const shuffled = [...allMoves].sort(() => Math.random() - 0.5);
+
+          for (const m of shuffled) {
+            const { board: nb } = doMove(b, m.from, m.to);
+            let score = minimax(nb, depth - 1, -Infinity, Infinity, true, ver, learn);
+
+            // Learn from patterns
+            const key = `${m.piece}${m.from}${m.to}`;
+            if (learn.winningMoves.includes(key)) score -= 20 * learn.learningRate;
+            if (learn.losingMoves.includes(key)) score += 15 * learn.learningRate;
+
+            if (score < bestScore) {
+              bestScore = score;
+              bestMove = m;
+            }
+          }
+
+          if (bestMove) {
+            const key = `${bestMove.from}-${bestMove.to}`;
+            if (!votes[key]) votes[key] = { move: bestMove, count: 0 };
+            const weight = 1 + learn.versions[ver].score / 100;
+            votes[key].count += weight;
+          }
+        });
+
+        let best = null;
+        let bestCount = -1;
+        Object.values(votes).forEach(v => {
+          if (v.count > bestCount) {
+            bestCount = v.count;
+            best = v.move;
+          }
+        });
+
+        return best || allMoves[0];
+      }, [getAllMoves, doMove, minimax]);
+
+      // Learn from game result
+      const learnGame = useCallback((winner, gMoves) => {
+        setLearning(prev => {
+          const next = { ...prev };
+          next.gamesPlayed++;
+          next.learningRate = 1 + next.gamesPlayed * 0.05;
+
+          const aiKeys = gMoves.filter(m => m.player === AI).map(m => m.key);
+
+          if (winner === AI) {
+            next.gamesWon++;
+            next.winningMoves = [...next.winningMoves, ...aiKeys].slice(-50);
+            Object.keys(next.versions).forEach(v => {
+              next.versions[v].wins++;
+              next.versions[v].score += 8;
+            });
+          } else if (winner === HUMAN) {
+            next.gamesLost++;
+            next.losingMoves = [...next.losingMoves, ...aiKeys].slice(-50);
+            Object.keys(next.versions).forEach(v => {
+              next.versions[v].losses++;
+              next.versions[v].score = Math.max(10, next.versions[v].score - 4);
+            });
+          }
+
+          return next;
+        });
+      }, []);
+
+      // AI makes move
+      const aiMove = useCallback(() => {
+        if (status !== 'playing') return;
+
+        setThinking(true);
+
+        setTimeout(() => {
+          const move = pickAIMove(board, learning);
+
+          if (!move) {
+            setStatus('white-wins');
+            learnGame(HUMAN, gameMoves);
+            setThinking(false);
+            setInfo('');
+            return;
+          }
+
+          const { board: nb, captured } = doMove(board, move.from, move.to);
+          const key = `${move.piece}${move.from}${move.to}`;
+
+          if (captured?.toUpperCase() === 'K') {
+            setBoard(nb);
+            setStatus('black-wins');
+            learnGame(AI, [...gameMoves, { player: AI, key }]);
+            setThinking(false);
+            setInfo('');
+            return;
+          }
+
+          setBoard(nb);
+          setGameMoves(prev => [...prev, { player: AI, key }]);
+          setMoves(prev => [...prev, { player: AI, piece: move.piece, from: move.from, to: move.to }]);
+          setTurn(HUMAN);
+          setThinking(false);
+          setInfo('Your turn!');
+        }, mode === 'self-play' ? 100 : 400);
+      }, [board, status, mode, learning, pickAIMove, doMove, learnGame, gameMoves]);
+
+      // Trigger AI when it's AI's turn
+      useEffect(() => {
+        if ((mode === 'play' || mode === 'learn') && turn === AI && status === 'playing' && !thinking) {
+          const timer = setTimeout(aiMove, 300);
+          return () => clearTimeout(timer);
+        }
+      }, [turn, mode, status, thinking, aiMove]);
+
+      // Handle click
+      const handleClick = (r, c) => {
+        if (status !== 'playing' || thinking || mode === 'self-play' || turn !== HUMAN) return;
+
+        const p = board[r][c];
+        const isOwn = p && p === p.toUpperCase();
+
+        if (selected) {
+          const [sr, sc] = selected;
+          const isValid = validMoves.some(([vr, vc]) => vr === r && vc === c);
+
+          if (isValid) {
+            const movingPiece = board[sr][sc];
+            const { board: nb, captured } = doMove(board, [sr, sc], [r, c]);
+            const key = `${movingPiece}${sr},${sc}${r},${c}`;
+
+            if (captured?.toLowerCase() === 'k') {
+              setBoard(nb);
+              setStatus('white-wins');
+              learnGame(HUMAN, [...gameMoves, { player: HUMAN, key }]);
+              setSelected(null);
+              setValidMoves([]);
+              return;
+            }
+
+            setBoard(nb);
+            setGameMoves(prev => [...prev, { player: HUMAN, key }]);
+            setMoves(prev => [...prev, { player: HUMAN, piece: movingPiece, from: [sr, sc], to: [r, c] }]);
+            setSelected(null);
+            setValidMoves([]);
+            setTurn(AI);
+            setInfo('AI is thinking...');
+          } else {
+            setSelected(null);
+            setValidMoves([]);
+            if (isOwn) {
+              setSelected([r, c]);
+              setValidMoves(getMoves(board, r, c, p));
+            }
+          }
+        } else if (isOwn) {
+          setSelected([r, c]);
+          setValidMoves(getMoves(board, r, c, p));
+        }
+      };
+
+      // Self-play
+      useEffect(() => {
+        if (mode === 'self-play' && playing && status === 'playing' && !thinking) {
+          const timer = setTimeout(() => {
+            setThinking(true);
+            
+            const allMoves = getAllMoves(board, turn);
+            if (allMoves.length === 0) {
+              setStatus(turn === 'white' ? 'black-wins' : 'white-wins');
+              setLearning(prev => ({ ...prev, gamesPlayed: prev.gamesPlayed + 1 }));
+              setThinking(false);
+              return;
+            }
+
+            let move;
+            if (turn === AI) {
+              move = pickAIMove(board, learning);
+            } else {
+              // Simple eval for white in self-play
+              let best = null, bestScore = -Infinity;
+              for (const m of allMoves) {
+                const { board: nb } = doMove(board, m.from, m.to);
+                const score = evaluate(nb, 'B', learning);
+                if (score > bestScore) { bestScore = score; best = m; }
+              }
+              move = best || allMoves[0];
+            }
+
+            if (!move) move = allMoves[0];
+
+            const { board: nb, captured } = doMove(board, move.from, move.to);
+
+            if (captured?.toLowerCase() === 'k' || captured?.toUpperCase() === 'K') {
+              setBoard(nb);
+              setStatus(turn === 'white' ? 'white-wins' : 'black-wins');
+              setLearning(prev => ({ ...prev, gamesPlayed: prev.gamesPlayed + 1 }));
+              setThinking(false);
+              return;
+            }
+
+            setBoard(nb);
+            setMoves(prev => [...prev, { player: turn, piece: move.piece }]);
+            setTurn(turn === 'white' ? 'black' : 'white');
+            setThinking(false);
+          }, selfSpeed);
+
+          return () => clearTimeout(timer);
+        }
+      }, [mode, playing, status, thinking, turn, board, selfSpeed, getAllMoves, pickAIMove, doMove, evaluate, learning]);
+
+      // Auto-restart self-play
+      useEffect(() => {
+        if (mode === 'self-play' && playing && status !== 'playing') {
+          const t = setTimeout(reset, 1500);
+          return () => clearTimeout(t);
+        }
+      }, [mode, playing, status]);
+
+      const reset = useCallback(() => {
+        setBoard(INIT_BOARD.map(r => [...r]));
+        setTurn('white');
+        setSelected(null);
+        setValidMoves([]);
+        setStatus('playing');
+        setMoves([]);
+        setGameMoves([]);
+        setThinking(false);
+        setInfo('Your turn! You play White.');
+      }, []);
+
+      const renderSquare = (r, c) => {
+        const p = board[r][c];
+        const light = (r + c) % 2 === 0;
+        const isSel = selected?.[0] === r && selected?.[1] === c;
+        const isTarget = validMoves.some(([vr, vc]) => vr === r && vc === c);
+
+        let bg = light ? '#f0d9b5' : '#b58863';
+        if (isSel) bg = '#ffd700';
+        else if (isTarget) bg = '#90EE90';
+
+        return (
+          <div key={`${r}-${c}`} onClick={() => handleClick(r, c)} style={{
+            width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 32, background: bg, cursor: turn === HUMAN && !thinking ? 'pointer' : 'default'
+          }}>
+            {p && <span style={{ color: p === p.toUpperCase() ? '#fff' : '#000', textShadow: p === p.toUpperCase() ? '1px 1px 2px #000' : '1px 1px 2px #fff' }}>{SYMBOLS[p]}</span>}
+            {isTarget && !p && <div style={{ width: 12, height: 12, borderRadius: '50%', background: 'rgba(0,128,0,0.5)' }} />}
+          </div>
+        );
+      };
+
+      // Menu
+      if (mode === 'menu') {
+        return (
+          <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div style={{ fontSize: 32, fontWeight: 'bold', color: '#ffd700', marginBottom: 8 }}>♔ V2 Chess ♚</div>
+            <div style={{ fontSize: 12, color: '#888', marginBottom: 5 }}>5-Version Parallel Learning AI</div>
+            <div style={{ fontSize: 11, color: '#4ade80', marginBottom: 20 }}>You: WHITE (bottom) • AI: BLACK (top)</div>
+
+            {learning.gamesPlayed > 0 && (
+              <div style={{ marginBottom: 20, padding: 10, background: 'rgba(255,255,255,0.1)', borderRadius: 8, textAlign: 'center' }}>
+                <div style={{ color: '#ffd700', fontSize: 12 }}>AI Learned: {learning.gamesPlayed} games</div>
+                <div style={{ color: '#888', fontSize: 11 }}>AI Wins: {learning.gamesWon} | You: {learning.gamesLost}</div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 280 }}>
+              <button onClick={() => { setMode('play'); reset(); }} style={{ padding: 14, fontSize: 15, fontWeight: 'bold', background: 'linear-gradient(135deg, #f093fb, #f5576c)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>⚔️ Challenge AI</button>
+              <button onClick={() => { setMode('learn'); reset(); }} style={{ padding: 14, fontSize: 15, fontWeight: 'bold', background: 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>📚 Learn Mode</button>
+              <button onClick={() => { setMode('self-play'); reset(); }} style={{ padding: 14, fontSize: 15, fontWeight: 'bold', background: 'linear-gradient(135deg, #667eea, #764ba2)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🤖 AI Self-Play</button>
+            </div>
+
+            <div style={{ marginTop: 20, padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 8, fontSize: 10, color: '#666' }}>
+              <span style={{ color: '#3b82f6' }}>●A</span> Safe
+              <span style={{ color: '#22c55e', marginLeft: 8 }}>●B</span> Balanced
+              <span style={{ color: '#ef4444', marginLeft: 8 }}>●C</span> Attack
+              <span style={{ color: '#a855f7', marginLeft: 8 }}>●D</span> Explorer
+              <span style={{ color: '#f59e0b', marginLeft: 8 }}>●E</span> Meta
+            </div>
+          </div>
+        );
+      }
+
+      // Game screen
+      return (
+        <div style={{ minHeight: '100vh', padding: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+              <button onClick={() => { setMode('menu'); setPlaying(false); }} style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 5, color: '#fff', cursor: 'pointer', fontSize: 12 }}>← Menu</button>
+              <span style={{ fontSize: 14, fontWeight: 'bold', color: '#ffd700' }}>{mode === 'self-play' ? '🤖 Self-Play' : mode === 'learn' ? '📚 Learn' : '⚔️ vs AI'}</span>
+            </div>
+
+            <div style={{ fontSize: 10, color: '#ef4444', marginBottom: 4 }}>⬆️ AI (Black) • {learning.gamesPlayed} games learned</div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 44px)', border: '2px solid #444', borderRadius: 3 }}>
+              {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c)))}
+            </div>
+
+            <div style={{ fontSize: 10, color: '#4ade80', marginTop: 4 }}>⬇️ YOU (White) • Move first!</div>
+
+            <div style={{ marginTop: 12, padding: '10px 20px', borderRadius: 6, fontWeight: 'bold', fontSize: 13,
+              background: status === 'white-wins' ? '#22c55e' : status === 'black-wins' ? '#ef4444' : thinking ? '#f59e0b' : '#4ade80',
+              color: '#000'
+            }}>
+              {status === 'white-wins' ? '🎉 You Win!' : status === 'black-wins' ? '🤖 AI Wins!' : thinking ? '🤔 AI Thinking...' : '👆 Your Turn!'}
+            </div>
+
+            {info && <div style={{ marginTop: 6, fontSize: 10, color: '#888' }}>{info}</div>}
+
+            {mode === 'self-play' && (
+              <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                <button onClick={() => setPlaying(!playing)} style={{ padding: '8px 16px', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer', background: playing ? '#ef4444' : '#22c55e', fontWeight: 'bold', fontSize: 12 }}>
+                  {playing ? '⏸ Pause' : '▶ Play'}
+                </button>
+                <select value={selfSpeed} onChange={e => setSelfSpeed(Number(e.target.value))} style={{ padding: 8, background: '#333', border: '1px solid #555', borderRadius: 5, color: '#fff', fontSize: 12 }}>
+                  <option value={800}>Slow</option>
+                  <option value={500}>Normal</option>
+                  <option value={200}>Fast</option>
+                </select>
+              </div>
+            )}
+
+            {(mode === 'play' || mode === 'learn') && (
+              <button onClick={reset} style={{ marginTop: 12, padding: '8px 16px', background: '#3b82f6', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer', fontSize: 12 }}>🔄 New Game</button>
+            )}
+
+            <div style={{ marginTop: 12, display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {Object.entries(learning.versions).map(([v, d]) => (
+                <div key={v} style={{ padding: '3px 6px', background: 'rgba(255,255,255,0.05)', borderRadius: 4, fontSize: 9 }}>
+                  <span style={{ color: v==='A'?'#3b82f6':v==='B'?'#22c55e':v==='C'?'#ef4444':v==='D'?'#a855f7':'#f59e0b', fontWeight: 'bold' }}>{v}</span>
+                  <span style={{ color: '#666', marginLeft: 3 }}>{d.score}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 8, fontSize: 10, color: '#555' }}>
+              Moves: {moves.length} • Depth: {2 + Math.min(2, Math.floor(learning.gamesPlayed / 5))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<ChessV2 />, document.getElementById('root'));
+  </script>
+</body>
+</html>
