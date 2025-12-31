@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V2 Chess Engine - Self-Learning AI</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    button { font-family: inherit; }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    select { font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
+
+    // Chess piece values
+    const PIECE_VALUES = {
+      'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000,
+      'P': 100, 'N': 320, 'B': 330, 'R': 500, 'Q': 900, 'K': 20000
+    };
+
+    // Position tables
+    const PAWN_TABLE = [
+      0,0,0,0,0,0,0,0, 50,50,50,50,50,50,50,50, 10,10,20,30,30,20,10,10,
+      5,5,10,25,25,10,5,5, 0,0,0,20,20,0,0,0, 5,-5,-10,0,0,-10,-5,5,
+      5,10,10,-20,-20,10,10,5, 0,0,0,0,0,0,0,0
+    ];
+
+    const KNIGHT_TABLE = [
+      -50,-40,-30,-30,-30,-30,-40,-50, -40,-20,0,0,0,0,-20,-40, -30,0,10,15,15,10,0,-30,
+      -30,5,15,20,20,15,5,-30, -30,0,15,20,20,15,0,-30, -30,5,10,15,15,10,5,-30,
+      -40,-20,0,5,5,0,-20,-40, -50,-40,-30,-30,-30,-30,-40,-50
+    ];
+
+    const BISHOP_TABLE = [
+      -20,-10,-10,-10,-10,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,5,10,10,5,0,-10,
+      -10,5,5,10,10,5,5,-10, -10,0,10,10,10,10,0,-10, -10,10,10,10,10,10,10,-10,
+      -10,5,0,0,0,0,5,-10, -20,-10,-10,-10,-10,-10,-10,-20
+    ];
+
+    const KING_TABLE = [
+      -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30,
+      -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30,
+      -20,-30,-30,-40,-40,-30,-30,-20, -10,-20,-20,-20,-20,-20,-20,-10,
+      20,20,0,0,0,0,20,20, 20,30,10,0,0,10,30,20
+    ];
+
+    const INITIAL_BOARD = [
+      ['r','n','b','q','k','b','n','r'],
+      ['p','p','p','p','p','p','p','p'],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      ['P','P','P','P','P','P','P','P'],
+      ['R','N','B','Q','K','B','N','R']
+    ];
+
+    const PIECE_SYMBOLS = {
+      'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+      'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+    };
+
+    const PIECE_NAMES = {
+      'K': 'King', 'Q': 'Queen', 'R': 'Rook', 'B': 'Bishop', 'N': 'Knight', 'P': 'Pawn',
+      'k': 'King', 'q': 'Queen', 'r': 'Rook', 'b': 'Bishop', 'n': 'Knight', 'p': 'Pawn'
+    };
+
+    const PIECE_TIPS = {
+      'P': "♙ Pawns move forward 1 square (2 from start). Capture diagonally. Promote to Queen at the end!",
+      'N': "♘ Knights move in an 'L': 2+1 squares. They jump over pieces - very tricky!",
+      'B': "♗ Bishops slide diagonally any distance. Each stays on its starting color.",
+      'R': "♖ Rooks slide horizontally/vertically. Powerful on open files!",
+      'Q': "♕ The Queen combines Rook + Bishop movement. Most powerful piece!",
+      'K': "♔ The King moves 1 square any direction. Lose him = lose the game!"
+    };
+
+    const STRATEGY_TIPS = [
+      "💡 Control the center (d4, d5, e4, e5) - pieces are strongest there!",
+      "💡 Develop knights and bishops before attacking.",
+      "💡 Castle early to protect your king.",
+      "💡 Don't move the same piece twice in the opening.",
+      "💡 Connect your rooks by developing all minor pieces.",
+      "💡 Don't bring your queen out too early.",
+      "💡 Pawns can't move backward - advance carefully!",
+      "💡 Look for forks - attacking two pieces at once.",
+      "💡 Pins and skewers are powerful tactics.",
+      "💡 Always ask: What is my opponent threatening?"
+    ];
+
+    // Create learning system with persistent patterns
+    const createLearningSystem = () => ({
+      versionPerformance: {
+        A: { wins: 0, losses: 0, draws: 0, score: 50 },
+        B: { wins: 0, losses: 0, draws: 0, score: 50 },
+        C: { wins: 0, losses: 0, draws: 0, score: 50 },
+        D: { wins: 0, losses: 0, draws: 0, score: 50 },
+        E: { wins: 0, losses: 0, draws: 0, score: 50 }
+      },
+      humanPatterns: {},
+      winningSequences: [],
+      losingSequences: [],
+      positionMemory: {},
+      humanWeaknesses: {},
+      adaptiveDepth: 3,
+      gamesPlayed: 0,
+      gamesWonVsHuman: 0,
+      gamesLostVsHuman: 0,
+      learningRate: 1.0,
+      difficultyLevel: 1
+    });
+
+    function ChessV2Learning() {
+      const [board, setBoard] = useState(INITIAL_BOARD.map(row => [...row]));
+      const [currentPlayer, setCurrentPlayer] = useState('white');
+      const [selectedSquare, setSelectedSquare] = useState(null);
+      const [validMoves, setValidMoves] = useState([]);
+      const [gameMode, setGameMode] = useState('menu');
+      const [gameStatus, setGameStatus] = useState('active');
+      const [learningData, setLearningData] = useState(createLearningSystem);
+      const [moveLog, setMoveLog] = useState([]);
+      const [selfPlaySpeed, setSelfPlaySpeed] = useState(400);
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [gameCount, setGameCount] = useState(0);
+      const [positionHistory, setPositionHistory] = useState([]);
+      const [lastFourMoves, setLastFourMoves] = useState([]);
+      const [stuckCounter, setStuckCounter] = useState(0);
+      const [currentGameMoves, setCurrentGameMoves] = useState([]);
+
+      // Teaching mode
+      const [showHints, setShowHints] = useState(true);
+      const [suggestedMoves, setSuggestedMoves] = useState([]);
+      const [currentTip, setCurrentTip] = useState(STRATEGY_TIPS[0]);
+      const [moveExplanation, setMoveExplanation] = useState('');
+      const [aiThinking, setAiThinking] = useState('');
+
+      const selfPlayRef = useRef(null);
+
+      // Board to string for position tracking
+      const boardToString = useCallback((b) => {
+        return b.map(row => row.map(p => p || '.').join('')).join('/');
+      }, []);
+
+      const isPlayerPiece = useCallback((piece, player) => {
+        if (!piece) return false;
+        return player === 'white' ? piece === piece.toUpperCase() : piece === piece.toLowerCase();
+      }, []);
+
+      // Get valid moves for a piece
+      const getValidMoves = useCallback((board, row, col, piece) => {
+        const moves = [];
+        if (!piece) return moves;
+        const isWhite = piece === piece.toUpperCase();
+
+        const addMoveIfValid = (r, c) => {
+          if (r >= 0 && r < 8 && c >= 0 && c < 8) {
+            const target = board[r][c];
+            if (!target || (isWhite ? target === target.toLowerCase() : target === target.toUpperCase())) {
+              moves.push([r, c]);
+              return !target;
+            }
+          }
+          return false;
+        };
+
+        const pieceType = piece.toLowerCase();
+
+        switch (pieceType) {
+          case 'p': {
+            const dir = isWhite ? -1 : 1;
+            const startRow = isWhite ? 6 : 1;
+            if (board[row + dir]?.[col] === null) {
+              moves.push([row + dir, col]);
+              if (row === startRow && board[row + 2 * dir]?.[col] === null) {
+                moves.push([row + 2 * dir, col]);
+              }
+            }
+            [-1, 1].forEach(dc => {
+              const target = board[row + dir]?.[col + dc];
+              if (target && (isWhite ? target === target.toLowerCase() : target === target.toUpperCase())) {
+                moves.push([row + dir, col + dc]);
+              }
+            });
+            break;
+          }
+          case 'n':
+            [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr, dc]) => {
+              addMoveIfValid(row + dr, col + dc);
+            });
+            break;
+          case 'b':
+            [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr, dc]) => {
+              for (let i = 1; i < 8; i++) if (!addMoveIfValid(row + dr*i, col + dc*i)) break;
+            });
+            break;
+          case 'r':
+            [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr, dc]) => {
+              for (let i = 1; i < 8; i++) if (!addMoveIfValid(row + dr*i, col + dc*i)) break;
+            });
+            break;
+          case 'q':
+            [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr, dc]) => {
+              for (let i = 1; i < 8; i++) if (!addMoveIfValid(row + dr*i, col + dc*i)) break;
+            });
+            break;
+          case 'k':
+            [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr, dc]) => {
+              addMoveIfValid(row + dr, col + dc);
+            });
+            break;
+          default: break;
+        }
+        return moves;
+      }, []);
+
+      const getAllMoves = useCallback((board, player) => {
+        const moves = [];
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const piece = board[r][c];
+            if (piece && isPlayerPiece(piece, player)) {
+              getValidMoves(board, r, c, piece).forEach(([toR, toC]) => {
+                moves.push({ from: [r, c], to: [toR, toC], piece });
+              });
+            }
+          }
+        }
+        return moves;
+      }, [getValidMoves, isPlayerPiece]);
+
+      const applyMove = useCallback((board, from, to) => {
+        const newBoard = board.map(row => [...row]);
+        const [fromR, fromC] = from;
+        const [toR, toC] = to;
+        const piece = newBoard[fromR][fromC];
+
+        if (piece?.toLowerCase() === 'p' && (toR === 0 || toR === 7)) {
+          newBoard[toR][toC] = piece === 'P' ? 'Q' : 'q';
+        } else {
+          newBoard[toR][toC] = piece;
+        }
+        newBoard[fromR][fromC] = null;
+        return newBoard;
+      }, []);
+
+      // ENHANCED EVALUATION with continuous learning
+      const evaluatePosition = useCallback((board, version, depth = 0, learning) => {
+        let score = 0;
+        let whiteMaterial = 0, blackMaterial = 0;
+        let centerControl = 0, development = 0, kingSafety = 0;
+
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const piece = board[r][c];
+            if (!piece) continue;
+            
+            const isWhite = piece === piece.toUpperCase();
+            const value = PIECE_VALUES[piece] || 0;
+            const sign = isWhite ? 1 : -1;
+            
+            if (isWhite) whiteMaterial += value; else blackMaterial += value;
+            
+            const pieceType = piece.toLowerCase();
+            const tableRow = isWhite ? r : 7 - r;
+            const idx = tableRow * 8 + c;
+            
+            if (pieceType === 'p') score += sign * PAWN_TABLE[idx];
+            else if (pieceType === 'n') score += sign * KNIGHT_TABLE[idx];
+            else if (pieceType === 'b') score += sign * BISHOP_TABLE[idx];
+            else if (pieceType === 'k') score += sign * KING_TABLE[idx];
+            
+            if ((r === 3 || r === 4) && (c === 3 || c === 4)) centerControl += sign * 15;
+            if ((pieceType === 'n' || pieceType === 'b') && r !== (isWhite ? 7 : 0)) development += sign * 20;
+          }
+        }
+
+        score += whiteMaterial - blackMaterial;
+
+        // LEARNING BOOST - Position memory from past games
+        const posStr = boardToString(board);
+        if (learning.positionMemory[posStr]) {
+          score += learning.positionMemory[posStr] * learning.learningRate * 50;
+        }
+
+        // Version-specific weights ENHANCED by learning
+        const learningBoost = 1 + (learning.gamesPlayed * 0.05);
+
+        switch (version) {
+          case 'A':
+            score += centerControl * 0.5 * learningBoost;
+            score += development * 0.8;
+            score += kingSafety * 2.0 * learningBoost;
+            break;
+          case 'B':
+            score += centerControl * 1.0 * learningBoost;
+            score += development * 1.0 * learningBoost;
+            break;
+          case 'C':
+            score += centerControl * 1.5 * learningBoost;
+            score += development * 1.2;
+            score += (whiteMaterial > blackMaterial ? 50 : -50) * learningBoost;
+            break;
+          case 'D':
+            score += centerControl * (0.8 + Math.random() * 0.4);
+            score += development * (0.8 + Math.random() * 0.4);
+            break;
+          case 'E':
+            score += centerControl * 1.2 * learningBoost;
+            score += development * 1.2 * learningBoost;
+            score += learning.gamesWonVsHuman * 5;
+            break;
+          default:
+            score += centerControl + development;
+        }
+
+        return score - depth * 0.1;
+      }, [boardToString]);
+
+      // Minimax with adaptive depth based on learning
+      const minimax = useCallback((board, depth, alpha, beta, maximizing, version, learning) => {
+        if (depth === 0) return evaluatePosition(board, version, depth, learning);
+
+        const player = maximizing ? 'white' : 'black';
+        const moves = getAllMoves(board, player);
+        if (moves.length === 0) return maximizing ? -Infinity : Infinity;
+
+        if (maximizing) {
+          let maxEval = -Infinity;
+          for (const move of moves) {
+            const newBoard = applyMove(board, move.from, move.to);
+            const evalScore = minimax(newBoard, depth - 1, alpha, beta, false, version, learning);
+            maxEval = Math.max(maxEval, evalScore);
+            alpha = Math.max(alpha, evalScore);
+            if (beta <= alpha) break;
+          }
+          return maxEval;
+        } else {
+          let minEval = Infinity;
+          for (const move of moves) {
+            const newBoard = applyMove(board, move.from, move.to);
+            const evalScore = minimax(newBoard, depth - 1, alpha, beta, true, version, learning);
+            minEval = Math.min(minEval, evalScore);
+            beta = Math.min(beta, evalScore);
+            if (beta <= alpha) break;
+          }
+          return minEval;
+        }
+      }, [evaluatePosition, getAllMoves, applyMove]);
+
+      // Check for repeated moves (anti-stuck)
+      const isMoveRepeated = useCallback((moveStr, recentMoves) => {
+        return recentMoves.filter(m => m === moveStr).length >= 2;
+      }, []);
+
+      // ENHANCED move selection with continuous learning
+      const selectBestMove = useCallback((board, player, learning, avoidMoves = []) => {
+        const versions = ['A', 'B', 'C', 'D', 'E'];
+        const versionMoves = {};
+        const versionScores = {};
+
+        let moves = getAllMoves(board, player);
+        if (moves.length === 0) return null;
+
+        // Filter avoided moves
+        if (avoidMoves.length > 0) {
+          const filtered = moves.filter(m => {
+            const key = `${m.from[0]},${m.from[1]}-${m.to[0]},${m.to[1]}`;
+            return !avoidMoves.includes(key);
+          });
+          if (filtered.length > 0) moves = filtered;
+        }
+
+        const isMaximizing = player === 'white';
+
+        // ADAPTIVE DEPTH - increases as AI learns more
+        const baseDepth = gameMode === 'learn' ? 2 : 3;
+        const learningDepthBonus = Math.min(2, Math.floor(learning.gamesPlayed / 3));
+        const searchDepth = baseDepth + learningDepthBonus;
+
+        setAiThinking(`Analyzing at depth ${searchDepth}... (learned from ${learning.gamesPlayed} games)`);
+
+        versions.forEach(version => {
+          let bestMove = null;
+          let bestScore = isMaximizing ? -Infinity : Infinity;
+          
+          const shuffled = [...moves].sort(() => Math.random() - 0.5);
+          
+          shuffled.forEach(move => {
+            const newBoard = applyMove(board, move.from, move.to);
+            let score = minimax(newBoard, searchDepth - 1, -Infinity, Infinity, !isMaximizing, version, learning);
+            
+            // LEARNING BONUS: Prefer moves from winning sequences
+            const moveKey = `${move.piece}:${move.from[0]},${move.from[1]}-${move.to[0]},${move.to[1]}`;
+            const winningBonus = learning.winningSequences.filter(s => s.includes(moveKey)).length * 20;
+            const losingPenalty = learning.losingSequences.filter(s => s.includes(moveKey)).length * 15;
+            score += (winningBonus - losingPenalty) * learning.learningRate;
+            
+            // Check if human has weakness at this position
+            const posKey = boardToString(newBoard);
+            if (learning.humanWeaknesses[posKey]) {
+              score += learning.humanWeaknesses[posKey] * 30;
+            }
+            
+            // Add small random factor
+            score += (Math.random() * 3);
+            
+            if (isMaximizing ? score > bestScore : score < bestScore) {
+              bestScore = score;
+              bestMove = move;
+            }
+          });
+          
+          versionMoves[version] = bestMove;
+          versionScores[version] = bestScore;
+        });
+
+        // Consolidation with learned weights
+        const moveVotes = {};
+        Object.entries(versionMoves).forEach(([version, move]) => {
+          if (!move) return;
+          const key = `${move.from[0]},${move.from[1]}-${move.to[0]},${move.to[1]}`;
+          const isRepeated = isMoveRepeated(key, lastFourMoves);
+          
+          if (!moveVotes[key]) {
+            moveVotes[key] = { move, votes: 0, versions: [], isRepeated };
+          }
+          
+          const perf = learning.versionPerformance[version];
+          let weight = 1 + (perf.score / 100);
+          if (isRepeated) weight *= 0.2;
+          
+          moveVotes[key].votes += weight;
+          moveVotes[key].versions.push(version);
+        });
+
+        // Select best non-repeated move
+        let bestMove = null, bestVotes = -Infinity;
+
+        Object.values(moveVotes).forEach(({ move, votes, isRepeated }) => {
+          if (!isRepeated && votes > bestVotes) {
+            bestVotes = votes;
+            bestMove = move;
+          }
+        });
+
+        if (!bestMove) {
+          Object.values(moveVotes).forEach(({ move, votes }) => {
+            if (votes > bestVotes) {
+              bestVotes = votes;
+              bestMove = move;
+            }
+          });
+        }
+
+        setAiThinking('');
+        return bestMove || moves[Math.floor(Math.random() * moves.length)];
+      }, [getAllMoves, applyMove, minimax, lastFourMoves, isMoveRepeated, gameMode, boardToString]);
+
+      // Track human move for learning
+      const trackHumanMove = useCallback((move, board) => {
+        const moveKey = `${move.piece}:${move.from[0]},${move.from[1]}-${move.to[0]},${move.to[1]}`;
+        setCurrentGameMoves(prev => [...prev, { type: 'human', move: moveKey }]);
+
+        // Track human patterns
+        setLearningData(prev => {
+          const newData = { ...prev };
+          if (!newData.humanPatterns[moveKey]) {
+            newData.humanPatterns[moveKey] = 0;
+          }
+          newData.humanPatterns[moveKey]++;
+          return newData;
+        });
+      }, []);
+
+      // Track AI move for learning
+      const trackAIMove = useCallback((move) => {
+        const moveKey = `${move.piece}:${move.from[0]},${move.from[1]}-${move.to[0]},${move.to[1]}`;
+        setCurrentGameMoves(prev => [...prev, { type: 'ai', move: moveKey }]);
+      }, []);
+
+      // LEARN FROM GAME RESULT
+      const learnFromGame = useCallback((winner, moves) => {
+        setLearningData(prev => {
+          const newData = { ...prev };
+          newData.gamesPlayed++;
+          newData.learningRate = 1 + (newData.gamesPlayed * 0.1);
+
+          const aiMoves = moves.filter(m => m.type === 'ai').map(m => m.move);
+          const humanMoves = moves.filter(m => m.type === 'human').map(m => m.move);
+          
+          if (winner === 'black') {
+            newData.gamesWonVsHuman++;
+            newData.difficultyLevel = Math.min(10, newData.difficultyLevel + 0.5);
+            
+            if (aiMoves.length > 0) {
+              newData.winningSequences.push(aiMoves);
+              if (newData.winningSequences.length > 20) {
+                newData.winningSequences = newData.winningSequences.slice(-20);
+              }
+            }
+            
+            Object.keys(newData.versionPerformance).forEach(v => {
+              newData.versionPerformance[v].wins++;
+              newData.versionPerformance[v].score += 15;
+            });
+            
+          } else if (winner === 'white') {
+            newData.gamesLostVsHuman++;
+            
+            if (aiMoves.length > 0) {
+              newData.losingSequences.push(aiMoves);
+              if (newData.losingSequences.length > 20) {
+                newData.losingSequences = newData.losingSequences.slice(-20);
+              }
+            }
+            
+            humanMoves.forEach(move => {
+              if (!newData.humanPatterns[move]) newData.humanPatterns[move] = 0;
+              newData.humanPatterns[move] += 2;
+            });
+            
+            Object.keys(newData.versionPerformance).forEach(v => {
+              newData.versionPerformance[v].losses++;
+              newData.versionPerformance[v].score = Math.max(10, newData.versionPerformance[v].score - 5);
+            });
+            
+          } else {
+            Object.keys(newData.versionPerformance).forEach(v => {
+              newData.versionPerformance[v].draws++;
+            });
+          }
+          
+          return newData;
+        });
+      }, []);
+
+      // Make AI move
+      const makeAIMove = useCallback(() => {
+        if (gameStatus !== 'active') return;
+
+        setTimeout(() => {
+          const move = selectBestMove(board, currentPlayer, learningData);
+          
+          if (!move) {
+            setGameStatus('draw');
+            learnFromGame('draw', currentGameMoves);
+            return;
+          }
+          
+          const moveStr = `${move.from[0]},${move.from[1]}-${move.to[0]},${move.to[1]}`;
+          const newBoard = applyMove(board, move.from, move.to);
+          const capturedPiece = board[move.to[0]][move.to[1]];
+          const posStr = boardToString(newBoard);
+          
+          // Track for learning
+          trackAIMove(move);
+          
+          // Position history for draw detection
+          const newPosHistory = [...positionHistory, posStr];
+          const posCount = newPosHistory.filter(p => p === posStr).length;
+          
+          const newLastFour = [...lastFourMoves, moveStr].slice(-4);
+          setLastFourMoves(newLastFour);
+          
+          // Draw by repetition
+          if (posCount >= 3) {
+            setGameStatus('draw');
+            learnFromGame('draw', currentGameMoves);
+            return;
+          }
+          
+          // Stuck detection
+          const uniqueRecent = [...new Set(newLastFour)];
+          if (newLastFour.length >= 4 && uniqueRecent.length <= 2) {
+            const newStuck = stuckCounter + 1;
+            setStuckCounter(newStuck);
+            if (newStuck >= 8) {
+              setGameStatus('draw');
+              learnFromGame('draw', currentGameMoves);
+              return;
+            }
+          } else {
+            setStuckCounter(0);
+          }
+          
+          setPositionHistory(newPosHistory);
+          setBoard(newBoard);
+          setMoveLog(prev => [...prev, {
+            player: currentPlayer,
+            piece: move.piece,
+            from: move.from,
+            to: move.to,
+            captured: capturedPiece
+          }]);
+          
+          // Generate explanation
+          if (gameMode === 'learn' || gameMode === 'play-ai') {
+            const pieceName = PIECE_NAMES[move.piece] || 'Piece';
+            let exp = `AI moved ${pieceName}`;
+            if (capturedPiece) exp += ` capturing your ${PIECE_NAMES[capturedPiece]}!`;
+            exp += ` (Difficulty: ${learningData.difficultyLevel.toFixed(1)}, Depth: ${3 + Math.min(2, Math.floor(learningData.gamesPlayed / 3))})`;
+            setMoveExplanation(exp);
+          }
+          
+          // Check for king capture
+          if (capturedPiece?.toLowerCase() === 'k') {
+            const winner = currentPlayer;
+            setGameStatus(`${winner}-wins`);
+            learnFromGame(winner, currentGameMoves);
+            return;
+          }
+          
+          // Max moves draw
+          if (moveLog.length >= 100) {
+            setGameStatus('draw');
+            learnFromGame('draw', currentGameMoves);
+            return;
+          }
+          
+          setCurrentPlayer(currentPlayer === 'white' ? 'black' : 'white');
+        }, 150);
+      }, [board, currentPlayer, gameStatus, selectBestMove, applyMove, positionHistory, lastFourMoves, stuckCounter, boardToString, moveLog.length, gameMode, learningData, learnFromGame, currentGameMoves, trackAIMove]);
+
+      // Self-play loop
+      useEffect(() => {
+        if (gameMode === 'self-play' && isPlaying && gameStatus === 'active') {
+          selfPlayRef.current = setTimeout(makeAIMove, selfPlaySpeed);
+        }
+        return () => { if (selfPlayRef.current) clearTimeout(selfPlayRef.current); };
+      }, [gameMode, isPlaying, gameStatus, currentPlayer, makeAIMove, selfPlaySpeed]);
+
+      // Get suggested moves for teaching
+      const getSuggestedMoves = useCallback((board, player) => {
+        const allMoves = getAllMoves(board, player);
+        const scored = allMoves.map(move => {
+          let score = 0, reason = '';
+          const piece = board[move.from[0]][move.from[1]];
+          const captured = board[move.to[0]][move.to[1]];
+
+          if (captured) {
+            score += PIECE_VALUES[captured] || 0;
+            reason = `Capture ${PIECE_NAMES[captured]}`;
+          }
+          if ((move.to[0] === 3 || move.to[0] === 4) && (move.to[1] === 3 || move.to[1] === 4)) {
+            score += 50;
+            if (!reason) reason = 'Control center';
+          }
+          const homeRow = piece === piece.toUpperCase() ? 7 : 0;
+          if (move.from[0] === homeRow && (piece.toLowerCase() === 'n' || piece.toLowerCase() === 'b')) {
+            score += 40;
+            if (!reason) reason = 'Develop piece';
+          }
+          
+          return { ...move, score, reason: reason || 'Improve position' };
+        });
+
+        scored.sort((a, b) => b.score - a.score);
+        return scored.slice(0, 3);
+      }, [getAllMoves]);
+
+      // Update suggestions in teaching mode
+      useEffect(() => {
+        if (gameMode === 'learn' && currentPlayer === 'white' && gameStatus === 'active') {
+          setSuggestedMoves(getSuggestedMoves(board, 'white'));
+          setCurrentTip(STRATEGY_TIPS[Math.floor(Math.random() * STRATEGY_TIPS.length)]);
+        }
+      }, [gameMode, currentPlayer, board, gameStatus, getSuggestedMoves]);
+
+      // Human move handler
+      const handleSquareClick = useCallback((row, col) => {
+        if (gameStatus !== 'active') return;
+        if (gameMode === 'self-play') return;
+        if ((gameMode === 'play-ai' || gameMode === 'learn') && currentPlayer !== 'white') return;
+
+        const piece = board[row][col];
+
+        if (selectedSquare) {
+          const [selRow, selCol] = selectedSquare;
+          const isValid = validMoves.some(([r, c]) => r === row && c === col);
+          
+          if (isValid) {
+            const selPiece = board[selRow][selCol];
+            const newBoard = applyMove(board, [selRow, selCol], [row, col]);
+            const captured = board[row][col];
+            
+            // Track human move for learning
+            trackHumanMove({ piece: selPiece, from: [selRow, selCol], to: [row, col] }, board);
+            
+            setBoard(newBoard);
+            setMoveLog(prev => [...prev, {
+              player: 'white',
+              piece: selPiece,
+              from: [selRow, selCol],
+              to: [row, col],
+              captured
+            }]);
+            
+            if (gameMode === 'learn') {
+              const wasSuggested = suggestedMoves.some(
+                m => m.from[0] === selRow && m.from[1] === selCol && m.to[0] === row && m.to[1] === col
+              );
+              setMoveExplanation(wasSuggested ? "Great move! That was recommended. 👍" : "Let's see how that works out!");
+            }
+            
+            if (captured?.toLowerCase() === 'k') {
+              setGameStatus('white-wins');
+              learnFromGame('white', currentGameMoves);
+            } else {
+              setCurrentPlayer('black');
+              setTimeout(makeAIMove, 400);
+            }
+          }
+          
+          setSelectedSquare(null);
+          setValidMoves([]);
+        } else if (piece && isPlayerPiece(piece, 'white')) {
+          setSelectedSquare([row, col]);
+          setValidMoves(getValidMoves(board, row, col, piece));
+          if (gameMode === 'learn') {
+            setCurrentTip(PIECE_TIPS[piece.toUpperCase()] || STRATEGY_TIPS[0]);
+          }
+        }
+      }, [gameMode, gameStatus, currentPlayer, board, selectedSquare, validMoves, applyMove, isPlayerPiece, getValidMoves, makeAIMove, suggestedMoves, learnFromGame, currentGameMoves, trackHumanMove]);
+
+      // Reset game
+      const resetGame = useCallback(() => {
+        setBoard(INITIAL_BOARD.map(row => [...row]));
+        setCurrentPlayer('white');
+        setSelectedSquare(null);
+        setValidMoves([]);
+        setGameStatus('active');
+        setMoveLog([]);
+        setPositionHistory([]);
+        setLastFourMoves([]);
+        setStuckCounter(0);
+        setCurrentGameMoves([]);
+        setSuggestedMoves([]);
+        setMoveExplanation('');
+        setCurrentTip(STRATEGY_TIPS[Math.floor(Math.random() * STRATEGY_TIPS.length)]);
+        setGameCount(prev => prev + 1);
+      }, []);
+
+      // Auto-reset in self-play
+      useEffect(() => {
+        if (gameMode === 'self-play' && isPlaying && gameStatus !== 'active') {
+          setTimeout(resetGame, 1500);
+        }
+      }, [gameMode, isPlaying, gameStatus, resetGame]);
+
+      // Render square
+      const renderSquare = (row, col) => {
+        const piece = board[row][col];
+        const isLight = (row + col) % 2 === 0;
+        const isSelected = selectedSquare?.[0] === row && selectedSquare?.[1] === col;
+        const isValidTarget = validMoves.some(([r, c]) => r === row && c === col);
+        const isSuggested = gameMode === 'learn' && showHints && suggestedMoves.some(
+          m => m.from[0] === row && m.from[1] === col
+        );
+        const isSuggestedTarget = gameMode === 'learn' && showHints && selectedSquare && suggestedMoves.some(
+          m => m.from[0] === selectedSquare[0] && m.from[1] === selectedSquare[1] && m.to[0] === row && m.to[1] === col
+        );
+        const lastMove = moveLog[moveLog.length - 1];
+        const isLastMove = lastMove && ((lastMove.from[0] === row && lastMove.from[1] === col) ||
+          (lastMove.to[0] === row && lastMove.to[1] === col));
+
+        let bg;
+        if (isSelected) bg = 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)';
+        else if (isSuggestedTarget) bg = 'linear-gradient(135deg, #00ff88 0%, #00cc66 100%)';
+        else if (isValidTarget) bg = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
+        else if (isSuggested) bg = 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)';
+        else if (isLastMove) bg = isLight ? '#e6d9a8' : '#b8a060';
+        else bg = isLight ? 'linear-gradient(135deg, #f0d9b5 0%, #e8d0a8 100%)' : 'linear-gradient(135deg, #b58863 0%, #986a45 100%)';
+
+        return (
+          <div
+            key={`${row}-${col}`}
+            onClick={() => handleSquareClick(row, col)}
+            style={{
+              width: 52, height: 52,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 36,
+              cursor: gameMode !== 'self-play' && currentPlayer === 'white' ? 'pointer' : 'default',
+              background: bg,
+              boxShadow: isSelected ? 'inset 0 0 12px rgba(255,215,0,0.6)' : 'inset 0 0 2px rgba(0,0,0,0.1)',
+              transition: 'all 0.15s ease',
+              userSelect: 'none'
+            }}
+          >
+            {piece && (
+              <span style={{
+                color: piece === piece.toUpperCase() ? '#fff' : '#1a1a2e',
+                textShadow: piece === piece.toUpperCase() 
+                  ? '1px 1px 3px rgba(0,0,0,0.8), 0 0 8px rgba(255,255,255,0.3)'
+                  : '1px 1px 3px rgba(0,0,0,0.3)',
+                filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.4))'
+              }}>
+                {PIECE_SYMBOLS[piece]}
+              </span>
+            )}
+            {isValidTarget && !piece && (
+              <div style={{
+                width: 12, height: 12, borderRadius: '50%',
+                background: isSuggestedTarget ? 'rgba(0,255,136,0.8)' : 'rgba(74,222,128,0.7)',
+                boxShadow: '0 0 8px rgba(74,222,128,0.6)'
+              }} />
+            )}
+          </div>
+        );
+      };
+
+      // Version card
+      const VersionCard = ({ version, data }) => {
+        const colors = { A: '#3b82f6', B: '#22c55e', C: '#ef4444', D: '#a855f7', E: '#f59e0b' };
+        const names = { A: 'Conservative', B: 'Balanced', C: 'Aggressive', D: 'Explorer', E: 'Master' };
+
+        return (
+          <div style={{
+            background: `${colors[version]}15`,
+            border: `1px solid ${colors[version]}50`,
+            borderRadius: 6, padding: '5px 8px', marginBottom: 4
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+              <span style={{ color: colors[version], fontWeight: 'bold' }}>V{version} {names[version]}</span>
+              <span style={{ color: '#888' }}>{data.score}pts</span>
+            </div>
+            <div style={{ fontSize: 10, color: '#666' }}>W:{data.wins} L:{data.losses} D:{data.draws}</div>
+          </div>
+        );
+      };
+
+      // MAIN MENU
+      if (gameMode === 'menu') {
+        return (
+          <div style={{
+            minHeight: '100vh',
+            background: 'linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            fontFamily: "'Segoe UI', system-ui, sans-serif", color: '#fff', padding: 20
+          }}>
+            <div style={{
+              fontSize: 42, fontWeight: 'bold', marginBottom: 8,
+              background: 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+            }}>
+              ♔ V2 Chess Engine ♚
+            </div>
+
+            <div style={{ fontSize: 13, color: '#888', marginBottom: 30, textAlign: 'center', maxWidth: 450 }}>
+              Self-Learning AI with Parallel Version Architecture
+              <br />
+              <span style={{ color: '#666', fontSize: 11 }}>
+                AI continuously learns from every game • Gets harder as you play
+              </span>
+            </div>
+            
+            {learningData.gamesPlayed > 0 && (
+              <div style={{
+                background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)',
+                borderRadius: 8, padding: '10px 20px', marginBottom: 25, textAlign: 'center'
+              }}>
+                <div style={{ color: '#ffd700', fontSize: 12, fontWeight: 'bold' }}>AI Learning Progress</div>
+                <div style={{ color: '#888', fontSize: 11, marginTop: 4 }}>
+                  {learningData.gamesPlayed} games played • Difficulty: {learningData.difficultyLevel.toFixed(1)} • 
+                  Won {learningData.gamesWonVsHuman} vs Human
+                </div>
+              </div>
+            )}
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 350 }}>
+              <button onClick={() => setGameMode('self-play')} style={{
+                padding: '16px 24px', fontSize: 15, fontWeight: 'bold',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none', borderRadius: 10, color: '#fff', cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(102,126,234,0.4)', transition: 'transform 0.2s'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 22 }}>🤖</span>
+                  <div style={{ textAlign: 'left' }}>
+                    <div>AI Self-Play Learning</div>
+                    <div style={{ fontSize: 10, opacity: 0.8 }}>Watch AI train against itself</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button onClick={() => setGameMode('play-ai')} style={{
+                padding: '16px 24px', fontSize: 15, fontWeight: 'bold',
+                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                border: 'none', borderRadius: 10, color: '#fff', cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(245,87,108,0.4)', transition: 'transform 0.2s'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 22 }}>⚔️</span>
+                  <div style={{ textAlign: 'left' }}>
+                    <div>Challenge the AI</div>
+                    <div style={{ fontSize: 10, opacity: 0.8 }}>AI learns from YOUR games!</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button onClick={() => { setGameMode('learn'); setShowHints(true); }} style={{
+                padding: '16px 24px', fontSize: 15, fontWeight: 'bold',
+                background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
+                border: 'none', borderRadius: 10, color: '#fff', cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(34,197,94,0.4)', transition: 'transform 0.2s'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 22 }}>📚</span>
+                  <div style={{ textAlign: 'left' }}>
+                    <div>Learn to Play Chess</div>
+                    <div style={{ fontSize: 10, opacity: 0.8 }}>Hints, tips & guided moves</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+            
+            <div style={{
+              marginTop: 40, padding: 15, background: 'rgba(255,255,255,0.03)',
+              borderRadius: 10, maxWidth: 450, textAlign: 'center'
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 'bold', color: '#ffd700', marginBottom: 8 }}>
+                V2 Parallel Learning System
+              </div>
+              <div style={{ fontSize: 10, color: '#666', lineHeight: 1.5 }}>
+                <span style={{ color: '#3b82f6' }}>●A</span> Conservative &nbsp;
+                <span style={{ color: '#22c55e' }}>●B</span> Balanced &nbsp;
+                <span style={{ color: '#ef4444' }}>●C</span> Aggressive &nbsp;
+                <span style={{ color: '#a855f7' }}>●D</span> Explorer &nbsp;
+                <span style={{ color: '#f59e0b' }}>●E</span> Master
+                <br />
+                All 5 versions analyze every position and vote on the best move
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // GAME VIEW
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%)',
+          display: 'flex', fontFamily: "'Segoe UI', system-ui, sans-serif", color: '#fff', padding: 15
+        }}>
+          {/* Left - Board */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 15 }}>
+              <button onClick={() => { setGameMode('menu'); setIsPlaying(false); resetGame(); }} style={{
+                padding: '6px 14px', background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)', borderRadius: 5, color: '#fff', cursor: 'pointer'
+              }}>
+                ← Menu
+              </button>
+              <div style={{ fontSize: 16, fontWeight: 'bold', color: '#ffd700' }}>
+                {gameMode === 'self-play' ? '🤖 AI Self-Play' : gameMode === 'learn' ? '📚 Learn Chess' : '⚔️ Challenge AI'}
+              </div>
+            </div>
+
+            {/* Board */}
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(8, 52px)',
+              border: '3px solid #2a2a4a', borderRadius: 4,
+              boxShadow: '0 15px 50px rgba(0,0,0,0.5)'
+            }}>
+              {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c)))}
+            </div>
+            
+            {/* Status */}
+            <div style={{
+              marginTop: 15, padding: '10px 20px', borderRadius: 8, fontWeight: 'bold',
+              background: gameStatus !== 'active'
+                ? gameStatus === 'white-wins' ? 'linear-gradient(135deg, #4ade80, #22c55e)' 
+                : gameStatus === 'black-wins' ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                : 'linear-gradient(135deg, #f59e0b, #d97706)'
+                : currentPlayer === 'white' ? 'linear-gradient(135deg, #f0f0f0, #d0d0d0)' : 'linear-gradient(135deg, #374151, #1f2937)',
+              color: (gameStatus !== 'active' || currentPlayer === 'white') ? '#1a1a2e' : '#fff'
+            }}>
+              {gameStatus === 'white-wins' ? '🎉 You Win!' : 
+               gameStatus === 'black-wins' ? '🤖 AI Wins!' :
+               gameStatus === 'draw' ? '🤝 Draw!' :
+               `${currentPlayer === 'white' ? 'Your' : "AI's"} Turn`}
+            </div>
+            
+            {/* Controls */}
+            {gameMode === 'self-play' && (
+              <div style={{ marginTop: 15, display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button onClick={() => setIsPlaying(!isPlaying)} style={{
+                  padding: '8px 16px', border: 'none', borderRadius: 6, color: '#fff', cursor: 'pointer', fontWeight: 'bold',
+                  background: isPlaying ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #22c55e, #16a34a)'
+                }}>
+                  {isPlaying ? '⏸ Pause' : '▶ Play'}
+                </button>
+                <select value={selfPlaySpeed} onChange={(e) => setSelfPlaySpeed(Number(e.target.value))} style={{
+                  padding: '8px 12px', background: '#2a2a4a', border: '1px solid #3a3a5a',
+                  borderRadius: 6, color: '#fff', cursor: 'pointer'
+                }}>
+                  <option value={800}>Slow</option>
+                  <option value={400}>Normal</option>
+                  <option value={150}>Fast</option>
+                  <option value={50}>Ultra</option>
+                </select>
+                <button onClick={resetGame} style={{
+                  padding: '8px 16px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                  border: 'none', borderRadius: 6, color: '#fff', cursor: 'pointer', fontWeight: 'bold'
+                }}>
+                  🔄 New
+                </button>
+              </div>
+            )}
+            
+            {(gameMode === 'play-ai' || gameMode === 'learn') && (
+              <div style={{ marginTop: 15, display: 'flex', gap: 8 }}>
+                <button onClick={resetGame} style={{
+                  padding: '8px 16px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                  border: 'none', borderRadius: 6, color: '#fff', cursor: 'pointer', fontWeight: 'bold'
+                }}>
+                  🔄 New Game
+                </button>
+                {gameMode === 'learn' && (
+                  <button onClick={() => setShowHints(!showHints)} style={{
+                    padding: '8px 16px', border: 'none', borderRadius: 6, color: '#fff', cursor: 'pointer',
+                    background: showHints ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #6b7280, #4b5563)'
+                  }}>
+                    {showHints ? '💡 Hints On' : '💡 Hints Off'}
+                  </button>
+                )}
+              </div>
+            )}
+            
+            {/* AI Thinking indicator */}
+            {aiThinking && (
+              <div style={{ marginTop: 10, fontSize: 11, color: '#888', fontStyle: 'italic' }}>
+                {aiThinking}
+              </div>
+            )}
+          </div>
+          
+          {/* Right Panel */}
+          <div style={{
+            width: 260, marginLeft: 20, background: 'rgba(255,255,255,0.03)',
+            borderRadius: 10, padding: 15, border: '1px solid rgba(255,255,255,0.08)'
+          }}>
+            {/* Learning Stats */}
+            <div style={{ fontSize: 13, fontWeight: 'bold', color: '#ffd700', marginBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 8 }}>
+              📊 AI Learning Stats
+            </div>
+            
+            <div style={{ marginBottom: 15, fontSize: 11 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ color: '#888' }}>Games Played:</span>
+                <span style={{ color: '#22c55e', fontWeight: 'bold' }}>{learningData.gamesPlayed}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ color: '#888' }}>Difficulty Level:</span>
+                <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>{learningData.difficultyLevel.toFixed(1)}/10</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ color: '#888' }}>AI vs Human:</span>
+                <span style={{ color: '#3b82f6', fontWeight: 'bold' }}>
+                  {learningData.gamesWonVsHuman}W - {learningData.gamesLostVsHuman}L
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#888' }}>Learning Rate:</span>
+                <span style={{ color: '#a855f7', fontWeight: 'bold' }}>{learningData.learningRate.toFixed(1)}x</span>
+              </div>
+              
+              {/* Learning progress bar */}
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 10, color: '#666', marginBottom: 3 }}>AI Intelligence</div>
+                <div style={{ height: 6, background: '#1a1a2e', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', borderRadius: 3,
+                    width: `${Math.min(100, learningData.gamesPlayed * 5)}%`,
+                    background: 'linear-gradient(90deg, #3b82f6, #a855f7, #f59e0b)'
+                  }} />
+                </div>
+              </div>
+            </div>
+            
+            {/* Version Performance */}
+            <div style={{ fontSize: 12, fontWeight: 'bold', color: '#fff', marginBottom: 8 }}>
+              Version Performance
+            </div>
+            {Object.entries(learningData.versionPerformance).map(([v, data]) => (
+              <VersionCard key={v} version={v} data={data} />
+            ))}
+            
+            {/* Teaching Panel */}
+            {gameMode === 'learn' && (
+              <div style={{ marginTop: 15 }}>
+                <div style={{ fontSize: 12, fontWeight: 'bold', color: '#4ade80', marginBottom: 8 }}>
+                  📚 Chess Tips
+                </div>
+                <div style={{
+                  background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)',
+                  borderRadius: 6, padding: 8, fontSize: 11, color: '#a7f3d0', lineHeight: 1.4
+                }}>
+                  {currentTip}
+                </div>
+                
+                {showHints && suggestedMoves.length > 0 && currentPlayer === 'white' && gameStatus === 'active' && (
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ fontSize: 11, color: '#60a5fa', marginBottom: 5 }}>💡 Suggested Moves:</div>
+                    {suggestedMoves.map((m, i) => (
+                      <div key={i} style={{ fontSize: 10, color: '#888', padding: '2px 0' }}>
+                        {PIECE_SYMBOLS[m.piece]} {String.fromCharCode(97 + m.from[1])}{8 - m.from[0]}→
+                        {String.fromCharCode(97 + m.to[1])}{8 - m.to[0]}: {m.reason}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Move Explanation */}
+            {moveExplanation && (
+              <div style={{
+                marginTop: 12, padding: 8, background: 'rgba(255,215,0,0.1)',
+                border: '1px solid rgba(255,215,0,0.2)', borderRadius: 6,
+                fontSize: 10, color: '#fcd34d', lineHeight: 1.4
+              }}>
+                {moveExplanation}
+              </div>
+            )}
+            
+            {/* Recent Moves */}
+            <div style={{ marginTop: 12, fontSize: 11, fontWeight: 'bold', color: '#888', marginBottom: 5 }}>
+              Recent Moves
+            </div>
+            <div style={{
+              maxHeight: 100, overflowY: 'auto', background: 'rgba(0,0,0,0.2)',
+              borderRadius: 6, padding: 6
+            }}>
+              {moveLog.slice(-8).map((m, i) => (
+                <div key={i} style={{ fontSize: 10, color: '#666', padding: '2px 0' }}>
+                  <span style={{ color: m.player === 'white' ? '#fff' : '#888' }}>{PIECE_SYMBOLS[m.piece]}</span>
+                  {' '}{String.fromCharCode(97 + m.from[1])}{8 - m.from[0]}→{String.fromCharCode(97 + m.to[1])}{8 - m.to[0]}
+                  {m.captured && <span style={{ color: '#ef4444' }}> ×{PIECE_SYMBOLS[m.captured]}</span>}
+                </div>
+              ))}
+              {moveLog.length === 0 && <div style={{ color: '#444', fontSize: 10 }}>No moves yet</div>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<ChessV2Learning />, document.getElementById('root'));
+  </script>
+</body>
+</html>
