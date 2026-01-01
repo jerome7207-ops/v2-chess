@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>V2 Chess Academy - Complete Platform</title>
+  <title>V2 Chess Academy</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -18,106 +18,108 @@
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useEffect, useCallback, useRef } = React;
+    const { useState, useEffect, useCallback } = React;
+
+    // ========================================
+    // GUMROAD CONFIG - UPDATE WITH YOUR LINK
+    // ========================================
+    const GUMROAD_LINK = "https://gumroad.com/l/v2chess";
+    const UNLOCK_CODE = "V2CHESS2024";
+
+    // ========================================
+    // V2 LEARNING SYSTEM - 5 VERSION ARCHITECTURE
+    // ========================================
+    const createLearning = () => ({
+      versions: {
+        A: { score: 50, name: 'Conservative', desc: 'Safety first' },
+        B: { score: 50, name: 'Balanced', desc: 'Standard play' },
+        C: { score: 50, name: 'Aggressive', desc: 'Attack minded' },
+        D: { score: 50, name: 'Explorer', desc: 'Tries new ideas' },
+        E: { score: 50, name: 'Synthesizer', desc: 'Meta-learner' }
+      },
+      winningPatterns: [],
+      losingPatterns: [],
+      positionMemory: {},
+      gamesPlayed: 0,
+      gamesWon: 0,
+      gamesLost: 0,
+      learningRate: 1.0,
+      lessonsCompleted: 0,
+      puzzleRating: 800,
+      puzzlesSolved: 0
+    });
 
     // ========================================
     // 27 NESTED THIRDS LESSONS
     // ========================================
     const LESSONS = [
-      { id: 1, part: 'FRACTURE', section: 'Seed', title: 'How Pieces Move', desc: 'King moves 1 square. Queen moves any direction. Rooks straight. Bishops diagonal. Knights jump L-shape. Pawns forward, capture diagonal.', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [], task: 'Tap pieces to see moves!' },
-      { id: 2, part: 'FRACTURE', section: 'Seed', title: 'Piece Values', desc: 'Pawn=1, Knight=3, Bishop=3, Rook=5, Queen=9, King=∞. Trade wisely!', board: [[null,null,null,'q',null,null,null,null],[null,null,null,null,null,null,null,null],[null,'n',null,null,null,'b',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'R',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[0,3],[2,1],[2,5],[5,2]], task: 'Q=9, N=3, B=3, R=5' },
-      { id: 3, part: 'FRACTURE', section: 'Seed', title: 'Checkmate Goal', desc: 'Attack the King so it cannot escape = Checkmate. Game over!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,'R']], highlight: [[0,4],[2,4]], task: 'Black King in CHECK!' },
-      { id: 4, part: 'FRACTURE', section: 'Develop', title: 'Control Center', desc: 'd4, d5, e4, e5 are key squares. Control them!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [[3,3],[3,4],[4,3],[4,4]], task: 'Center = Power!' },
-      { id: 5, part: 'FRACTURE', section: 'Develop', title: 'Develop Pieces', desc: 'Get Knights and Bishops out early. Don\'t leave them home!', board: [['r',null,'b','q','k','b',null,'r'],['p','p','p','p','p','p','p','p'],[null,null,'n',null,null,'n',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,'N',null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R',null,'B','Q','K','B',null,'R']], highlight: [[5,2],[5,5],[2,2],[2,5]], task: 'Knights developed!' },
-      { id: 6, part: 'FRACTURE', section: 'Develop', title: 'Castle Early', desc: 'Castle to protect King and activate Rook. Do it early!', board: [['r',null,null,null,'k',null,null,'r'],['p','p','p',null,null,'p','p','p'],[null,null,'n','p',null,'n',null,null],[null,null,'b',null,'p',null,'b',null],[null,null,'B',null,'P',null,'B',null],[null,null,'N','P',null,'N',null,null],['P','P','P',null,null,'P','P','P'],['R',null,null,null,'K',null,null,'R']], highlight: [[7,4],[0,4]], task: 'Both should castle!' },
-      { id: 7, part: 'FRACTURE', section: 'Turn', title: 'One Piece Once', desc: 'Don\'t move same piece twice in opening. Develop NEW pieces!', board: [['r','n','b','q','k','b',null,'r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,'n',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'N'],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B',null,'R']], highlight: [[4,7]], task: 'Knight moved twice = bad!' },
-      { id: 8, part: 'FRACTURE', section: 'Turn', title: 'Queen Stays Home', desc: 'Don\'t bring Queen out early - she\'ll get chased!', board: [['r','n','b',null,'k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,'q'],[null,null,'B',null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], highlight: [[3,7]], task: 'Queen out too early!' },
-      { id: 9, part: 'FRACTURE', section: 'Turn', title: 'Protect Pieces', desc: 'Before moving, check: Is my piece safe? Hanging pieces lose!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'B',null,null,null,null],[null,null,null,null,null,'p',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[4,5]], task: 'Bishop is HANGING!' },
-      { id: 10, part: 'PRESSURE', section: 'Seed', title: 'The Fork', desc: 'Attack TWO pieces at once! They can only save one.', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'q',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[0,4],[5,2]], task: 'Knight FORKS King+Queen!' },
-      { id: 11, part: 'PRESSURE', section: 'Seed', title: 'The Pin', desc: 'Trap a piece - moving it exposes something more valuable!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,'r',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[6,4],[1,4],[0,4]], task: 'Rook PINNED to King!' },
-      { id: 12, part: 'PRESSURE', section: 'Seed', title: 'The Skewer', desc: 'Attack valuable piece first - when it moves, take what\'s behind!', board: [[null,null,null,null,null,null,null,null],[null,'k',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'B'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'r']], highlight: [[4,7],[1,1],[7,7]], task: 'Bishop SKEWERS King→Rook!' },
-      { id: 13, part: 'PRESSURE', section: 'Develop', title: 'Discovered Attack', desc: 'Move one piece to reveal attack by another!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'R',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[2,4],[4,4],[0,4]], task: 'Knight moves = discovered CHECK!' },
-      { id: 14, part: 'PRESSURE', section: 'Develop', title: 'Double Attack', desc: 'Attack two things - opponent saves one, you take other!', board: [[null,null,'r',null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'b'],[null,null,null,null,'K',null,null,null]], highlight: [[4,4],[0,4],[6,7]], task: 'Queen attacks King AND Bishop!' },
-      { id: 15, part: 'PRESSURE', section: 'Develop', title: 'Remove Defender', desc: 'Capture the piece that\'s protecting your target!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,'r',null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'R',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[2,4],[1,4],[4,4]], task: 'Take Knight, then Rook!' },
-      { id: 16, part: 'PRESSURE', section: 'Turn', title: 'Active Pieces', desc: 'Pieces need good squares! Rooks on open files, Bishops on diagonals.', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,'B',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,'K',null,null,null]], highlight: [[7,0],[3,1]], task: 'Active Rook + Bishop!' },
-      { id: 17, part: 'PRESSURE', section: 'Turn', title: 'Pawn Structure', desc: 'Doubled pawns weak. Isolated pawns need protection. Connected pawns strong!', board: [[null,null,null,null,'k',null,null,null],['p',null,'p',null,null,'p','p','p'],[null,'p',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P',null,null,null,null,null,null,null],['P',null,'P','P',null,'P','P','P'],[null,null,null,null,'K',null,null,null]], highlight: [[5,0],[6,0]], task: 'Doubled pawns = weakness!' },
-      { id: 18, part: 'PRESSURE', section: 'Turn', title: 'Weak Squares', desc: 'Squares you can\'t defend with pawns are weak. Knights love them!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,'p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'N',null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],[null,null,null,null,'K',null,null,null]], highlight: [[4,5]], task: 'Knight on weak square!' },
-      { id: 19, part: 'SHIFT', section: 'Seed', title: 'K+Q vs K', desc: 'Push enemy King to edge. Your King helps trap. Don\'t stalemate!', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[5,4],[7,4],[1,4]], task: 'Push King to edge!' },
-      { id: 20, part: 'SHIFT', section: 'Seed', title: 'K+R vs K', desc: 'Rook cuts off King. Your King approaches. Slower but same idea.', board: [[null,null,null,null,null,null,null,null],[null,null,null,'k',null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'K',null,null,null,null]], highlight: [[3,0],[7,3],[1,3]], task: 'Rook cuts off King!' },
-      { id: 21, part: 'SHIFT', section: 'Seed', title: 'Pawn Promotion', desc: 'Get pawn to last rank = new Queen! King escorts the pawn.', board: [[null,null,null,null,null,null,null,null],[null,null,null,'P',null,null,null,null],[null,null,null,'K',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,'k',null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[1,3],[2,3]], task: 'King escorts pawn!' },
-      { id: 22, part: 'SHIFT', section: 'Develop', title: 'Active King', desc: 'In endgame, King becomes fighter! Bring to center.', board: [[null,null,null,null,null,null,null,null],['p',null,null,null,null,null,null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null],[null,null,null,null,null,null,null,null],['P',null,null,null,null,null,null,'P'],[null,null,null,null,null,null,null,'k']], highlight: [[4,4],[7,7]], task: 'White King active, Black stuck!' },
-      { id: 23, part: 'SHIFT', section: 'Develop', title: 'Passed Pawns', desc: 'No enemy pawns can stop it = PASSED. Push it!', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'P',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'p',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'K',null,null,'k',null]], highlight: [[2,3]], task: 'Passed pawn = danger!' },
-      { id: 24, part: 'SHIFT', section: 'Develop', title: 'Opposition', desc: 'Kings face off, 1 square apart. Who moves loses ground!', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[2,4],[4,4]], task: 'White has opposition!' },
-      { id: 25, part: 'SHIFT', section: 'Turn', title: 'Pattern Recognition', desc: 'Learn patterns: back rank mate, smothered mate. Spot them instantly!', board: [[null,null,null,null,null,null,'k',null],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,null,null,'K',null]], highlight: [[7,0],[0,6]], task: 'Ra8# = Back rank mate!' },
-      { id: 26, part: 'SHIFT', section: 'Turn', title: 'Calculation', desc: 'Think 2-3 moves ahead. If I go here, they go there, then I...', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,null,null,null,null,'q',null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[4,6]], task: 'Calculate: Nf6+, Kf8, Nxq!' },
-      { id: 27, part: 'SHIFT', section: 'Turn', title: 'You Are Ready!', desc: 'FRACTURE→PRESSURE→SHIFT. Every game is this journey. Go play!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [], task: '🎓 Complete! Now PLAY!' }
+      { id: 1, part: 'FRACTURE', section: 'Seed', title: 'How Pieces Move', desc: 'King moves 1 square. Queen moves any direction. Rooks straight. Bishops diagonal. Knights jump L-shape. Pawns forward, capture diagonal.', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [], task: 'Tap pieces to see moves!', free: true },
+      { id: 2, part: 'FRACTURE', section: 'Seed', title: 'Piece Values', desc: 'Pawn=1, Knight=3, Bishop=3, Rook=5, Queen=9, King=∞. Trade wisely!', board: [[null,null,null,'q',null,null,null,null],[null,null,null,null,null,null,null,null],[null,'n',null,null,null,'b',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'R',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[0,3],[2,1],[2,5],[5,2]], task: 'Q=9, N=3, B=3, R=5', free: true },
+      { id: 3, part: 'FRACTURE', section: 'Seed', title: 'Checkmate Goal', desc: 'Attack the King so it cannot escape = Checkmate. Game over!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,'R']], highlight: [[0,4],[2,4]], task: 'Black King in CHECK!', free: true },
+      { id: 4, part: 'FRACTURE', section: 'Develop', title: 'Control Center', desc: 'd4, d5, e4, e5 are key squares. Control them!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [[3,3],[3,4],[4,3],[4,4]], task: 'Center = Power!', free: false },
+      { id: 5, part: 'FRACTURE', section: 'Develop', title: 'Develop Pieces', desc: 'Get Knights and Bishops out early!', board: [['r',null,'b','q','k','b',null,'r'],['p','p','p','p','p','p','p','p'],[null,null,'n',null,null,'n',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,'N',null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R',null,'B','Q','K','B',null,'R']], highlight: [[5,2],[5,5],[2,2],[2,5]], task: 'Knights developed!', free: false },
+      { id: 6, part: 'FRACTURE', section: 'Develop', title: 'Castle Early', desc: 'Castle to protect King and activate Rook.', board: [['r',null,null,null,'k',null,null,'r'],['p','p','p',null,null,'p','p','p'],[null,null,'n','p',null,'n',null,null],[null,null,'b',null,'p',null,'b',null],[null,null,'B',null,'P',null,'B',null],[null,null,'N','P',null,'N',null,null],['P','P','P',null,null,'P','P','P'],['R',null,null,null,'K',null,null,'R']], highlight: [[7,4],[0,4]], task: 'Both should castle!', free: false },
+      { id: 7, part: 'FRACTURE', section: 'Turn', title: 'One Piece Once', desc: 'Don\'t move same piece twice in opening.', board: [['r','n','b','q','k','b',null,'r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,'n',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'N'],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B',null,'R']], highlight: [[4,7]], task: 'Knight moved twice = bad!', free: false },
+      { id: 8, part: 'FRACTURE', section: 'Turn', title: 'Queen Stays Home', desc: 'Don\'t bring Queen out early.', board: [['r','n','b',null,'k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,'q'],[null,null,'B',null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], highlight: [[3,7]], task: 'Queen out too early!', free: false },
+      { id: 9, part: 'FRACTURE', section: 'Turn', title: 'Protect Pieces', desc: 'Before moving, check: Is my piece safe?', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'B',null,null,null,null],[null,null,null,null,null,'p',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[4,5]], task: 'Bishop is HANGING!', free: false },
+      { id: 10, part: 'PRESSURE', section: 'Seed', title: 'The Fork', desc: 'Attack TWO pieces at once!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'q',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[0,4],[5,2]], task: 'Knight FORKS King+Queen!', free: false },
+      { id: 11, part: 'PRESSURE', section: 'Seed', title: 'The Pin', desc: 'Trap a piece against a more valuable one!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,'r',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[6,4],[1,4],[0,4]], task: 'Rook PINNED to King!', free: false },
+      { id: 12, part: 'PRESSURE', section: 'Seed', title: 'The Skewer', desc: 'Attack valuable piece, take what\'s behind!', board: [[null,null,null,null,null,null,null,null],[null,'k',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'B'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'r']], highlight: [[4,7],[1,1],[7,7]], task: 'Bishop SKEWERS King→Rook!', free: false },
+      { id: 13, part: 'PRESSURE', section: 'Develop', title: 'Discovered Attack', desc: 'Move one piece to reveal attack by another!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'R',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[2,4],[4,4],[0,4]], task: 'Knight moves = CHECK!', free: false },
+      { id: 14, part: 'PRESSURE', section: 'Develop', title: 'Double Attack', desc: 'Attack two things at once!', board: [[null,null,'r',null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'b'],[null,null,null,null,'K',null,null,null]], highlight: [[4,4],[0,4],[6,7]], task: 'Queen attacks King AND Bishop!', free: false },
+      { id: 15, part: 'PRESSURE', section: 'Develop', title: 'Remove Defender', desc: 'Capture the protecting piece first!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,'r',null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'R',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[2,4],[1,4],[4,4]], task: 'Take Knight, then Rook!', free: false },
+      { id: 16, part: 'PRESSURE', section: 'Turn', title: 'Active Pieces', desc: 'Rooks on open files, Bishops on diagonals.', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,'B',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,'K',null,null,null]], highlight: [[7,0],[3,1]], task: 'Active pieces!', free: false },
+      { id: 17, part: 'PRESSURE', section: 'Turn', title: 'Pawn Structure', desc: 'Doubled pawns weak. Connected pawns strong!', board: [[null,null,null,null,'k',null,null,null],['p',null,'p',null,null,'p','p','p'],[null,'p',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P',null,null,null,null,null,null,null],['P',null,'P','P',null,'P','P','P'],[null,null,null,null,'K',null,null,null]], highlight: [[5,0],[6,0]], task: 'Doubled pawns = weak!', free: false },
+      { id: 18, part: 'PRESSURE', section: 'Turn', title: 'Weak Squares', desc: 'Squares you can\'t defend with pawns.', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,'p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'N',null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],[null,null,null,null,'K',null,null,null]], highlight: [[4,5]], task: 'Knight on weak square!', free: false },
+      { id: 19, part: 'SHIFT', section: 'Seed', title: 'K+Q vs K', desc: 'Push enemy King to edge. Don\'t stalemate!', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[5,4],[7,4],[1,4]], task: 'Push King to edge!', free: false },
+      { id: 20, part: 'SHIFT', section: 'Seed', title: 'K+R vs K', desc: 'Rook cuts off King. Your King approaches.', board: [[null,null,null,null,null,null,null,null],[null,null,null,'k',null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'K',null,null,null,null]], highlight: [[3,0],[7,3],[1,3]], task: 'Rook cuts off King!', free: false },
+      { id: 21, part: 'SHIFT', section: 'Seed', title: 'Pawn Promotion', desc: 'Get pawn to last rank = new Queen!', board: [[null,null,null,null,null,null,null,null],[null,null,null,'P',null,null,null,null],[null,null,null,'K',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,'k',null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[1,3],[2,3]], task: 'King escorts pawn!', free: false },
+      { id: 22, part: 'SHIFT', section: 'Develop', title: 'Active King', desc: 'In endgame, King becomes fighter!', board: [[null,null,null,null,null,null,null,null],['p',null,null,null,null,null,null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null],[null,null,null,null,null,null,null,null],['P',null,null,null,null,null,null,'P'],[null,null,null,null,null,null,null,'k']], highlight: [[4,4],[7,7]], task: 'White King active!', free: false },
+      { id: 23, part: 'SHIFT', section: 'Develop', title: 'Passed Pawns', desc: 'No enemy pawns can stop it = PASSED.', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'P',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'p',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'K',null,null,'k',null]], highlight: [[2,3]], task: 'Passed pawn = danger!', free: false },
+      { id: 24, part: 'SHIFT', section: 'Develop', title: 'Opposition', desc: 'Kings face off. Who moves loses ground!', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[2,4],[4,4]], task: 'White has opposition!', free: false },
+      { id: 25, part: 'SHIFT', section: 'Turn', title: 'Pattern Recognition', desc: 'Learn patterns: back rank mate, etc.', board: [[null,null,null,null,null,null,'k',null],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,null,null,'K',null]], highlight: [[7,0],[0,6]], task: 'Ra8# = Back rank mate!', free: false },
+      { id: 26, part: 'SHIFT', section: 'Turn', title: 'Calculation', desc: 'Think 2-3 moves ahead.', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,null,null,null,null,'q',null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[4,6]], task: 'Calculate: Nf6+!', free: false },
+      { id: 27, part: 'SHIFT', section: 'Turn', title: 'You Are Ready!', desc: 'Go play and apply what you learned!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [], task: '🎓 Complete! Now PLAY!', free: false }
     ];
 
-    // ========================================
-    // OPENING DATABASE - 15 OPENINGS
-    // ========================================
-    const OPENINGS = [
-      { name: 'Italian Game', eco: 'C50', moves: '1.e4 e5 2.Nf3 Nc6 3.Bc4', desc: 'Classic attacking opening. Aim at f7!', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,null,null,null,'p',null,null,null],[null,null,'B',null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], level: 'Beginner' },
-      { name: 'Sicilian Defense', eco: 'B20', moves: '1.e4 c5', desc: 'Most popular response to e4. Sharp and complex!', board: [['r','n','b','q','k','b','n','r'],['p','p',null,'p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,'p',null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate' },
-      { name: 'French Defense', eco: 'C00', moves: '1.e4 e6', desc: 'Solid but cramped. Counterattack d4 later.', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate' },
-      { name: 'Caro-Kann', eco: 'B10', moves: '1.e4 c6', desc: 'Solid like French but keeps Bishop active.', board: [['r','n','b','q','k','b','n','r'],['p','p',null,'p','p','p','p','p'],[null,null,'p',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate' },
-      { name: 'Queen\'s Gambit', eco: 'D00', moves: '1.d4 d5 2.c4', desc: 'Offer pawn to control center. Not a real gambit!', board: [['r','n','b','q','k','b','n','r'],['p','p','p',null,'p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,'p',null,null,null,null],[null,null,'P','P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate' },
-      { name: 'London System', eco: 'D00', moves: '1.d4 d5 2.Bf4', desc: 'Easy to learn, solid setup. Great for beginners!', board: [['r','n','b','q','k','b','n','r'],['p','p','p',null,'p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,'p',null,null,null,null],[null,null,null,'P',null,'B',null,null],[null,null,null,null,null,null,null,null],['P','P','P',null,'P','P','P','P'],['R','N',null,'Q','K','B','N','R']], level: 'Beginner' },
-      { name: 'King\'s Indian', eco: 'E60', moves: '1.d4 Nf6 2.c4 g6', desc: 'Fianchetto setup. Attack kingside later!', board: [['r','n','b','q','k','b',null,'r'],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,'n','p',null],[null,null,null,null,null,null,null,null],[null,null,'P','P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Advanced' },
-      { name: 'Ruy Lopez', eco: 'C60', moves: '1.e4 e5 2.Nf3 Nc6 3.Bb5', desc: 'The Spanish Game. Deep theory, classical.', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,'B',null,null,'p',null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], level: 'Advanced' },
-      { name: 'Scotch Game', eco: 'C45', moves: '1.e4 e5 2.Nf3 Nc6 3.d4', desc: 'Open the center immediately. Active play!', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,null,null,null,'p',null,null,null],[null,null,null,'P','P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P',null,null,'P','P','P'],['R','N','B','Q','K','B',null,'R']], level: 'Beginner' },
-      { name: 'Scandinavian', eco: 'B01', moves: '1.e4 d5', desc: 'Challenge e4 immediately. Queen comes out early.', board: [['r','n','b','q','k','b','n','r'],['p','p','p',null,'p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,'p',null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Beginner' },
-      { name: 'Pirc Defense', eco: 'B07', moves: '1.e4 d6 2.d4 Nf6', desc: 'Let White build center, then attack it!', board: [['r','n','b','q','k','b',null,'r'],['p','p','p',null,'p','p','p','p'],[null,null,null,'p',null,'n',null,null],[null,null,null,null,null,null,null,null],[null,null,null,'P','P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P',null,null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Advanced' },
-      { name: 'English Opening', eco: 'A10', moves: '1.c4', desc: 'Flexible opening. Can transpose to many systems.', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'P',null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,'P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate' },
-      { name: 'Vienna Game', eco: 'C25', moves: '1.e4 e5 2.Nc3', desc: 'Prepare f4 push. Aggressive setup!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,'p',null,null,null],[null,null,null,null,'P',null,null,null],[null,null,'N',null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R',null,'B','Q','K','B','N','R']], level: 'Intermediate' },
-      { name: 'King\'s Gambit', eco: 'C30', moves: '1.e4 e5 2.f4', desc: 'Romantic era favorite! Sacrifice pawn for attack.', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,'p',null,null,null],[null,null,null,null,'P','P',null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,null,'P','P'],['R','N','B','Q','K','B','N','R']], level: 'Advanced' },
-      { name: 'Dutch Defense', eco: 'A80', moves: '1.d4 f5', desc: 'Aggressive counter to d4. Control e4!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p',null,'p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'p',null,null],[null,null,null,'P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P',null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Advanced' }
-    ];
-
-    // ========================================
-    // PUZZLE DATABASE - 20 TACTICAL PUZZLES
-    // ========================================
+    // PUZZLES
     const PUZZLES = [
-      { id: 1, rating: 600, theme: 'Fork', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,'q',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[4,3],[2,4]], hint: 'Knight fork!', toMove: 'white' },
-      { id: 2, rating: 700, theme: 'Back Rank', board: [[null,null,null,null,null,null,'k',null],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,'K',null,null,null]], solution: [[7,0],[0,0]], hint: 'Back rank mate!', toMove: 'white' },
-      { id: 3, rating: 800, theme: 'Pin', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,null,null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[4,4],[0,0]], hint: 'Pin the Knight!', toMove: 'white' },
-      { id: 4, rating: 900, theme: 'Skewer', board: [[null,null,null,null,null,null,null,null],[null,'k',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'r'],[null,null,null,null,null,null,null,'B']], solution: [[7,7],[1,1]], hint: 'Skewer King to Rook!', toMove: 'white' },
-      { id: 5, rating: 1000, theme: 'Discovery', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'N',null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'q'],[null,null,null,null,'K',null,null,null]], solution: [[3,4],[1,5]], hint: 'Discovered attack!', toMove: 'white' },
-      { id: 6, rating: 1100, theme: 'Mate in 1', board: [['r',null,null,null,'k',null,null,'r'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'Q',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[5,5],[0,5]], hint: 'Queen delivers mate!', toMove: 'white' },
-      { id: 7, rating: 1200, theme: 'Fork', board: [[null,'r',null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'N',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[4,2],[2,3]], hint: 'Fork King and Rook!', toMove: 'white' },
-      { id: 8, rating: 1300, theme: 'Mate in 2', board: [[null,null,null,null,null,'r','k',null],[null,null,null,null,null,'p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['Q',null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[6,0],[0,0]], hint: 'Queen sacrifice!', toMove: 'white' },
-      { id: 9, rating: 1400, theme: 'Trapped Piece', board: [[null,null,null,null,'k',null,null,null],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,'q',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'N',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[5,2],[3,1]], hint: 'Trap the Queen!', toMove: 'white' },
-      { id: 10, rating: 1500, theme: 'Deflection', board: [[null,null,null,'r','k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,'K',null,null,null]], solution: [[4,4],[0,0]], hint: 'Deflect the Rook!', toMove: 'white' }
+      { id: 1, rating: 600, theme: 'Fork', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,'q',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[4,3],[2,4]], hint: 'Knight fork!', toMove: 'white', free: true },
+      { id: 2, rating: 700, theme: 'Back Rank', board: [[null,null,null,null,null,null,'k',null],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,'K',null,null,null]], solution: [[7,0],[0,0]], hint: 'Back rank mate!', toMove: 'white', free: true },
+      { id: 3, rating: 800, theme: 'Pin', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,null,null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[4,4],[0,0]], hint: 'Pin the Knight!', toMove: 'white', free: true },
+      { id: 4, rating: 900, theme: 'Skewer', board: [[null,null,null,null,null,null,null,null],[null,'k',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'r'],[null,null,null,null,null,null,null,'B']], solution: [[7,7],[1,1]], hint: 'Skewer!', toMove: 'white', free: false },
+      { id: 5, rating: 1000, theme: 'Discovery', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'N',null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'q'],[null,null,null,null,'K',null,null,null]], solution: [[3,4],[1,5]], hint: 'Discovered attack!', toMove: 'white', free: false },
+      { id: 6, rating: 1100, theme: 'Mate in 1', board: [['r',null,null,null,'k',null,null,'r'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'Q',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[5,5],[0,5]], hint: 'Queen mates!', toMove: 'white', free: false },
+      { id: 7, rating: 1200, theme: 'Fork', board: [[null,'r',null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'N',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[4,2],[2,3]], hint: 'Fork!', toMove: 'white', free: false },
+      { id: 8, rating: 1300, theme: 'Mate in 2', board: [[null,null,null,null,null,'r','k',null],[null,null,null,null,null,'p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['Q',null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[6,0],[0,0]], hint: 'Queen sac!', toMove: 'white', free: false }
     ];
 
-    // ========================================
-    // VIDEO LESSONS - GRANDMASTER CONTENT
-    // ========================================
+    // OPENINGS
+    const OPENINGS = [
+      { name: 'Italian Game', eco: 'C50', moves: '1.e4 e5 2.Nf3 Nc6 3.Bc4', desc: 'Classic attacking opening.', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,null,null,null,'p',null,null,null],[null,null,'B',null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], level: 'Beginner', free: true },
+      { name: 'London System', eco: 'D00', moves: '1.d4 d5 2.Bf4', desc: 'Easy solid setup.', board: [['r','n','b','q','k','b','n','r'],['p','p','p',null,'p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,'p',null,null,null,null],[null,null,null,'P',null,'B',null,null],[null,null,null,null,null,null,null,null],['P','P','P',null,'P','P','P','P'],['R','N',null,'Q','K','B','N','R']], level: 'Beginner', free: true },
+      { name: 'Scotch Game', eco: 'C45', moves: '1.e4 e5 2.Nf3 Nc6 3.d4', desc: 'Open center early.', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,null,null,null,'p',null,null,null],[null,null,null,'P','P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P',null,null,'P','P','P'],['R','N','B','Q','K','B',null,'R']], level: 'Beginner', free: true },
+      { name: 'Sicilian Defense', eco: 'B20', moves: '1.e4 c5', desc: 'Sharp and complex!', board: [['r','n','b','q','k','b','n','r'],['p','p',null,'p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,'p',null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate', free: false },
+      { name: 'French Defense', eco: 'C00', moves: '1.e4 e6', desc: 'Solid but cramped.', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate', free: false },
+      { name: 'Queen\'s Gambit', eco: 'D00', moves: '1.d4 d5 2.c4', desc: 'Control center.', board: [['r','n','b','q','k','b','n','r'],['p','p','p',null,'p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,'p',null,null,null,null],[null,null,'P','P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate', free: false },
+      { name: 'King\'s Indian', eco: 'E60', moves: '1.d4 Nf6 2.c4 g6', desc: 'Fianchetto attack.', board: [['r','n','b','q','k','b',null,'r'],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,'n','p',null],[null,null,null,null,null,null,null,null],[null,null,'P','P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Advanced', free: false },
+      { name: 'Ruy Lopez', eco: 'C60', moves: '1.e4 e5 2.Nf3 Nc6 3.Bb5', desc: 'The Spanish Game.', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,'B',null,null,'p',null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], level: 'Advanced', free: false }
+    ];
+
+    // VIDEOS
     const VIDEOS = [
-      { title: 'Chess Fundamentals', channel: 'GothamChess', url: 'https://www.youtube.com/watch?v=OCSbzArwB10', category: 'Beginner', desc: 'Complete beginner guide' },
-      { title: 'Opening Principles', channel: 'Daniel Naroditsky', url: 'https://www.youtube.com/watch?v=Ao9iOeK_jvU', category: 'Beginner', desc: 'How to start games properly' },
-      { title: 'Basic Tactics', channel: 'ChessNetwork', url: 'https://www.youtube.com/watch?v=4WenuiT9pME', category: 'Beginner', desc: 'Forks, pins, skewers' },
-      { title: 'Checkmate Patterns', channel: 'Agadmator', url: 'https://www.youtube.com/watch?v=5ggIkK7kjqY', category: 'Beginner', desc: 'Learn mating patterns' },
-      { title: 'Italian Game Guide', channel: 'GothamChess', url: 'https://www.youtube.com/watch?v=8IlJ3v8I4aE', category: 'Opening', desc: 'Complete Italian repertoire' },
-      { title: 'Sicilian Defense', channel: 'GM Hikaru', url: 'https://www.youtube.com/watch?v=mP0v5NpBpXY', category: 'Opening', desc: 'Fighting against 1.e4' },
-      { title: 'London System', channel: 'GothamChess', url: 'https://www.youtube.com/watch?v=dKy1GmpHn4o', category: 'Opening', desc: 'Easy system for White' },
-      { title: 'Middlegame Strategy', channel: 'Daniel Naroditsky', url: 'https://www.youtube.com/watch?v=MRLqMhJvMkA', category: 'Strategy', desc: 'Planning in the middlegame' },
-      { title: 'Endgame Basics', channel: 'John Bartholomew', url: 'https://www.youtube.com/watch?v=8peIqXEPoFQ', category: 'Endgame', desc: 'Essential endgame knowledge' },
-      { title: 'King & Pawn Endings', channel: 'ChessNetwork', url: 'https://www.youtube.com/watch?v=rZYRnBnE8Kc', category: 'Endgame', desc: 'Most important endgame' },
-      { title: 'Rook Endgames', channel: 'Daniel Naroditsky', url: 'https://www.youtube.com/watch?v=ZgFLKmjXz9c', category: 'Endgame', desc: 'Lucena & Philidor positions' },
-      { title: 'Attack the King', channel: 'Agadmator', url: 'https://www.youtube.com/watch?v=4ILq6gTLs_0', category: 'Strategy', desc: 'How to launch attacks' }
+      { title: 'Chess Fundamentals', channel: 'GothamChess', url: 'https://www.youtube.com/watch?v=OCSbzArwB10', category: 'Beginner', free: true },
+      { title: 'Opening Principles', channel: 'Naroditsky', url: 'https://www.youtube.com/watch?v=Ao9iOeK_jvU', category: 'Beginner', free: true },
+      { title: 'Basic Tactics', channel: 'ChessNetwork', url: 'https://www.youtube.com/watch?v=4WenuiT9pME', category: 'Beginner', free: true },
+      { title: 'Checkmate Patterns', channel: 'Agadmator', url: 'https://www.youtube.com/watch?v=5ggIkK7kjqY', category: 'Beginner', free: false },
+      { title: 'Italian Game Guide', channel: 'GothamChess', url: 'https://www.youtube.com/watch?v=8IlJ3v8I4aE', category: 'Opening', free: false },
+      { title: 'Sicilian Defense', channel: 'GM Hikaru', url: 'https://www.youtube.com/watch?v=mP0v5NpBpXY', category: 'Opening', free: false },
+      { title: 'Middlegame Strategy', channel: 'Naroditsky', url: 'https://www.youtube.com/watch?v=MRLqMhJvMkA', category: 'Strategy', free: false },
+      { title: 'Endgame Basics', channel: 'John Bartholomew', url: 'https://www.youtube.com/watch?v=8peIqXEPoFQ', category: 'Endgame', free: false }
     ];
-
-    // ========================================
-    // V2 LEARNING SYSTEM
-    // ========================================
-    const createLearning = () => ({
-      versions: { A:{score:50}, B:{score:50}, C:{score:50}, D:{score:50}, E:{score:50} },
-      winningMoves: [], losingMoves: [], gamesPlayed: 0, gamesWon: 0, gamesLost: 0, 
-      learningRate: 1.0, lessonsCompleted: 0, puzzleRating: 800, puzzlesSolved: 0
-    });
 
     const PIECE_VALUES = { p:100, n:320, b:330, r:500, q:900, k:20000 };
+    const PST_CENTER = [[0,0,0,0,0,0,0,0],[0,5,5,5,5,5,5,0],[0,5,10,15,15,10,5,0],[0,5,15,20,20,15,5,0],[0,5,15,20,20,15,5,0],[0,5,10,15,15,10,5,0],[0,5,5,5,5,5,5,0],[0,0,0,0,0,0,0,0]];
     const INIT_BOARD = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
     const SYMBOLS = { K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙', k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' };
 
@@ -141,8 +143,20 @@
       const [puzzleStatus, setPuzzleStatus] = useState(null);
       const [videoCategory, setVideoCategory] = useState('All');
       const [twoPlayerTurn, setTwoPlayerTurn] = useState('white');
+      const [showUnlock, setShowUnlock] = useState(false);
+      const [unlockInput, setUnlockInput] = useState('');
+      const [isPremium, setIsPremium] = useState(false);
 
-      // Chess logic functions
+      useEffect(() => { try { if(localStorage.getItem('v2chess_premium')==='true') setIsPremium(true); } catch(e){} }, []);
+
+      const unlockPremium = () => {
+        if (unlockInput.toUpperCase() === UNLOCK_CODE) {
+          setIsPremium(true); try { localStorage.setItem('v2chess_premium', 'true'); } catch(e) {}
+          setShowUnlock(false); setUnlockInput(''); alert('🎉 Premium Unlocked!');
+        } else { alert('Invalid code.'); }
+      };
+
+      // Chess logic
       const getMoves = useCallback((b,r,c,p) => {
         if(!p)return[];const moves=[];const isW=p===p.toUpperCase();
         const canGo=(row,col)=>{if(row<0||row>7||col<0||col>7)return false;const t=b[row]?.[col];if(!t)return true;return isW?t===t.toLowerCase():t===t.toUpperCase();};
@@ -169,315 +183,455 @@
         return{board:nb,captured:cap};
       },[]);
 
-      const evaluate = useCallback((b,ver,learn)=>{
-        let score=0;
-        for(let r=0;r<8;r++)for(let c=0;c<8;c++){const p=b[r]?.[c];if(!p)continue;const isW=p===p.toUpperCase();const val=PIECE_VALUES[p.toLowerCase()]||0;score+=(isW?1:-1)*val;if((r===3||r===4)&&(c===3||c===4))score+=(isW?1:-1)*12;}
-        const boost=1+learn.gamesPlayed*0.03;if(ver==='C')score*=1.1*boost;else if(ver==='D')score+=(Math.random()-0.5)*30;
+      // ========================================
+      // V2 EVALUATION - 5 VERSION SYSTEM
+      // ========================================
+      const evaluate = useCallback((b, version, learn) => {
+        let score = 0;
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const p = b[r]?.[c];
+            if (!p) continue;
+            const isW = p === p.toUpperCase();
+            const val = PIECE_VALUES[p.toLowerCase()] || 0;
+            const posBonus = PST_CENTER[r][c];
+            score += (isW ? 1 : -1) * (val + posBonus);
+          }
+        }
+        
+        // VERSION-SPECIFIC ADJUSTMENTS (Nested Thirds Parallel Learning)
+        const boost = 1 + learn.gamesPlayed * 0.02;
+        
+        if (version === 'A') {
+          // CONSERVATIVE: Values material preservation, safety
+          score *= 0.95; // Slightly undervalue to prefer safe trades
+        } else if (version === 'B') {
+          // BALANCED: Standard evaluation
+          score *= 1.0;
+        } else if (version === 'C') {
+          // AGGRESSIVE: Values attack, center control more
+          score *= 1.1 * boost; // Gets more aggressive with experience
+        } else if (version === 'D') {
+          // EXPLORER: Adds randomness to find new patterns
+          score += (Math.random() - 0.5) * 40;
+        } else if (version === 'E') {
+          // SYNTHESIZER: Uses confidence from wins
+          const confidence = learn.gamesWon / Math.max(1, learn.gamesPlayed);
+          score *= (1 + confidence * 0.2);
+        }
+        
         return score;
-      },[]);
+      }, []);
 
-      const minimax = useCallback((b,depth,alpha,beta,isMax,ver,learn)=>{
-        if(depth===0)return evaluate(b,ver,learn);
-        const all=getAllMoves(b,isMax?'white':'black');if(all.length===0)return isMax?-50000:50000;
-        if(isMax){let max=-Infinity;for(const m of all){const{board:nb}=doMove(b,m.from,m.to);max=Math.max(max,minimax(nb,depth-1,alpha,beta,false,ver,learn));alpha=Math.max(alpha,max);if(beta<=alpha)break;}return max;}
-        else{let min=Infinity;for(const m of all){const{board:nb}=doMove(b,m.from,m.to);min=Math.min(min,minimax(nb,depth-1,alpha,beta,true,ver,learn));beta=Math.min(beta,min);if(beta<=alpha)break;}return min;}
-      },[evaluate,getAllMoves,doMove]);
+      const minimax = useCallback((b, depth, alpha, beta, isMax, version, learn) => {
+        if (depth === 0) return evaluate(b, version, learn);
+        const all = getAllMoves(b, isMax ? 'white' : 'black');
+        if (all.length === 0) return isMax ? -50000 : 50000;
+        
+        if (isMax) {
+          let max = -Infinity;
+          for (const m of all) {
+            const { board: nb } = doMove(b, m.from, m.to);
+            max = Math.max(max, minimax(nb, depth - 1, alpha, beta, false, version, learn));
+            alpha = Math.max(alpha, max);
+            if (beta <= alpha) break;
+          }
+          return max;
+        } else {
+          let min = Infinity;
+          for (const m of all) {
+            const { board: nb } = doMove(b, m.from, m.to);
+            min = Math.min(min, minimax(nb, depth - 1, alpha, beta, true, version, learn));
+            beta = Math.min(beta, min);
+            if (beta <= alpha) break;
+          }
+          return min;
+        }
+      }, [evaluate, getAllMoves, doMove]);
 
-      const pickAIMove = useCallback((b,learn)=>{
-        const all=getAllMoves(b,'black');if(all.length===0)return null;
-        const depth=2+Math.min(2,Math.floor(learn.gamesPlayed/5));
-        const versions=['A','B','C','D','E'];const votes={};
-        versions.forEach(ver=>{let best=null,bestScore=Infinity;const shuffled=[...all].sort(()=>Math.random()-0.5);
-          for(const m of shuffled){const{board:nb}=doMove(b,m.from,m.to);let score=minimax(nb,depth-1,-Infinity,Infinity,true,ver,learn);if(score<bestScore){bestScore=score;best=m;}}
-          if(best){const key=`${best.from}-${best.to}`;if(!votes[key])votes[key]={move:best,count:0};votes[key].count+=1+learn.versions[ver].score/100;}
-        });
-        let best=null,bestCount=-1;Object.values(votes).forEach(v=>{if(v.count>bestCount){bestCount=v.count;best=v.move;}});
-        return best||all[0];
-      },[getAllMoves,doMove,minimax]);
-
-      const learnGame = useCallback((winner,gMoves)=>{
-        setLearning(prev=>{const next={...prev};next.gamesPlayed++;next.learningRate=1+next.gamesPlayed*0.05;
-          if(winner==='black'){next.gamesWon++;Object.keys(next.versions).forEach(v=>next.versions[v].score+=8);}
-          else if(winner==='white'){next.gamesLost++;Object.keys(next.versions).forEach(v=>next.versions[v].score=Math.max(10,next.versions[v].score-4));}
-          return next;});
-      },[]);
-
-      const aiMove = useCallback(()=>{
-        if(status!=='playing')return;setThinking(true);
-        setTimeout(()=>{const move=pickAIMove(board,learning);if(!move){setStatus('white-wins');learnGame('white',gameMoves);setThinking(false);return;}
-          const{board:nb,captured}=doMove(board,move.from,move.to);
-          if(captured?.toUpperCase()==='K'){setBoard(nb);setStatus('black-wins');learnGame('black',gameMoves);setThinking(false);return;}
-          setBoard(nb);setMoves(prev=>[...prev,{player:'black',piece:move.piece}]);setTurn('white');setThinking(false);
-        },mode==='self-play'?100:400);
-      },[board,status,mode,learning,pickAIMove,doMove,learnGame,gameMoves]);
-
-      useEffect(()=>{if(mode==='play'&&turn==='black'&&status==='playing'&&!thinking){const t=setTimeout(aiMove,300);return()=>clearTimeout(t);}},[turn,mode,status,thinking,aiMove]);
-
-      const handleClick=(r,c)=>{
-        // Puzzle mode
-        if(mode==='puzzle'){
-          const puzzle=PUZZLES[currentPuzzle];
-          if(puzzleStatus)return;
-          if(selected){
-            const[sr,sc]=selected;
-            const sol=puzzle.solution;
-            if(sr===sol[0][0]&&sc===sol[0][1]&&r===sol[1][0]&&c===sol[1][1]){
-              setPuzzleStatus('correct');
-              setLearning(prev=>({...prev,puzzleRating:prev.puzzleRating+Math.floor((puzzle.rating-prev.puzzleRating)/10)+10,puzzlesSolved:prev.puzzlesSolved+1}));
-            }else{
-              setPuzzleStatus('wrong');
-              setLearning(prev=>({...prev,puzzleRating:Math.max(400,prev.puzzleRating-5)}));
-            }
-            setSelected(null);setValidMoves([]);
-          }else{
-            const p=puzzle.board[r]?.[c];
-            if(p&&(puzzle.toMove==='white'?p===p.toUpperCase():p===p.toLowerCase())){
-              setSelected([r,c]);setValidMoves(getMoves(puzzle.board,r,c,p));
+      // ========================================
+      // V2 AI MOVE SELECTION - 5 VERSION VOTING
+      // ========================================
+      const pickAIMove = useCallback((b, learn) => {
+        const all = getAllMoves(b, 'black');
+        if (all.length === 0) return null;
+        
+        // ADAPTIVE DEPTH (Windshield Wiper principle)
+        // Start at depth 2, increase with experience
+        const depth = 2 + Math.min(2, Math.floor(learn.gamesPlayed / 5));
+        
+        const versions = ['A', 'B', 'C', 'D', 'E'];
+        const votes = {};
+        
+        // Each version evaluates and votes
+        versions.forEach(ver => {
+          let best = null;
+          let bestScore = Infinity;
+          const shuffled = [...all].sort(() => Math.random() - 0.5);
+          
+          for (const m of shuffled) {
+            const { board: nb } = doMove(b, m.from, m.to);
+            const score = minimax(nb, depth - 1, -Infinity, Infinity, true, ver, learn);
+            if (score < bestScore) {
+              bestScore = score;
+              best = m;
             }
           }
+          
+          if (best) {
+            const key = `${best.from}-${best.to}`;
+            if (!votes[key]) votes[key] = { move: best, count: 0, supporters: [] };
+            // Weight by version performance score
+            const weight = 1 + learn.versions[ver].score / 100;
+            votes[key].count += weight;
+            votes[key].supporters.push(ver);
+          }
+        });
+        
+        // Pick move with most weighted votes
+        let bestMove = null;
+        let bestCount = -1;
+        Object.values(votes).forEach(v => {
+          if (v.count > bestCount) {
+            bestCount = v.count;
+            bestMove = v.move;
+          }
+        });
+        
+        return bestMove || all[0];
+      }, [getAllMoves, doMove, minimax]);
+
+      // ========================================
+      // V2 LEARNING - UPDATE AFTER GAME
+      // ========================================
+      const learnFromGame = useCallback((winner, gMoves) => {
+        setLearning(prev => {
+          const next = { ...prev };
+          next.gamesPlayed++;
+          next.learningRate = 1 + next.gamesPlayed * 0.05;
+          
+          if (winner === 'black') {
+            // AI won - boost all version scores
+            next.gamesWon++;
+            Object.keys(next.versions).forEach(v => {
+              next.versions[v].score = Math.min(100, next.versions[v].score + 8);
+            });
+            // Store winning pattern
+            if (gMoves.length > 0) {
+              next.winningPatterns = [...next.winningPatterns.slice(-50), gMoves.slice(-5)];
+            }
+          } else if (winner === 'white') {
+            // AI lost - reduce scores, learn from loss
+            next.gamesLost++;
+            Object.keys(next.versions).forEach(v => {
+              next.versions[v].score = Math.max(10, next.versions[v].score - 4);
+            });
+            if (gMoves.length > 0) {
+              next.losingPatterns = [...next.losingPatterns.slice(-50), gMoves.slice(-5)];
+            }
+          }
+          
+          return next;
+        });
+      }, []);
+
+      const aiMove = useCallback(() => {
+        if (status !== 'playing') return;
+        setThinking(true);
+        setTimeout(() => {
+          const move = pickAIMove(board, learning);
+          if (!move) {
+            setStatus('white-wins');
+            learnFromGame('white', gameMoves);
+            setThinking(false);
+            return;
+          }
+          const { board: nb, captured } = doMove(board, move.from, move.to);
+          const moveRecord = `${move.piece}${move.from}-${move.to}`;
+          
+          if (captured?.toUpperCase() === 'K') {
+            setBoard(nb);
+            setStatus('black-wins');
+            learnFromGame('black', [...gameMoves, moveRecord]);
+            setThinking(false);
+            return;
+          }
+          setBoard(nb);
+          setMoves(prev => [...prev, { player: 'black', piece: move.piece }]);
+          setGameMoves(prev => [...prev, moveRecord]);
+          setTurn('white');
+          setThinking(false);
+        }, mode === 'self-play' ? 100 : 400);
+      }, [board, status, mode, learning, pickAIMove, doMove, learnFromGame, gameMoves]);
+
+      useEffect(() => {
+        if (mode === 'play' && turn === 'black' && status === 'playing' && !thinking) {
+          const t = setTimeout(aiMove, 300);
+          return () => clearTimeout(t);
+        }
+      }, [turn, mode, status, thinking, aiMove]);
+
+      const handleClick = (r, c) => {
+        if (mode === 'puzzle') {
+          const puzzle = PUZZLES[currentPuzzle]; if (puzzleStatus) return;
+          if (selected) { const [sr, sc] = selected; const sol = puzzle.solution;
+            if (sr === sol[0][0] && sc === sol[0][1] && r === sol[1][0] && c === sol[1][1]) {
+              setPuzzleStatus('correct');
+              setLearning(prev => ({ ...prev, puzzleRating: prev.puzzleRating + 10, puzzlesSolved: prev.puzzlesSolved + 1 }));
+            } else {
+              setPuzzleStatus('wrong');
+              setLearning(prev => ({ ...prev, puzzleRating: Math.max(400, prev.puzzleRating - 5) }));
+            }
+            setSelected(null); setValidMoves([]);
+          } else { const p = puzzle.board[r]?.[c]; if (p && (puzzle.toMove === 'white' ? p === p.toUpperCase() : p === p.toLowerCase())) { setSelected([r, c]); setValidMoves(getMoves(puzzle.board, r, c, p)); } }
           return;
         }
-        // Lesson mode
-        if(mode==='lesson'){
-          const p=lessonBoard?.[r]?.[c];
-          if(p){setSelected([r,c]);setValidMoves(getMoves(lessonBoard,r,c,p));}else{setSelected(null);setValidMoves([]);}
-          return;
-        }
-        // Opening mode
-        if(mode==='opening'){
-          const p=OPENINGS[currentOpening].board[r]?.[c];
-          if(p){setSelected([r,c]);setValidMoves(getMoves(OPENINGS[currentOpening].board,r,c,p));}else{setSelected(null);setValidMoves([]);}
-          return;
-        }
-        // 2 player mode
-        if(mode==='2player'){
-          const p=board[r]?.[c];
-          const isOwn=p&&(twoPlayerTurn==='white'?p===p.toUpperCase():p===p.toLowerCase());
-          if(selected){
-            const[sr,sc]=selected;const isValid=validMoves.some(([vr,vc])=>vr===r&&vc===c);
-            if(isValid){
-              const{board:nb,captured}=doMove(board,[sr,sc],[r,c]);
-              if(captured?.toLowerCase()==='k'||captured?.toUpperCase()==='K'){setBoard(nb);setStatus(twoPlayerTurn+'-wins');setSelected(null);setValidMoves([]);return;}
-              setBoard(nb);setMoves(prev=>[...prev,{player:twoPlayerTurn}]);setSelected(null);setValidMoves([]);setTwoPlayerTurn(twoPlayerTurn==='white'?'black':'white');
-            }else{setSelected(null);setValidMoves([]);if(isOwn){setSelected([r,c]);setValidMoves(getMoves(board,r,c,p));}}
-          }else if(isOwn){setSelected([r,c]);setValidMoves(getMoves(board,r,c,p));}
-          return;
-        }
-        // Normal play vs AI
-        if(status!=='playing'||thinking||mode==='self-play'||turn!=='white')return;
-        const p=board[r]?.[c];const isOwn=p&&p===p.toUpperCase();
-        if(selected){const[sr,sc]=selected;const isValid=validMoves.some(([vr,vc])=>vr===r&&vc===c);
-          if(isValid){const{board:nb,captured}=doMove(board,[sr,sc],[r,c]);
-            if(captured?.toLowerCase()==='k'){setBoard(nb);setStatus('white-wins');learnGame('white',gameMoves);setSelected(null);setValidMoves([]);return;}
-            setBoard(nb);setMoves(prev=>[...prev,{player:'white'}]);setSelected(null);setValidMoves([]);setTurn('black');}
-          else{setSelected(null);setValidMoves([]);if(isOwn){setSelected([r,c]);setValidMoves(getMoves(board,r,c,p));}}}
-        else if(isOwn){setSelected([r,c]);setValidMoves(getMoves(board,r,c,p));}
+        if (mode === 'lesson') { const p = lessonBoard?.[r]?.[c]; if (p) { setSelected([r, c]); setValidMoves(getMoves(lessonBoard, r, c, p)); } else { setSelected(null); setValidMoves([]); } return; }
+        if (mode === 'opening') { const p = OPENINGS[currentOpening].board[r]?.[c]; if (p) { setSelected([r, c]); setValidMoves(getMoves(OPENINGS[currentOpening].board, r, c, p)); } else { setSelected(null); setValidMoves([]); } return; }
+        if (mode === '2player') { const p = board[r]?.[c]; const isOwn = p && (twoPlayerTurn === 'white' ? p === p.toUpperCase() : p === p.toLowerCase());
+          if (selected) { const [sr, sc] = selected; const isValid = validMoves.some(([vr, vc]) => vr === r && vc === c);
+            if (isValid) { const { board: nb, captured } = doMove(board, [sr, sc], [r, c]); if (captured?.toLowerCase() === 'k' || captured?.toUpperCase() === 'K') { setBoard(nb); setStatus(twoPlayerTurn + '-wins'); setSelected(null); setValidMoves([]); return; } setBoard(nb); setSelected(null); setValidMoves([]); setTwoPlayerTurn(twoPlayerTurn === 'white' ? 'black' : 'white'); }
+            else { setSelected(null); setValidMoves([]); if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); } } }
+          else if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); } return; }
+        if (status !== 'playing' || thinking || mode === 'self-play' || turn !== 'white') return;
+        const p = board[r]?.[c]; const isOwn = p && p === p.toUpperCase();
+        if (selected) { const [sr, sc] = selected; const isValid = validMoves.some(([vr, vc]) => vr === r && vc === c);
+          if (isValid) { const { board: nb, captured } = doMove(board, [sr, sc], [r, c]); const moveRecord = `${p}${sr}${sc}-${r}${c}`;
+            if (captured?.toLowerCase() === 'k') { setBoard(nb); setStatus('white-wins'); learnFromGame('white', [...gameMoves, moveRecord]); setSelected(null); setValidMoves([]); return; }
+            setBoard(nb); setMoves(prev => [...prev, { player: 'white' }]); setGameMoves(prev => [...prev, moveRecord]); setSelected(null); setValidMoves([]); setTurn('black'); }
+          else { setSelected(null); setValidMoves([]); if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); } } }
+        else if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); }
       };
 
       // Self-play
-      useEffect(()=>{if(mode==='self-play'&&playing&&status==='playing'&&!thinking){
-        const t=setTimeout(()=>{setThinking(true);const all=getAllMoves(board,turn);if(all.length===0){setStatus(turn==='white'?'black-wins':'white-wins');setThinking(false);return;}
-          let move;if(turn==='black')move=pickAIMove(board,learning);else{let best=null,bestScore=-Infinity;for(const m of all){const{board:nb}=doMove(board,m.from,m.to);const score=evaluate(nb,'B',learning);if(score>bestScore){bestScore=score;best=m;}}move=best||all[0];}
-          if(!move)move=all[0];const{board:nb,captured}=doMove(board,move.from,move.to);
-          if(captured?.toLowerCase()==='k'||captured?.toUpperCase()==='K'){setBoard(nb);setStatus(turn==='white'?'white-wins':'black-wins');setLearning(prev=>({...prev,gamesPlayed:prev.gamesPlayed+1}));setThinking(false);return;}
-          setBoard(nb);setMoves(prev=>[...prev,{player:turn}]);setTurn(turn==='white'?'black':'white');setThinking(false);
-        },selfSpeed);return()=>clearTimeout(t);}},[mode,playing,status,thinking,turn,board,selfSpeed,getAllMoves,pickAIMove,doMove,evaluate,learning]);
+      useEffect(() => {
+        if (mode === 'self-play' && playing && status === 'playing' && !thinking) {
+          const t = setTimeout(() => {
+            setThinking(true);
+            const all = getAllMoves(board, turn);
+            if (all.length === 0) { setStatus(turn === 'white' ? 'black-wins' : 'white-wins'); setThinking(false); return; }
+            let move;
+            if (turn === 'black') { move = pickAIMove(board, learning); }
+            else {
+              let best = null, bestScore = -Infinity;
+              for (const m of all) { const { board: nb } = doMove(board, m.from, m.to); const score = evaluate(nb, 'B', learning); if (score > bestScore) { bestScore = score; best = m; } }
+              move = best || all[0];
+            }
+            if (!move) move = all[0];
+            const { board: nb, captured } = doMove(board, move.from, move.to);
+            if (captured?.toLowerCase() === 'k' || captured?.toUpperCase() === 'K') {
+              setBoard(nb); setStatus(turn === 'white' ? 'white-wins' : 'black-wins');
+              setLearning(prev => ({ ...prev, gamesPlayed: prev.gamesPlayed + 1 }));
+              setThinking(false); return;
+            }
+            setBoard(nb); setTurn(turn === 'white' ? 'black' : 'white'); setThinking(false);
+          }, selfSpeed);
+          return () => clearTimeout(t);
+        }
+      }, [mode, playing, status, thinking, turn, board, selfSpeed, getAllMoves, pickAIMove, doMove, evaluate, learning]);
 
-      useEffect(()=>{if(mode==='self-play'&&playing&&status!=='playing'){const t=setTimeout(reset,1500);return()=>clearTimeout(t);}},[mode,playing,status]);
+      useEffect(() => { if (mode === 'self-play' && playing && status !== 'playing') { const t = setTimeout(reset, 1500); return () => clearTimeout(t); } }, [mode, playing, status]);
 
-      const reset=useCallback(()=>{setBoard(INIT_BOARD.map(r=>[...r]));setTurn('white');setTwoPlayerTurn('white');setSelected(null);setValidMoves([]);setStatus('playing');setMoves([]);setGameMoves([]);setThinking(false);},[]);
+      const reset = useCallback(() => { setBoard(INIT_BOARD.map(r => [...r])); setTurn('white'); setTwoPlayerTurn('white'); setSelected(null); setValidMoves([]); setStatus('playing'); setMoves([]); setGameMoves([]); setThinking(false); }, []);
+      const startLesson = (idx) => { setCurrentLesson(idx); setLessonBoard(LESSONS[idx].board.map(r => [...r])); setSelected(null); setValidMoves([]); };
+      const nextPuzzle = () => { setCurrentPuzzle(p => (p + 1) % PUZZLES.length); setPuzzleStatus(null); setSelected(null); setValidMoves([]); };
 
-      const startLesson=(idx)=>{setCurrentLesson(idx);setLessonBoard(LESSONS[idx].board.map(r=>[...r]));setSelected(null);setValidMoves([]);};
-      const nextPuzzle=()=>{setCurrentPuzzle(p=>(p+1)%PUZZLES.length);setPuzzleStatus(null);setSelected(null);setValidMoves([]);};
-
-      const renderSquare=(r,c,boardData,highlights=[])=>{
-        const b=boardData||board;const p=b?.[r]?.[c];const light=(r+c)%2===0;
-        const isSel=selected?.[0]===r&&selected?.[1]===c;const isTarget=validMoves.some(([vr,vc])=>vr===r&&vc===c);
-        const isHighlight=highlights?.some(([hr,hc])=>hr===r&&hc===c);
-        let bg=light?'#f0d9b5':'#b58863';if(isSel)bg='#ffd700';else if(isTarget)bg='#90EE90';else if(isHighlight)bg='#ff6b6b';
-        return(<div key={`${r}-${c}`} onClick={()=>handleClick(r,c)} style={{width:38,height:38,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,background:bg,cursor:'pointer'}}>{p&&<span style={{color:p===p.toUpperCase()?'#fff':'#000',textShadow:p===p.toUpperCase()?'1px 1px 2px #000':'1px 1px 2px #fff'}}>{SYMBOLS[p]}</span>}{isTarget&&!p&&<div style={{width:10,height:10,borderRadius:'50%',background:'rgba(0,128,0,0.5)'}}/>}</div>);
+      const renderSquare = (r, c, boardData, highlights = []) => {
+        const b = boardData || board; const p = b?.[r]?.[c]; const light = (r + c) % 2 === 0;
+        const isSel = selected?.[0] === r && selected?.[1] === c; const isTarget = validMoves.some(([vr, vc]) => vr === r && vc === c);
+        const isHighlight = highlights?.some(([hr, hc]) => hr === r && hc === c);
+        let bg = light ? '#f0d9b5' : '#b58863'; if (isSel) bg = '#ffd700'; else if (isTarget) bg = '#90EE90'; else if (isHighlight) bg = '#ff6b6b';
+        return (<div key={`${r}-${c}`} onClick={() => handleClick(r, c)} style={{ width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, background: bg, cursor: 'pointer' }}>{p && <span style={{ color: p === p.toUpperCase() ? '#fff' : '#000', textShadow: p === p.toUpperCase() ? '1px 1px 2px #000' : '1px 1px 2px #fff' }}>{SYMBOLS[p]}</span>}{isTarget && !p && <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(0,128,0,0.5)' }} />}</div>);
       };
 
+      const LockedOverlay = ({ onBuy }) => (<div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 8, zIndex: 10 }}><div style={{ fontSize: 24, marginBottom: 10 }}>🔒</div><div style={{ fontSize: 12, color: '#fff', marginBottom: 10 }}>Premium Feature</div><button onClick={onBuy} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,#ffd700,#ffaa00)', border: 'none', borderRadius: 6, color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: 11 }}>Unlock $9.99</button></div>);
+
       // ========== MENU ==========
-      if(mode==='menu'){
-        return(<div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:15}}>
-          <div style={{fontSize:26,fontWeight:'bold',color:'#ffd700',marginBottom:5}}>♔ V2 Chess Academy ♚</div>
-          <div style={{fontSize:10,color:'#888',marginBottom:3}}>Complete Learning Platform</div>
-          <div style={{fontSize:9,color:'#4ade80',marginBottom:12}}>5-Version AI • 27 Lessons • 15 Openings • Puzzles • Videos</div>
+      if (mode === 'menu') {
+        return (<div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 15 }}>
+          <div style={{ fontSize: 26, fontWeight: 'bold', color: '#ffd700', marginBottom: 5 }}>♔ V2 Chess Academy ♚</div>
+          <div style={{ fontSize: 10, color: '#888', marginBottom: 3 }}>5-Version Adaptive AI • Nested Thirds Learning</div>
+          {isPremium ? <div style={{ fontSize: 10, color: '#22c55e', marginBottom: 8 }}>⭐ PREMIUM UNLOCKED</div> : <div style={{ fontSize: 9, color: '#f59e0b', marginBottom: 8 }}>Free: 3 Lessons, 3 Puzzles, 3 Openings</div>}
           
-          {learning.gamesPlayed>0&&<div style={{marginBottom:12,padding:8,background:'rgba(255,255,255,0.1)',borderRadius:6,textAlign:'center',fontSize:10}}>
-            <div style={{color:'#ffd700'}}>Games: {learning.gamesPlayed} | Puzzles: {learning.puzzlesSolved} | Rating: {learning.puzzleRating}</div>
+          {learning.gamesPlayed > 0 && <div style={{ marginBottom: 10, padding: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 6, textAlign: 'center', fontSize: 9 }}>
+            <div style={{ color: '#ffd700', marginBottom: 4 }}>Games: {learning.gamesPlayed} | Won: {learning.gamesWon} | Lost: {learning.gamesLost}</div>
+            <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+              {Object.entries(learning.versions).map(([v, d]) => (<div key={v} style={{ padding: '2px 5px', background: 'rgba(255,255,255,0.05)', borderRadius: 3 }}><span style={{ color: v === 'A' ? '#3b82f6' : v === 'B' ? '#22c55e' : v === 'C' ? '#ef4444' : v === 'D' ? '#a855f7' : '#f59e0b', fontWeight: 'bold' }}>{v}</span><span style={{ color: '#666', marginLeft: 2 }}>{d.score}</span></div>))}
+            </div>
           </div>}
           
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,width:'100%',maxWidth:320}}>
-            <button onClick={()=>{setMode('play');reset();}} style={{padding:12,fontSize:12,fontWeight:'bold',background:'linear-gradient(135deg,#f093fb,#f5576c)',border:'none',borderRadius:8,color:'#fff',cursor:'pointer'}}>⚔️ vs AI</button>
-            <button onClick={()=>{setMode('2player');reset();}} style={{padding:12,fontSize:12,fontWeight:'bold',background:'linear-gradient(135deg,#06b6d4,#0891b2)',border:'none',borderRadius:8,color:'#fff',cursor:'pointer'}}>👥 2 Player</button>
-            <button onClick={()=>{setMode('lesson');startLesson(0);}} style={{padding:12,fontSize:12,fontWeight:'bold',background:'linear-gradient(135deg,#4ade80,#22c55e)',border:'none',borderRadius:8,color:'#fff',cursor:'pointer'}}>📚 27 Lessons</button>
-            <button onClick={()=>{setMode('puzzle');setPuzzleStatus(null);}} style={{padding:12,fontSize:12,fontWeight:'bold',background:'linear-gradient(135deg,#f59e0b,#d97706)',border:'none',borderRadius:8,color:'#fff',cursor:'pointer'}}>🧩 Puzzles</button>
-            <button onClick={()=>setMode('opening')} style={{padding:12,fontSize:12,fontWeight:'bold',background:'linear-gradient(135deg,#8b5cf6,#7c3aed)',border:'none',borderRadius:8,color:'#fff',cursor:'pointer'}}>📖 Openings</button>
-            <button onClick={()=>setMode('video')} style={{padding:12,fontSize:12,fontWeight:'bold',background:'linear-gradient(135deg,#ef4444,#dc2626)',border:'none',borderRadius:8,color:'#fff',cursor:'pointer'}}>🎬 Videos</button>
-            <button onClick={()=>{setMode('self-play');reset();}} style={{padding:12,fontSize:12,fontWeight:'bold',background:'linear-gradient(135deg,#667eea,#764ba2)',border:'none',borderRadius:8,color:'#fff',cursor:'pointer'}}>🤖 Self-Play</button>
-            <button onClick={()=>window.open('https://lichess.org','_blank')} style={{padding:12,fontSize:12,fontWeight:'bold',background:'linear-gradient(135deg,#374151,#1f2937)',border:'none',borderRadius:8,color:'#fff',cursor:'pointer'}}>🌐 Play Online</button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%', maxWidth: 320, marginBottom: 15 }}>
+            <button onClick={() => { setMode('play'); reset(); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#f093fb,#f5576c)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>⚔️ vs V2 AI</button>
+            <button onClick={() => { setMode('2player'); reset(); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#06b6d4,#0891b2)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>👥 2 Player</button>
+            <button onClick={() => { setMode('lesson'); startLesson(0); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#4ade80,#22c55e)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>📚 27 Lessons</button>
+            <button onClick={() => { setMode('puzzle'); setPuzzleStatus(null); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#f59e0b,#d97706)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🧩 Puzzles</button>
+            <button onClick={() => setMode('opening')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>📖 Openings</button>
+            <button onClick={() => setMode('video')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#ef4444,#dc2626)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🎬 Videos</button>
+            <button onClick={() => { setMode('self-play'); reset(); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#667eea,#764ba2)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🤖 Self-Learn</button>
+            <button onClick={() => window.open('https://lichess.org', '_blank')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#374151,#1f2937)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🌐 Online</button>
           </div>
+
+          {!isPremium && (<>
+            <button onClick={() => window.open(GUMROAD_LINK, '_blank')} style={{ padding: '10px 20px', background: 'linear-gradient(135deg,#ffd700,#ffaa00)', border: 'none', borderRadius: 8, color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: 13, marginBottom: 10 }}>💳 Buy Now - $9.99</button>
+            <button onClick={() => setShowUnlock(true)} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #555', borderRadius: 5, color: '#888', cursor: 'pointer', fontSize: 10 }}>Enter Unlock Code</button>
+          </>)}
+
+          {showUnlock && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+            <div style={{ background: '#1a1a2e', padding: 20, borderRadius: 10, textAlign: 'center' }}>
+              <div style={{ fontSize: 14, color: '#fff', marginBottom: 10 }}>Enter Unlock Code</div>
+              <input value={unlockInput} onChange={e => setUnlockInput(e.target.value)} placeholder="Enter code" style={{ padding: 10, width: 200, borderRadius: 5, border: '1px solid #444', background: '#0a0a12', color: '#fff', marginBottom: 10 }} />
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                <button onClick={unlockPremium} style={{ padding: '8px 16px', background: '#22c55e', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer' }}>Unlock</button>
+                <button onClick={() => { setShowUnlock(false); setUnlockInput(''); }} style={{ padding: '8px 16px', background: '#666', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer' }}>Cancel</button>
+              </div>
+            </div>
+          </div>)}
         </div>);
       }
 
-      // ========== LESSON MODE ==========
-      if(mode==='lesson'){
-        const lesson=LESSONS[currentLesson];const partColor=lesson.part==='FRACTURE'?'#ef4444':lesson.part==='PRESSURE'?'#f59e0b':'#22c55e';
-        return(<div style={{minHeight:'100vh',padding:10}}>
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,width:'100%',maxWidth:350}}>
-              <button onClick={()=>setMode('menu')} style={{padding:'4px 8px',background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:4,color:'#fff',cursor:'pointer',fontSize:10}}>← Menu</button>
-              <div style={{flex:1,textAlign:'center',fontSize:11,fontWeight:'bold',color:'#ffd700'}}>Lesson {lesson.id}/27</div>
-            </div>
-            <div style={{marginBottom:6}}><span style={{fontSize:9,color:partColor,fontWeight:'bold'}}>{lesson.part}</span><span style={{fontSize:9,color:'#666'}}> • {lesson.section}</span></div>
-            <div style={{fontSize:13,fontWeight:'bold',color:'#fff',marginBottom:6}}>{lesson.title}</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(8,38px)',border:'2px solid #444',borderRadius:3,marginBottom:10}}>
-              {[...Array(8)].map((_,r)=>[...Array(8)].map((_,c)=>renderSquare(r,c,lessonBoard,lesson.highlight)))}
-            </div>
-            <div style={{maxWidth:320,padding:10,background:'rgba(255,255,255,0.05)',borderRadius:6,marginBottom:8}}>
-              <div style={{fontSize:10,color:'#ccc',lineHeight:1.4,marginBottom:6}}>{lesson.desc}</div>
-              <div style={{fontSize:9,color:'#4ade80'}}>🎯 {lesson.task}</div>
-            </div>
-            <div style={{display:'flex',gap:6}}>
-              <button onClick={()=>{if(currentLesson>0)startLesson(currentLesson-1);}} disabled={currentLesson===0} style={{padding:'6px 12px',background:currentLesson===0?'#333':'#3b82f6',border:'none',borderRadius:4,color:'#fff',cursor:currentLesson===0?'default':'pointer',fontSize:11}}>← Prev</button>
-              <button onClick={()=>{if(currentLesson<26){startLesson(currentLesson+1);setLearning(prev=>({...prev,lessonsCompleted:Math.max(prev.lessonsCompleted,currentLesson+1)}));}else setMode('menu');}} style={{padding:'6px 12px',background:'#22c55e',border:'none',borderRadius:4,color:'#fff',cursor:'pointer',fontSize:11}}>{currentLesson===26?'🎓 Done':'Next →'}</button>
-            </div>
-            <div style={{marginTop:10,display:'flex',gap:3,flexWrap:'wrap',justifyContent:'center',maxWidth:320}}>
-              {LESSONS.map((l,i)=>(<div key={i} onClick={()=>startLesson(i)} style={{width:18,height:18,borderRadius:3,display:'flex',alignItems:'center',justifyContent:'center',fontSize:7,cursor:'pointer',background:i===currentLesson?'#ffd700':i<learning.lessonsCompleted?'#22c55e':'rgba(255,255,255,0.1)',color:i===currentLesson?'#000':'#fff'}}>{i+1}</div>))}
-            </div>
+      // ========== LESSON/PUZZLE/OPENING/VIDEO/2PLAYER MODES ==========
+      if (mode === 'lesson') {
+        const lesson = LESSONS[currentLesson]; const canAccess = isPremium || lesson.free;
+        const partColor = lesson.part === 'FRACTURE' ? '#ef4444' : lesson.part === 'PRESSURE' ? '#f59e0b' : '#22c55e';
+        return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
+            <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
+            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>Lesson {lesson.id}/27 {!canAccess && '🔒'}</div>
           </div>
-        </div>);
-      }
-
-      // ========== PUZZLE MODE ==========
-      if(mode==='puzzle'){
-        const puzzle=PUZZLES[currentPuzzle];
-        return(<div style={{minHeight:'100vh',padding:10}}>
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,width:'100%',maxWidth:350}}>
-              <button onClick={()=>setMode('menu')} style={{padding:'4px 8px',background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:4,color:'#fff',cursor:'pointer',fontSize:10}}>← Menu</button>
-              <div style={{flex:1,textAlign:'center',fontSize:11,fontWeight:'bold',color:'#ffd700'}}>Puzzle #{puzzle.id} • Rating: {puzzle.rating}</div>
+          <div style={{ position: 'relative' }}>
+            <div style={{ marginBottom: 6 }}><span style={{ fontSize: 9, color: partColor, fontWeight: 'bold' }}>{lesson.part}</span><span style={{ fontSize: 9, color: '#666' }}> • {lesson.section}</span></div>
+            <div style={{ fontSize: 13, fontWeight: 'bold', color: '#fff', marginBottom: 6 }}>{lesson.title}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3, marginBottom: 10, opacity: canAccess ? 1 : 0.3 }}>
+              {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, lessonBoard, lesson.highlight)))}
             </div>
-            <div style={{fontSize:10,color:'#888',marginBottom:6}}>Your Rating: {learning.puzzleRating} | Solved: {learning.puzzlesSolved}</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(8,38px)',border:'2px solid #444',borderRadius:3,marginBottom:10}}>
-              {[...Array(8)].map((_,r)=>[...Array(8)].map((_,c)=>renderSquare(r,c,puzzle.board,[])))}
-            </div>
-            <div style={{padding:10,background:'rgba(255,255,255,0.05)',borderRadius:6,marginBottom:8,textAlign:'center'}}>
-              <div style={{fontSize:11,color:'#fff',marginBottom:4}}>{puzzle.theme} - {puzzle.toMove==='white'?'White':'Black'} to move</div>
-              {puzzleStatus==='correct'&&<div style={{fontSize:12,color:'#22c55e',fontWeight:'bold'}}>✓ Correct! +{Math.floor((puzzle.rating-learning.puzzleRating)/10)+10} rating</div>}
-              {puzzleStatus==='wrong'&&<div style={{fontSize:12,color:'#ef4444',fontWeight:'bold'}}>✗ Wrong! Hint: {puzzle.hint}</div>}
-              {!puzzleStatus&&<div style={{fontSize:10,color:'#888'}}>Find the best move!</div>}
-            </div>
-            <button onClick={nextPuzzle} style={{padding:'8px 16px',background:'#3b82f6',border:'none',borderRadius:5,color:'#fff',cursor:'pointer',fontSize:11}}>Next Puzzle →</button>
+            {!canAccess && <LockedOverlay onBuy={() => window.open(GUMROAD_LINK, '_blank')} />}
           </div>
-        </div>);
-      }
-
-      // ========== OPENING MODE ==========
-      if(mode==='opening'){
-        const opening=OPENINGS[currentOpening];
-        const levels=['All','Beginner','Intermediate','Advanced'];
-        const filtered=OPENINGS.filter(o=>levels[0]==='All'||o.level===levels[0]);
-        return(<div style={{minHeight:'100vh',padding:10}}>
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,width:'100%',maxWidth:350}}>
-              <button onClick={()=>setMode('menu')} style={{padding:'4px 8px',background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:4,color:'#fff',cursor:'pointer',fontSize:10}}>← Menu</button>
-              <div style={{flex:1,textAlign:'center',fontSize:11,fontWeight:'bold',color:'#ffd700'}}>Opening Explorer</div>
-            </div>
-            <div style={{fontSize:13,fontWeight:'bold',color:'#fff',marginBottom:4}}>{opening.name}</div>
-            <div style={{fontSize:10,color:'#888',marginBottom:6}}>{opening.eco} • {opening.level}</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(8,38px)',border:'2px solid #444',borderRadius:3,marginBottom:8}}>
-              {[...Array(8)].map((_,r)=>[...Array(8)].map((_,c)=>renderSquare(r,c,opening.board,[])))}
-            </div>
-            <div style={{maxWidth:320,padding:10,background:'rgba(255,255,255,0.05)',borderRadius:6,marginBottom:8,textAlign:'center'}}>
-              <div style={{fontSize:11,color:'#4ade80',marginBottom:4}}>{opening.moves}</div>
-              <div style={{fontSize:10,color:'#ccc'}}>{opening.desc}</div>
-            </div>
-            <div className="scroll-container" style={{maxHeight:'25vh',width:'100%',maxWidth:320}}>
-              {OPENINGS.map((o,i)=>(<div key={i} onClick={()=>setCurrentOpening(i)} style={{padding:8,marginBottom:4,background:i===currentOpening?'rgba(255,215,0,0.2)':'rgba(255,255,255,0.05)',borderRadius:4,cursor:'pointer'}}>
-                <div style={{fontSize:11,color:'#fff',fontWeight:i===currentOpening?'bold':'normal'}}>{o.name}</div>
-                <div style={{fontSize:9,color:'#666'}}>{o.eco} • {o.level}</div>
-              </div>))}
-            </div>
-          </div>
-        </div>);
-      }
-
-      // ========== VIDEO MODE ==========
-      if(mode==='video'){
-        const categories=['All','Beginner','Opening','Strategy','Endgame'];
-        const filtered=VIDEOS.filter(v=>videoCategory==='All'||v.category===videoCategory);
-        return(<div style={{minHeight:'100vh',padding:10}}>
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,width:'100%',maxWidth:350}}>
-              <button onClick={()=>setMode('menu')} style={{padding:'4px 8px',background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:4,color:'#fff',cursor:'pointer',fontSize:10}}>← Menu</button>
-              <div style={{flex:1,textAlign:'center',fontSize:11,fontWeight:'bold',color:'#ffd700'}}>🎬 GM Video Lessons</div>
-            </div>
-            <div style={{display:'flex',gap:4,marginBottom:10,flexWrap:'wrap',justifyContent:'center'}}>
-              {categories.map(c=>(<button key={c} onClick={()=>setVideoCategory(c)} style={{padding:'4px 10px',background:videoCategory===c?'#ffd700':'rgba(255,255,255,0.1)',border:'none',borderRadius:4,color:videoCategory===c?'#000':'#fff',cursor:'pointer',fontSize:10}}>{c}</button>))}
-            </div>
-            <div className="scroll-container" style={{maxHeight:'65vh',width:'100%',maxWidth:350}}>
-              {filtered.map((v,i)=>(<div key={i} onClick={()=>window.open(v.url,'_blank')} style={{padding:10,marginBottom:6,background:'rgba(255,255,255,0.05)',borderRadius:6,cursor:'pointer'}}>
-                <div style={{fontSize:12,color:'#fff',fontWeight:'bold',marginBottom:2}}>{v.title}</div>
-                <div style={{fontSize:10,color:'#f59e0b',marginBottom:2}}>{v.channel}</div>
-                <div style={{fontSize:9,color:'#888'}}>{v.desc}</div>
-              </div>))}
-            </div>
-          </div>
-        </div>);
-      }
-
-      // ========== 2 PLAYER MODE ==========
-      if(mode==='2player'){
-        return(<div style={{minHeight:'100vh',padding:10}}>
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-              <button onClick={()=>setMode('menu')} style={{padding:'4px 8px',background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:4,color:'#fff',cursor:'pointer',fontSize:10}}>← Menu</button>
-              <span style={{fontSize:12,fontWeight:'bold',color:'#ffd700'}}>👥 2 Player</span>
-            </div>
-            <div style={{fontSize:10,color:'#ef4444',marginBottom:4}}>⬆️ Black</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(8,38px)',border:'2px solid #444',borderRadius:3}}>
-              {[...Array(8)].map((_,r)=>[...Array(8)].map((_,c)=>renderSquare(r,c,board,[])))}
-            </div>
-            <div style={{fontSize:10,color:'#4ade80',marginTop:4}}>⬇️ White</div>
-            <div style={{marginTop:10,padding:'8px 16px',borderRadius:5,fontWeight:'bold',fontSize:12,background:status.includes('wins')?'#ffd700':twoPlayerTurn==='white'?'#4ade80':'#ef4444',color:'#000'}}>
-              {status==='white-wins'?'⚪ White Wins!':status==='black-wins'?'⚫ Black Wins!':twoPlayerTurn==='white'?'⚪ White\'s Turn':'⚫ Black\'s Turn'}
-            </div>
-            <button onClick={reset} style={{marginTop:10,padding:'6px 14px',background:'#3b82f6',border:'none',borderRadius:4,color:'#fff',cursor:'pointer',fontSize:11}}>🔄 Reset</button>
-          </div>
-        </div>);
-      }
-
-      // ========== PLAY VS AI / SELF-PLAY ==========
-      return(<div style={{minHeight:'100vh',padding:10}}>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-            <button onClick={()=>{setMode('menu');setPlaying(false);}} style={{padding:'4px 8px',background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:4,color:'#fff',cursor:'pointer',fontSize:10}}>← Menu</button>
-            <span style={{fontSize:12,fontWeight:'bold',color:'#ffd700'}}>{mode==='self-play'?'🤖 Self-Play':'⚔️ vs AI'}</span>
-          </div>
-          <div style={{fontSize:9,color:'#ef4444',marginBottom:3}}>⬆️ AI (Black) • {learning.gamesPlayed} games</div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(8,38px)',border:'2px solid #444',borderRadius:3}}>
-            {[...Array(8)].map((_,r)=>[...Array(8)].map((_,c)=>renderSquare(r,c,board,[])))}
-          </div>
-          <div style={{fontSize:9,color:'#4ade80',marginTop:3}}>⬇️ YOU (White)</div>
-          <div style={{marginTop:10,padding:'8px 16px',borderRadius:5,fontWeight:'bold',fontSize:12,background:status==='white-wins'?'#22c55e':status==='black-wins'?'#ef4444':thinking?'#f59e0b':'#4ade80',color:'#000'}}>
-            {status==='white-wins'?'🎉 You Win!':status==='black-wins'?'🤖 AI Wins!':thinking?'🤔 AI Thinking...':'👆 Your Turn!'}
-          </div>
-          {mode==='self-play'&&<div style={{marginTop:10,display:'flex',gap:6}}>
-            <button onClick={()=>setPlaying(!playing)} style={{padding:'6px 14px',border:'none',borderRadius:4,color:'#fff',cursor:'pointer',background:playing?'#ef4444':'#22c55e',fontWeight:'bold',fontSize:11}}>{playing?'⏸ Pause':'▶ Play'}</button>
-            <select value={selfSpeed} onChange={e=>setSelfSpeed(Number(e.target.value))} style={{padding:6,background:'#333',border:'1px solid #555',borderRadius:4,color:'#fff',fontSize:11}}><option value={800}>Slow</option><option value={500}>Normal</option><option value={200}>Fast</option></select>
+          {canAccess && <div style={{ maxWidth: 320, padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 8 }}>
+            <div style={{ fontSize: 10, color: '#ccc', lineHeight: 1.4, marginBottom: 6 }}>{lesson.desc}</div>
+            <div style={{ fontSize: 9, color: '#4ade80' }}>🎯 {lesson.task}</div>
           </div>}
-          {mode==='play'&&<button onClick={reset} style={{marginTop:10,padding:'6px 14px',background:'#3b82f6',border:'none',borderRadius:4,color:'#fff',cursor:'pointer',fontSize:11}}>🔄 New Game</button>}
-          <div style={{marginTop:10,display:'flex',gap:4}}>
-            {Object.entries(learning.versions).map(([v,d])=>(<div key={v} style={{padding:'2px 5px',background:'rgba(255,255,255,0.05)',borderRadius:3,fontSize:8}}><span style={{color:v==='A'?'#3b82f6':v==='B'?'#22c55e':v==='C'?'#ef4444':v==='D'?'#a855f7':'#f59e0b',fontWeight:'bold'}}>{v}</span><span style={{color:'#666',marginLeft:2}}>{d.score}</span></div>))}
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={() => { if (currentLesson > 0) startLesson(currentLesson - 1); }} disabled={currentLesson === 0} style={{ padding: '6px 12px', background: currentLesson === 0 ? '#333' : '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: currentLesson === 0 ? 'default' : 'pointer', fontSize: 11 }}>← Prev</button>
+            <button onClick={() => { if (currentLesson < 26) startLesson(currentLesson + 1); else setMode('menu'); }} style={{ padding: '6px 12px', background: '#22c55e', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>{currentLesson === 26 ? 'Done' : 'Next →'}</button>
           </div>
+        </div></div>);
+      }
+
+      if (mode === 'puzzle') {
+        const puzzle = PUZZLES[currentPuzzle]; const canAccess = isPremium || puzzle.free;
+        return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
+            <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
+            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>Puzzle #{puzzle.id} {!canAccess && '🔒'}</div>
+          </div>
+          <div style={{ fontSize: 10, color: '#888', marginBottom: 6 }}>Rating: {learning.puzzleRating}</div>
+          <div style={{ position: 'relative' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3, marginBottom: 10, opacity: canAccess ? 1 : 0.3 }}>
+              {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, puzzle.board, [])))}
+            </div>
+            {!canAccess && <LockedOverlay onBuy={() => window.open(GUMROAD_LINK, '_blank')} />}
+          </div>
+          {canAccess && <div style={{ padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: '#fff', marginBottom: 4 }}>{puzzle.theme} • {puzzle.toMove === 'white' ? 'White' : 'Black'} to move</div>
+            {puzzleStatus === 'correct' && <div style={{ fontSize: 12, color: '#22c55e', fontWeight: 'bold' }}>✓ Correct!</div>}
+            {puzzleStatus === 'wrong' && <div style={{ fontSize: 12, color: '#ef4444', fontWeight: 'bold' }}>✗ {puzzle.hint}</div>}
+          </div>}
+          <button onClick={nextPuzzle} style={{ padding: '8px 16px', background: '#3b82f6', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer', fontSize: 11 }}>Next →</button>
+        </div></div>);
+      }
+
+      if (mode === 'opening') {
+        const opening = OPENINGS[currentOpening]; const canAccess = isPremium || opening.free;
+        return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
+            <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
+            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>Openings</div>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <div style={{ fontSize: 13, fontWeight: 'bold', color: '#fff', marginBottom: 4 }}>{opening.name} {!canAccess && '🔒'}</div>
+            <div style={{ fontSize: 10, color: '#888', marginBottom: 6 }}>{opening.eco} • {opening.level}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3, marginBottom: 8, opacity: canAccess ? 1 : 0.3 }}>
+              {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, opening.board, [])))}
+            </div>
+            {!canAccess && <LockedOverlay onBuy={() => window.open(GUMROAD_LINK, '_blank')} />}
+          </div>
+          {canAccess && <div style={{ maxWidth: 320, padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: '#4ade80', marginBottom: 4 }}>{opening.moves}</div>
+            <div style={{ fontSize: 10, color: '#ccc' }}>{opening.desc}</div>
+          </div>}
+          <div className="scroll-container" style={{ maxHeight: '20vh', width: '100%', maxWidth: 320 }}>
+            {OPENINGS.map((o, i) => { const can = isPremium || o.free; return (<div key={i} onClick={() => setCurrentOpening(i)} style={{ padding: 8, marginBottom: 4, background: i === currentOpening ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.05)', borderRadius: 4, cursor: 'pointer', opacity: can ? 1 : 0.5 }}>
+              <div style={{ fontSize: 11, color: '#fff' }}>{o.name} {!can && '🔒'}</div>
+              <div style={{ fontSize: 9, color: '#666' }}>{o.level}</div>
+            </div>); })}
+          </div>
+        </div></div>);
+      }
+
+      if (mode === 'video') {
+        const categories = ['All', 'Beginner', 'Opening', 'Strategy', 'Endgame'];
+        const filtered = VIDEOS.filter(v => videoCategory === 'All' || v.category === videoCategory);
+        return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
+            <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
+            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>🎬 Videos</div>
+          </div>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {categories.map(c => (<button key={c} onClick={() => setVideoCategory(c)} style={{ padding: '4px 8px', background: videoCategory === c ? '#ffd700' : 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 4, color: videoCategory === c ? '#000' : '#fff', cursor: 'pointer', fontSize: 9 }}>{c}</button>))}
+          </div>
+          <div className="scroll-container" style={{ maxHeight: '65vh', width: '100%', maxWidth: 350 }}>
+            {filtered.map((v, i) => { const canAccess = isPremium || v.free; return (<div key={i} onClick={() => canAccess && window.open(v.url, '_blank')} style={{ padding: 10, marginBottom: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 6, cursor: canAccess ? 'pointer' : 'default', opacity: canAccess ? 1 : 0.5 }}>
+              <div style={{ fontSize: 12, color: '#fff', fontWeight: 'bold', marginBottom: 2 }}>{v.title} {!canAccess && '🔒'}</div>
+              <div style={{ fontSize: 10, color: '#f59e0b' }}>{v.channel}</div>
+            </div>); })}
+          </div>
+        </div></div>);
+      }
+
+      if (mode === '2player') {
+        return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
+            <span style={{ fontSize: 12, fontWeight: 'bold', color: '#ffd700' }}>👥 2 Player</span>
+          </div>
+          <div style={{ fontSize: 10, color: '#ef4444', marginBottom: 4 }}>⬆️ Black</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3 }}>
+            {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, board, [])))}
+          </div>
+          <div style={{ fontSize: 10, color: '#4ade80', marginTop: 4 }}>⬇️ White</div>
+          <div style={{ marginTop: 10, padding: '8px 16px', borderRadius: 5, fontWeight: 'bold', fontSize: 12, background: status.includes('wins') ? '#ffd700' : twoPlayerTurn === 'white' ? '#4ade80' : '#ef4444', color: '#000' }}>
+            {status === 'white-wins' ? '⚪ White Wins!' : status === 'black-wins' ? '⚫ Black Wins!' : twoPlayerTurn === 'white' ? '⚪ White Turn' : '⚫ Black Turn'}
+          </div>
+          <button onClick={reset} style={{ marginTop: 10, padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>🔄 Reset</button>
+        </div></div>);
+      }
+
+      // ========== VS AI / SELF-PLAY ==========
+      return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <button onClick={() => { setMode('menu'); setPlaying(false); }} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
+          <span style={{ fontSize: 12, fontWeight: 'bold', color: '#ffd700' }}>{mode === 'self-play' ? '🤖 V2 Self-Learn' : '⚔️ vs V2 AI'}</span>
         </div>
-      </div>);
+        <div style={{ fontSize: 9, color: '#ef4444', marginBottom: 3 }}>⬆️ V2 AI (Black) • {learning.gamesPlayed} games</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3 }}>
+          {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, board, [])))}
+        </div>
+        <div style={{ fontSize: 9, color: '#4ade80', marginTop: 3 }}>⬇️ YOU (White)</div>
+        <div style={{ marginTop: 10, padding: '8px 16px', borderRadius: 5, fontWeight: 'bold', fontSize: 12, background: status === 'white-wins' ? '#22c55e' : status === 'black-wins' ? '#ef4444' : thinking ? '#f59e0b' : '#4ade80', color: '#000' }}>
+          {status === 'white-wins' ? '🎉 You Win!' : status === 'black-wins' ? '🤖 AI Wins!' : thinking ? '🤔 V2 Thinking...' : '👆 Your Turn!'}
+        </div>
+        {mode === 'self-play' && <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
+          <button onClick={() => setPlaying(!playing)} style={{ padding: '6px 14px', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', background: playing ? '#ef4444' : '#22c55e', fontWeight: 'bold', fontSize: 11 }}>{playing ? '⏸ Pause' : '▶ Play'}</button>
+          <select value={selfSpeed} onChange={e => setSelfSpeed(Number(e.target.value))} style={{ padding: 6, background: '#333', border: '1px solid #555', borderRadius: 4, color: '#fff', fontSize: 11 }}><option value={800}>Slow</option><option value={500}>Normal</option><option value={200}>Fast</option></select>
+        </div>}
+        {mode === 'play' && <button onClick={reset} style={{ marginTop: 10, padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>🔄 New Game</button>}
+        <div style={{ marginTop: 10, display: 'flex', gap: 4 }}>
+          {Object.entries(learning.versions).map(([v, d]) => (<div key={v} style={{ padding: '2px 5px', background: 'rgba(255,255,255,0.05)', borderRadius: 3, fontSize: 8 }}><span style={{ color: v === 'A' ? '#3b82f6' : v === 'B' ? '#22c55e' : v === 'C' ? '#ef4444' : v === 'D' ? '#a855f7' : '#f59e0b', fontWeight: 'bold' }}>{v}</span><span style={{ color: '#666', marginLeft: 2 }}>{d.score}</span></div>))}
+        </div>
+      </div></div>);
     }
 
-    ReactDOM.render(<ChessV2/>,document.getElementById('root'));
+    ReactDOM.render(<ChessV2 />, document.getElementById('root'));
   </script>
 </body>
 </html>
