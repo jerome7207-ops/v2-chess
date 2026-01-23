@@ -1,5 +1,5 @@
-O. <!DOCTYPE html>
-<html lang="en">e Let's see.
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,12 +19,13 @@ O. <!DOCTYPE html>
   <div id="root"></div>
   <script type="text/babel">
     const { useState, useEffect, useCallback } = React;
-Damn it.
+
     // ========================================
     // GUMROAD CONFIG - UPDATE WITH YOUR LINK
     // ========================================
-    const GUMROAD_LINK = "https://gumroad.com/l/v2chess";
+    const GUMROAD_LINK = "https://popcornwhisper.gumroad.com/l/V2ChessAcademy";
     const UNLOCK_CODE = "V2CHESS2024";
+    const FREE_TRIAL_CODE = "TRYCHESS2024";
 
     // ========================================
     // V2 LEARNING SYSTEM - 5 VERSION ARCHITECTURE
@@ -150,7 +151,7 @@ Damn it.
       useEffect(() => { try { if(localStorage.getItem('v2chess_premium')==='true') setIsPremium(true); } catch(e){} }, []);
 
       const unlockPremium = () => {
-        if (unlockInput.toUpperCase() === UNLOCK_CODE) {
+        if (unlockInput.toUpperCase() === UNLOCK_CODE || unlockInput.toUpperCase() === FREE_TRIAL_CODE) {
           setIsPremium(true); try { localStorage.setItem('v2chess_premium', 'true'); } catch(e) {}
           setShowUnlock(false); setUnlockInput(''); alert('🎉 Premium Unlocked!');
         } else { alert('Invalid code.'); }
