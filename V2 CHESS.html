@@ -3,635 +3,1421 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>V2 Chess Academy</title>
+  <title>V2 Chess Academy - Complete Learning Platform</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%); min-height: 100vh; color: #fff; }
-    .scroll-container { max-height: 60vh; overflow-y: auto; }
-    .scroll-container::-webkit-scrollbar { width: 6px; }
-    .scroll-container::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    button { font-family: inherit; }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    select { font-family: inherit; }
   </style>
 </head>
 <body>
   <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect, useCallback } = React;
 
-    // ========================================
-    // GUMROAD CONFIG - UPDATE WITH YOUR LINK
-    // ========================================
-    const GUMROAD_LINK = "https://gumroad.com/l/v2chess";
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
+
+    // Configuration
+    const GUMROAD_LINK = "https://popcornwhisper.gumroad.com/l/V2ChessAcademy";
     const UNLOCK_CODE = "V2CHESS2024";
 
-    // ========================================
-    // V2 LEARNING SYSTEM - 5 VERSION ARCHITECTURE
-    // ========================================
-    const createLearning = () => ({
-      versions: {
-        A: { score: 50, name: 'Conservative', desc: 'Safety first' },
-        B: { score: 50, name: 'Balanced', desc: 'Standard play' },
-        C: { score: 50, name: 'Aggressive', desc: 'Attack minded' },
-        D: { score: 50, name: 'Explorer', desc: 'Tries new ideas' },
-        E: { score: 50, name: 'Synthesizer', desc: 'Meta-learner' }
+    // Chess piece values
+    const PIECE_VALUES = {
+      'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000,
+      'P': 100, 'N': 320, 'B': 330, 'R': 500, 'Q': 900, 'K': 20000
+    };
+
+    // Position tables
+    const PAWN_TABLE = [
+      0,0,0,0,0,0,0,0, 50,50,50,50,50,50,50,50, 10,10,20,30,30,20,10,10,
+      5,5,10,25,25,10,5,5, 0,0,0,20,20,0,0,0, 5,-5,-10,0,0,-10,-5,5,
+      5,10,10,-20,-20,10,10,5, 0,0,0,0,0,0,0,0
+    ];
+
+    const KNIGHT_TABLE = [
+      -50,-40,-30,-30,-30,-30,-40,-50, -40,-20,0,0,0,0,-20,-40, -30,0,10,15,15,10,0,-30,
+      -30,5,15,20,20,15,5,-30, -30,0,15,20,20,15,0,-30, -30,5,10,15,15,10,5,-30,
+      -40,-20,0,5,5,0,-20,-40, -50,-40,-30,-30,-30,-30,-40,-50
+    ];
+
+    const BISHOP_TABLE = [
+      -20,-10,-10,-10,-10,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,5,10,10,5,0,-10,
+      -10,5,5,10,10,5,5,-10, -10,0,10,10,10,10,0,-10, -10,10,10,10,10,10,10,-10,
+      -10,5,0,0,0,0,5,-10, -20,-10,-10,-10,-10,-10,-10,-20
+    ];
+
+    const KING_TABLE = [
+      -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30,
+      -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30,
+      -20,-30,-30,-40,-40,-30,-30,-20, -10,-20,-20,-20,-20,-20,-20,-10,
+      20,20,0,0,0,0,20,20, 20,30,10,0,0,10,30,20
+    ];
+
+    const INITIAL_BOARD = [
+      ['r','n','b','q','k','b','n','r'],
+      ['p','p','p','p','p','p','p','p'],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      ['P','P','P','P','P','P','P','P'],
+      ['R','N','B','Q','K','B','N','R']
+    ];
+
+    const PIECE_SYMBOLS = {
+      'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+      'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+    };
+
+    const PIECE_NAMES = {
+      'K': 'King', 'Q': 'Queen', 'R': 'Rook', 'B': 'Bishop', 'N': 'Knight', 'P': 'Pawn',
+      'k': 'King', 'q': 'Queen', 'r': 'Rook', 'b': 'Bishop', 'n': 'Knight', 'p': 'Pawn'
+    };
+
+    const LESSONS = [
+      { id: 1, title: "How Pieces Move", part: 1, section: 1, beat: 1, content: "Each piece moves differently. Pawns forward, Knights L-shape, Bishops diagonal..." },
+      { id: 2, title: "Piece Values", part: 1, section: 1, beat: 2, content: "Pawn=1, Knight=3, Bishop=3, Rook=5, Queen=9. King is priceless!" },
+      { id: 3, title: "The Goal: Checkmate", part: 1, section: 1, beat: 3, content: "Checkmate = King is attacked and has no escape. That's how you win!" },
+      { id: 4, title: "Control the Center", part: 1, section: 2, beat: 1, content: "d4, d5, e4, e5 are the most important squares. Control them early!" },
+      { id: 5, title: "Develop Your Pieces", part: 1, section: 2, beat: 2, content: "Move Knights and Bishops before the Queen. Get all pieces ready for battle!" },
+      { id: 6, title: "Castle for Safety", part: 1, section: 2, beat: 3, content: "Castling moves King to safety and activates Rook. Do this early!" },
+      { id: 7, title: "Don't Move Twice", part: 1, section: 3, beat: 1, content: "In the opening, each piece should move once before you move any twice. Variety!" },
+      { id: 8, title: "Queen Out Too Early?", part: 1, section: 3, beat: 2, content: "Your Queen is powerful but vulnerable. Keep her safe behind pawns!" },
+      { id: 9, title: "Protect Your Pieces", part: 1, section: 3, beat: 3, content: "Don't leave pieces undefended. Every attack needs a counter!" },
+      { id: 10, title: "The Fork", part: 2, section: 1, beat: 1, content: "Attacking two pieces at once. Knight forks are deadly!" },
+      { id: 11, title: "The Pin", part: 2, section: 1, beat: 2, content: "Bishop or Rook attacks through a piece to a more valuable piece behind it." },
+      { id: 12, title: "The Skewer", part: 2, section: 1, beat: 3, content: "Like a pin but reversed - valuable piece first, then piece behind." },
+      { id: 13, title: "Discovered Attack", part: 2, section: 2, beat: 1, content: "Move one piece to unleash attack from piece behind it!" },
+      { id: 14, title: "Double Attack", part: 2, section: 2, beat: 2, content: "Attack multiple pieces or create multiple threats simultaneously." },
+      { id: 15, title: "Remove the Defender", part: 2, section: 2, beat: 3, content: "Capture or deflect the piece protecting another piece." },
+      { id: 16, title: "Piece Activity", part: 2, section: 3, beat: 1, content: "Active pieces control more squares and create more threats." },
+      { id: 17, title: "Pawn Structure", part: 2, section: 3, beat: 2, content: "Pawn chains are strong. Weak pawns become targets!" },
+      { id: 18, title: "Weak Squares", part: 2, section: 3, beat: 3, content: "Squares your pawns can't protect. Plant pieces there!" },
+      { id: 19, title: "Basic Checkmates", part: 3, section: 1, beat: 1, content: "Queen + King vs King. Rook + King vs King. Know these!" },
+      { id: 20, title: "Pawn Promotion", part: 3, section: 1, beat: 2, content: "When pawn reaches the end, promote to Queen (usually). Extremely powerful!" },
+      { id: 21, title: "Opposition", part: 3, section: 1, beat: 3, content: "Kings directly opposite with one square between = you control the position." },
+      { id: 22, title: "King Activation", part: 3, section: 2, beat: 1, content: "In endgame, King is strong! Bring it into the action to support pawns." },
+      { id: 23, title: "Passed Pawns", part: 3, section: 2, beat: 2, content: "Pawn with no enemy pawns ahead. Try to promote it!" },
+      { id: 24, title: "Zugzwang", part: 3, section: 2, beat: 3, content: "Opponent has no good moves. Any move makes position worse. You win!" },
+      { id: 25, title: "Calculate Variations", part: 3, section: 3, beat: 1, content: "See 3-4 moves ahead. Predict opponent's responses." },
+      { id: 26, title: "Pattern Recognition", part: 3, section: 3, beat: 2, content: "Recognize mating patterns, sacrifice patterns, endgame patterns." },
+      { id: 27, title: "Mastery: Play Stronger", part: 3, section: 3, beat: 3, content: "Bring it all together. Play, analyze, improve. You are a chess player!" }
+    ];
+
+    const PUZZLES = [
+      { id: 1, title: "Fork the King", difficulty: 1, description: "Knight fork wins material" },
+      { id: 2, title: "Pin the Bishop", difficulty: 1, description: "Pin captures Bishop" },
+      { id: 3, title: "Mate in One", difficulty: 2, description: "Find the checkmate!" },
+      { id: 4, title: "Discovered Attack", difficulty: 2, description: "Unleash hidden piece" },
+      { id: 5, title: "Sacrifice for Mate", difficulty: 3, description: "Give up material to checkmate" },
+      { id: 6, title: "Quiet Move Wins", difficulty: 2, description: "Hidden winning move" },
+      { id: 7, title: "Back Rank Mate", difficulty: 2, description: "Trap the King!" },
+      { id: 8, title: "Deflection Tactic", difficulty: 3, description: "Remove the defender" },
+      { id: 9, title: "Stalemate Trap", difficulty: 3, description: "Force a draw" },
+      { id: 10, title: "Perpetual Check", difficulty: 3, description: "Eternal checks = draw" }
+    ];
+
+    const OPENINGS = [
+      { name: "Italian Game", moves: "1.e4 e5 2.Nf3 Nc6 3.Bc4", ideas: "Control center, develop, attack f7" },
+      { name: "Sicilian Defense", moves: "1.e4 c5", ideas: "Black fights for center, popular!" },
+      { name: "French Defense", moves: "1.e4 e6", ideas: "Solid structure, c4 pawn break" },
+      { name: "Caro-Kann Defense", moves: "1.e4 c6", ideas: "Rock solid, d5 breakout" },
+      { name: "Ruy Lopez (Spanish)", moves: "1.e4 e5 2.Nf3 Nc6 3.Bb5", ideas: "Most popular! Control e5" },
+      { name: "Queen's Gambit", moves: "1.d4 d5 2.c4", ideas: "Sacrifice pawn for space" },
+      { name: "King's Indian", moves: "1.d4 Nf6 2.c4 g6", ideas: "Fianchetto, counterattack" },
+      { name: "London System", moves: "1.d4 2.Bf4 3.Nf3 4.e3", ideas: "Flexible, solid structure" },
+      { name: "Scotch Game", moves: "1.e4 e5 2.Nf3 Nc6 3.Nxe5", ideas: "Open game, tactical" },
+      { name: "Nimzo-Indian", moves: "1.d4 Nf6 2.c4 e6 3.Nc3 Bb4", ideas: "Counter-pin, flexible" },
+      { name: "Slav Defense", moves: "1.d4 d5 2.c4 c6", ideas: "Solid, fighting for d5" },
+      { name: "Grunfeld Defense", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 d5", ideas: "Counterattack center" },
+      { name: "English Opening", moves: "1.c4", ideas: "Flexible, positional control" },
+      { name: "Alekhine's Defense", moves: "1.e4 Nf6", ideas: "Provoke pawns, counterattack" },
+      { name: "Bird's Opening", moves: "1.f4", ideas: "Control e5, fianchetto idea" }
+    ];
+
+    const VIDEOS = [
+      { title: "How to Play Chess (Beginners)", creator: "GothamChess", url: "https://youtube.com/results?search_query=gothamchess+how+to+play+chess" },
+      { title: "Chess Opening Principles", creator: "Daniel Naroditsky", url: "https://youtube.com/results?search_query=daniel+naroditsky+chess+openings" },
+      { title: "Tactics Training", creator: "GothamChess", url: "https://youtube.com/results?search_query=gothamchess+tactics+training" },
+      { title: "Endgame Basics", creator: "Agadmator", url: "https://youtube.com/results?search_query=agadmator+endgame+basics" },
+      { title: "Middle Game Strategy", creator: "GothamChess", url: "https://youtube.com/results?search_query=gothamchess+middlegame+strategy" },
+      { title: "Checkmate Patterns", creator: "GothamChess", url: "https://youtube.com/results?search_query=gothamchess+checkmate+patterns" },
+      { title: "Positional Chess", creator: "Agadmator", url: "https://youtube.com/results?search_query=agadmator+positional+chess" },
+      { title: "Chess Sacrifice", creator: "GothamChess", url: "https://youtube.com/results?search_query=gothamchess+sacrifice" },
+      { title: "Pawn Structures", creator: "Daniel Naroditsky", url: "https://youtube.com/results?search_query=naroditsky+pawn+structures" },
+      { title: "King Activity in Endgame", creator: "Agadmator", url: "https://youtube.com/results?search_query=agadmator+king+endgame" },
+      { title: "Pin and Fork Tactics", creator: "GothamChess", url: "https://youtube.com/results?search_query=gothamchess+pin+fork" },
+      { title: "Chess for Beginners", creator: "Lichess", url: "https://youtube.com/results?search_query=lichess+chess+for+beginners" }
+    ];
+
+    const createLearningSystem = () => ({
+      versionPerformance: {
+        A: { wins: 0, losses: 0, draws: 0, score: 50 },
+        B: { wins: 0, losses: 0, draws: 0, score: 50 },
+        C: { wins: 0, losses: 0, draws: 0, score: 50 },
+        D: { wins: 0, losses: 0, draws: 0, score: 50 },
+        E: { wins: 0, losses: 0, draws: 0, score: 50 }
       },
-      winningPatterns: [],
-      losingPatterns: [],
+      humanPatterns: {},
+      winningSequences: [],
+      losingSequences: [],
       positionMemory: {},
+      humanWeaknesses: {},
       gamesPlayed: 0,
-      gamesWon: 0,
-      gamesLost: 0,
+      gamesWonVsHuman: 0,
+      gamesLostVsHuman: 0,
       learningRate: 1.0,
-      lessonsCompleted: 0,
-      puzzleRating: 800,
-      puzzlesSolved: 0
+      difficultyLevel: 1,
+      unlockedFeatures: false,
+      unlockedCode: ""
     });
 
-    // ========================================
-    // 27 NESTED THIRDS LESSONS
-    // ========================================
-    const LESSONS = [
-      { id: 1, part: 'FRACTURE', section: 'Seed', title: 'How Pieces Move', desc: 'King moves 1 square. Queen moves any direction. Rooks straight. Bishops diagonal. Knights jump L-shape. Pawns forward, capture diagonal.', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [], task: 'Tap pieces to see moves!', free: true },
-      { id: 2, part: 'FRACTURE', section: 'Seed', title: 'Piece Values', desc: 'Pawn=1, Knight=3, Bishop=3, Rook=5, Queen=9, King=∞. Trade wisely!', board: [[null,null,null,'q',null,null,null,null],[null,null,null,null,null,null,null,null],[null,'n',null,null,null,'b',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'R',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[0,3],[2,1],[2,5],[5,2]], task: 'Q=9, N=3, B=3, R=5', free: true },
-      { id: 3, part: 'FRACTURE', section: 'Seed', title: 'Checkmate Goal', desc: 'Attack the King so it cannot escape = Checkmate. Game over!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,'R']], highlight: [[0,4],[2,4]], task: 'Black King in CHECK!', free: true },
-      { id: 4, part: 'FRACTURE', section: 'Develop', title: 'Control Center', desc: 'd4, d5, e4, e5 are key squares. Control them!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [[3,3],[3,4],[4,3],[4,4]], task: 'Center = Power!', free: false },
-      { id: 5, part: 'FRACTURE', section: 'Develop', title: 'Develop Pieces', desc: 'Get Knights and Bishops out early!', board: [['r',null,'b','q','k','b',null,'r'],['p','p','p','p','p','p','p','p'],[null,null,'n',null,null,'n',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,'N',null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R',null,'B','Q','K','B',null,'R']], highlight: [[5,2],[5,5],[2,2],[2,5]], task: 'Knights developed!', free: false },
-      { id: 6, part: 'FRACTURE', section: 'Develop', title: 'Castle Early', desc: 'Castle to protect King and activate Rook.', board: [['r',null,null,null,'k',null,null,'r'],['p','p','p',null,null,'p','p','p'],[null,null,'n','p',null,'n',null,null],[null,null,'b',null,'p',null,'b',null],[null,null,'B',null,'P',null,'B',null],[null,null,'N','P',null,'N',null,null],['P','P','P',null,null,'P','P','P'],['R',null,null,null,'K',null,null,'R']], highlight: [[7,4],[0,4]], task: 'Both should castle!', free: false },
-      { id: 7, part: 'FRACTURE', section: 'Turn', title: 'One Piece Once', desc: 'Don\'t move same piece twice in opening.', board: [['r','n','b','q','k','b',null,'r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,'n',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'N'],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B',null,'R']], highlight: [[4,7]], task: 'Knight moved twice = bad!', free: false },
-      { id: 8, part: 'FRACTURE', section: 'Turn', title: 'Queen Stays Home', desc: 'Don\'t bring Queen out early.', board: [['r','n','b',null,'k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,'q'],[null,null,'B',null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], highlight: [[3,7]], task: 'Queen out too early!', free: false },
-      { id: 9, part: 'FRACTURE', section: 'Turn', title: 'Protect Pieces', desc: 'Before moving, check: Is my piece safe?', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'B',null,null,null,null],[null,null,null,null,null,'p',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[4,5]], task: 'Bishop is HANGING!', free: false },
-      { id: 10, part: 'PRESSURE', section: 'Seed', title: 'The Fork', desc: 'Attack TWO pieces at once!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'q',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[0,4],[5,2]], task: 'Knight FORKS King+Queen!', free: false },
-      { id: 11, part: 'PRESSURE', section: 'Seed', title: 'The Pin', desc: 'Trap a piece against a more valuable one!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,'r',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[6,4],[1,4],[0,4]], task: 'Rook PINNED to King!', free: false },
-      { id: 12, part: 'PRESSURE', section: 'Seed', title: 'The Skewer', desc: 'Attack valuable piece, take what\'s behind!', board: [[null,null,null,null,null,null,null,null],[null,'k',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'B'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'r']], highlight: [[4,7],[1,1],[7,7]], task: 'Bishop SKEWERS King→Rook!', free: false },
-      { id: 13, part: 'PRESSURE', section: 'Develop', title: 'Discovered Attack', desc: 'Move one piece to reveal attack by another!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'R',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[2,4],[4,4],[0,4]], task: 'Knight moves = CHECK!', free: false },
-      { id: 14, part: 'PRESSURE', section: 'Develop', title: 'Double Attack', desc: 'Attack two things at once!', board: [[null,null,'r',null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'b'],[null,null,null,null,'K',null,null,null]], highlight: [[4,4],[0,4],[6,7]], task: 'Queen attacks King AND Bishop!', free: false },
-      { id: 15, part: 'PRESSURE', section: 'Develop', title: 'Remove Defender', desc: 'Capture the protecting piece first!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,'r',null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'R',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[2,4],[1,4],[4,4]], task: 'Take Knight, then Rook!', free: false },
-      { id: 16, part: 'PRESSURE', section: 'Turn', title: 'Active Pieces', desc: 'Rooks on open files, Bishops on diagonals.', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,'B',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,'K',null,null,null]], highlight: [[7,0],[3,1]], task: 'Active pieces!', free: false },
-      { id: 17, part: 'PRESSURE', section: 'Turn', title: 'Pawn Structure', desc: 'Doubled pawns weak. Connected pawns strong!', board: [[null,null,null,null,'k',null,null,null],['p',null,'p',null,null,'p','p','p'],[null,'p',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P',null,null,null,null,null,null,null],['P',null,'P','P',null,'P','P','P'],[null,null,null,null,'K',null,null,null]], highlight: [[5,0],[6,0]], task: 'Doubled pawns = weak!', free: false },
-      { id: 18, part: 'PRESSURE', section: 'Turn', title: 'Weak Squares', desc: 'Squares you can\'t defend with pawns.', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,'p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'N',null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],[null,null,null,null,'K',null,null,null]], highlight: [[4,5]], task: 'Knight on weak square!', free: false },
-      { id: 19, part: 'SHIFT', section: 'Seed', title: 'K+Q vs K', desc: 'Push enemy King to edge. Don\'t stalemate!', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[5,4],[7,4],[1,4]], task: 'Push King to edge!', free: false },
-      { id: 20, part: 'SHIFT', section: 'Seed', title: 'K+R vs K', desc: 'Rook cuts off King. Your King approaches.', board: [[null,null,null,null,null,null,null,null],[null,null,null,'k',null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'K',null,null,null,null]], highlight: [[3,0],[7,3],[1,3]], task: 'Rook cuts off King!', free: false },
-      { id: 21, part: 'SHIFT', section: 'Seed', title: 'Pawn Promotion', desc: 'Get pawn to last rank = new Queen!', board: [[null,null,null,null,null,null,null,null],[null,null,null,'P',null,null,null,null],[null,null,null,'K',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,'k',null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[1,3],[2,3]], task: 'King escorts pawn!', free: false },
-      { id: 22, part: 'SHIFT', section: 'Develop', title: 'Active King', desc: 'In endgame, King becomes fighter!', board: [[null,null,null,null,null,null,null,null],['p',null,null,null,null,null,null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null],[null,null,null,null,null,null,null,null],['P',null,null,null,null,null,null,'P'],[null,null,null,null,null,null,null,'k']], highlight: [[4,4],[7,7]], task: 'White King active!', free: false },
-      { id: 23, part: 'SHIFT', section: 'Develop', title: 'Passed Pawns', desc: 'No enemy pawns can stop it = PASSED.', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'P',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'p',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'K',null,null,'k',null]], highlight: [[2,3]], task: 'Passed pawn = danger!', free: false },
-      { id: 24, part: 'SHIFT', section: 'Develop', title: 'Opposition', desc: 'Kings face off. Who moves loses ground!', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[2,4],[4,4]], task: 'White has opposition!', free: false },
-      { id: 25, part: 'SHIFT', section: 'Turn', title: 'Pattern Recognition', desc: 'Learn patterns: back rank mate, etc.', board: [[null,null,null,null,null,null,'k',null],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,null,null,'K',null]], highlight: [[7,0],[0,6]], task: 'Ra8# = Back rank mate!', free: false },
-      { id: 26, part: 'SHIFT', section: 'Turn', title: 'Calculation', desc: 'Think 2-3 moves ahead.', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,null,null,null,null,'q',null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[4,6]], task: 'Calculate: Nf6+!', free: false },
-      { id: 27, part: 'SHIFT', section: 'Turn', title: 'You Are Ready!', desc: 'Go play and apply what you learned!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [], task: '🎓 Complete! Now PLAY!', free: false }
-    ];
-
-    // PUZZLES
-    const PUZZLES = [
-      { id: 1, rating: 600, theme: 'Fork', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,'q',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[4,3],[2,4]], hint: 'Knight fork!', toMove: 'white', free: true },
-      { id: 2, rating: 700, theme: 'Back Rank', board: [[null,null,null,null,null,null,'k',null],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,'K',null,null,null]], solution: [[7,0],[0,0]], hint: 'Back rank mate!', toMove: 'white', free: true },
-      { id: 3, rating: 800, theme: 'Pin', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,null,null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[4,4],[0,0]], hint: 'Pin the Knight!', toMove: 'white', free: true },
-      { id: 4, rating: 900, theme: 'Skewer', board: [[null,null,null,null,null,null,null,null],[null,'k',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'r'],[null,null,null,null,null,null,null,'B']], solution: [[7,7],[1,1]], hint: 'Skewer!', toMove: 'white', free: false },
-      { id: 5, rating: 1000, theme: 'Discovery', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'N',null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'q'],[null,null,null,null,'K',null,null,null]], solution: [[3,4],[1,5]], hint: 'Discovered attack!', toMove: 'white', free: false },
-      { id: 6, rating: 1100, theme: 'Mate in 1', board: [['r',null,null,null,'k',null,null,'r'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'Q',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[5,5],[0,5]], hint: 'Queen mates!', toMove: 'white', free: false },
-      { id: 7, rating: 1200, theme: 'Fork', board: [[null,'r',null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'N',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[4,2],[2,3]], hint: 'Fork!', toMove: 'white', free: false },
-      { id: 8, rating: 1300, theme: 'Mate in 2', board: [[null,null,null,null,null,'r','k',null],[null,null,null,null,null,'p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['Q',null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], solution: [[6,0],[0,0]], hint: 'Queen sac!', toMove: 'white', free: false }
-    ];
-
-    // OPENINGS
-    const OPENINGS = [
-      { name: 'Italian Game', eco: 'C50', moves: '1.e4 e5 2.Nf3 Nc6 3.Bc4', desc: 'Classic attacking opening.', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,null,null,null,'p',null,null,null],[null,null,'B',null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], level: 'Beginner', free: true },
-      { name: 'London System', eco: 'D00', moves: '1.d4 d5 2.Bf4', desc: 'Easy solid setup.', board: [['r','n','b','q','k','b','n','r'],['p','p','p',null,'p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,'p',null,null,null,null],[null,null,null,'P',null,'B',null,null],[null,null,null,null,null,null,null,null],['P','P','P',null,'P','P','P','P'],['R','N',null,'Q','K','B','N','R']], level: 'Beginner', free: true },
-      { name: 'Scotch Game', eco: 'C45', moves: '1.e4 e5 2.Nf3 Nc6 3.d4', desc: 'Open center early.', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,null,null,null,'p',null,null,null],[null,null,null,'P','P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P',null,null,'P','P','P'],['R','N','B','Q','K','B',null,'R']], level: 'Beginner', free: true },
-      { name: 'Sicilian Defense', eco: 'B20', moves: '1.e4 c5', desc: 'Sharp and complex!', board: [['r','n','b','q','k','b','n','r'],['p','p',null,'p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,'p',null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate', free: false },
-      { name: 'French Defense', eco: 'C00', moves: '1.e4 e6', desc: 'Solid but cramped.', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate', free: false },
-      { name: 'Queen\'s Gambit', eco: 'D00', moves: '1.d4 d5 2.c4', desc: 'Control center.', board: [['r','n','b','q','k','b','n','r'],['p','p','p',null,'p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,'p',null,null,null,null],[null,null,'P','P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate', free: false },
-      { name: 'King\'s Indian', eco: 'E60', moves: '1.d4 Nf6 2.c4 g6', desc: 'Fianchetto attack.', board: [['r','n','b','q','k','b',null,'r'],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,'n','p',null],[null,null,null,null,null,null,null,null],[null,null,'P','P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Advanced', free: false },
-      { name: 'Ruy Lopez', eco: 'C60', moves: '1.e4 e5 2.Nf3 Nc6 3.Bb5', desc: 'The Spanish Game.', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,'B',null,null,'p',null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], level: 'Advanced', free: false }
-    ];
-
-    // VIDEOS
-    const VIDEOS = [
-      { title: 'Chess Fundamentals', channel: 'GothamChess', url: 'https://www.youtube.com/watch?v=OCSbzArwB10', category: 'Beginner', free: true },
-      { title: 'Opening Principles', channel: 'Naroditsky', url: 'https://www.youtube.com/watch?v=Ao9iOeK_jvU', category: 'Beginner', free: true },
-      { title: 'Basic Tactics', channel: 'ChessNetwork', url: 'https://www.youtube.com/watch?v=4WenuiT9pME', category: 'Beginner', free: true },
-      { title: 'Checkmate Patterns', channel: 'Agadmator', url: 'https://www.youtube.com/watch?v=5ggIkK7kjqY', category: 'Beginner', free: false },
-      { title: 'Italian Game Guide', channel: 'GothamChess', url: 'https://www.youtube.com/watch?v=8IlJ3v8I4aE', category: 'Opening', free: false },
-      { title: 'Sicilian Defense', channel: 'GM Hikaru', url: 'https://www.youtube.com/watch?v=mP0v5NpBpXY', category: 'Opening', free: false },
-      { title: 'Middlegame Strategy', channel: 'Naroditsky', url: 'https://www.youtube.com/watch?v=MRLqMhJvMkA', category: 'Strategy', free: false },
-      { title: 'Endgame Basics', channel: 'John Bartholomew', url: 'https://www.youtube.com/watch?v=8peIqXEPoFQ', category: 'Endgame', free: false }
-    ];
-
-    const PIECE_VALUES = { p:100, n:320, b:330, r:500, q:900, k:20000 };
-    const PST_CENTER = [[0,0,0,0,0,0,0,0],[0,5,5,5,5,5,5,0],[0,5,10,15,15,10,5,0],[0,5,15,20,20,15,5,0],[0,5,15,20,20,15,5,0],[0,5,10,15,15,10,5,0],[0,5,5,5,5,5,5,0],[0,0,0,0,0,0,0,0]];
-    const INIT_BOARD = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
-    const SYMBOLS = { K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙', k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' };
-
-    function ChessV2() {
-      const [board, setBoard] = useState(() => INIT_BOARD.map(r=>[...r]));
-      const [turn, setTurn] = useState('white');
-      const [selected, setSelected] = useState(null);
+    function ChessV2Academy() {
+      const [board, setBoard] = useState(INITIAL_BOARD.map(row => [...row]));
+      const [currentPlayer, setCurrentPlayer] = useState('white');
+      const [selectedSquare, setSelectedSquare] = useState(null);
       const [validMoves, setValidMoves] = useState([]);
-      const [mode, setMode] = useState('menu');
-      const [status, setStatus] = useState('playing');
-      const [learning, setLearning] = useState(createLearning);
-      const [moves, setMoves] = useState([]);
-      const [gameMoves, setGameMoves] = useState([]);
-      const [thinking, setThinking] = useState(false);
-      const [selfSpeed, setSelfSpeed] = useState(500);
-      const [playing, setPlaying] = useState(false);
-      const [currentLesson, setCurrentLesson] = useState(0);
-      const [lessonBoard, setLessonBoard] = useState(null);
-      const [currentOpening, setCurrentOpening] = useState(0);
-      const [currentPuzzle, setCurrentPuzzle] = useState(0);
-      const [puzzleStatus, setPuzzleStatus] = useState(null);
-      const [videoCategory, setVideoCategory] = useState('All');
-      const [twoPlayerTurn, setTwoPlayerTurn] = useState('white');
-      const [showUnlock, setShowUnlock] = useState(false);
-      const [unlockInput, setUnlockInput] = useState('');
-      const [isPremium, setIsPremium] = useState(false);
+      const [gameMode, setGameMode] = useState('menu');
+      const [gameStatus, setGameStatus] = useState('active');
+      const [learningData, setLearningData] = useState(createLearningSystem);
+      const [moveLog, setMoveLog] = useState([]);
+      const [positionHistory, setPositionHistory] = useState([]);
+      const [lastFourMoves, setLastFourMoves] = useState([]);
+      const [stuckCounter, setStuckCounter] = useState(0);
+      const [currentGameMoves, setCurrentGameMoves] = useState([]);
+      const [showUnlockModal, setShowUnlockModal] = useState(false);
+      const [unlockInput, setUnlockInput] = useState("");
+      const [aiThinking, setAiThinking] = useState('');
+      const [puzzleMode, setPuzzleMode] = useState('select');
+      const [currentPuzzle, setCurrentPuzzle] = useState(null);
+      const [puzzleRating, setPuzzleRating] = useState(800);
+      const [currentLesson, setCurrentLesson] = useState(null);
+      const [twoPlayerMode, setTwoPlayerMode] = useState(false);
+      const [selfPlaySpeed, setSelfPlaySpeed] = useState(400);
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [gameCount, setGameCount] = useState(0);
 
-      useEffect(() => { try { if(localStorage.getItem('v2chess_premium')==='true') setIsPremium(true); } catch(e){} }, []);
+      const selfPlayRef = useRef(null);
 
-      const unlockPremium = () => {
-        if (unlockInput.toUpperCase() === UNLOCK_CODE) {
-          setIsPremium(true); try { localStorage.setItem('v2chess_premium', 'true'); } catch(e) {}
-          setShowUnlock(false); setUnlockInput(''); alert('🎉 Premium Unlocked!');
-        } else { alert('Invalid code.'); }
-      };
+      const boardToString = useCallback((b) => {
+        return b.map(row => row.map(p => p || '.').join('')).join('/');
+      }, []);
 
-      // Chess logic
-      const getMoves = useCallback((b,r,c,p) => {
-        if(!p)return[];const moves=[];const isW=p===p.toUpperCase();
-        const canGo=(row,col)=>{if(row<0||row>7||col<0||col>7)return false;const t=b[row]?.[col];if(!t)return true;return isW?t===t.toLowerCase():t===t.toUpperCase();};
-        const slide=(dr,dc)=>{for(let i=1;i<8;i++){const nr=r+dr*i,nc=c+dc*i;if(nr<0||nr>7||nc<0||nc>7)break;if(!canGo(nr,nc))break;moves.push([nr,nc]);if(b[nr]?.[nc])break;}};
-        const type=p.toLowerCase();
-        if(type==='p'){const dir=isW?-1:1;const start=isW?6:1;if(r+dir>=0&&r+dir<=7&&b[r+dir]?.[c]===null){moves.push([r+dir,c]);if(r===start&&b[r+2*dir]?.[c]===null)moves.push([r+2*dir,c]);}[-1,1].forEach(dc=>{const nr=r+dir,nc=c+dc;if(nr>=0&&nr<=7&&nc>=0&&nc<=7){const t=b[nr]?.[nc];if(t&&(isW?t===t.toLowerCase():t===t.toUpperCase()))moves.push([nr,nc]);}});}
-        else if(type==='n')[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc])=>{if(canGo(r+dr,c+dc))moves.push([r+dr,c+dc]);});
-        else if(type==='b')[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr,dc])=>slide(dr,dc));
-        else if(type==='r')[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr,dc])=>slide(dr,dc));
-        else if(type==='q')[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr,dc])=>slide(dr,dc));
-        else if(type==='k')[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc])=>{if(canGo(r+dr,c+dc))moves.push([r+dr,c+dc]);});
+      const isPlayerPiece = useCallback((piece, player) => {
+        if (!piece) return false;
+        return player === 'white' ? piece === piece.toUpperCase() : piece === piece.toLowerCase();
+      }, []);
+
+      const getValidMoves = useCallback((board, row, col, piece) => {
+        const moves = [];
+        if (!piece) return moves;
+        const isWhite = piece === piece.toUpperCase();
+
+        const addMoveIfValid = (r, c) => {
+          if (r >= 0 && r < 8 && c >= 0 && c < 8) {
+            const target = board[r][c];
+            if (!target || (isWhite ? target === target.toLowerCase() : target === target.toUpperCase())) {
+              moves.push([r, c]);
+              return !target;
+            }
+          }
+          return false;
+        };
+
+        const pieceType = piece.toLowerCase();
+
+        switch (pieceType) {
+          case 'p': {
+            const dir = isWhite ? -1 : 1;
+            const startRow = isWhite ? 6 : 1;
+            if (board[row + dir]?.[col] === null) {
+              moves.push([row + dir, col]);
+              if (row === startRow && board[row + 2 * dir]?.[col] === null) {
+                moves.push([row + 2 * dir, col]);
+              }
+            }
+            [-1, 1].forEach(dc => {
+              const target = board[row + dir]?.[col + dc];
+              if (target && (isWhite ? target === target.toLowerCase() : target === target.toUpperCase())) {
+                moves.push([row + dir, col + dc]);
+              }
+            });
+            break;
+          }
+          case 'n':
+            [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr, dc]) => {
+              addMoveIfValid(row + dr, col + dc);
+            });
+            break;
+          case 'b':
+            [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr, dc]) => {
+              for (let i = 1; i < 8; i++) if (!addMoveIfValid(row + dr*i, col + dc*i)) break;
+            });
+            break;
+          case 'r':
+            [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr, dc]) => {
+              for (let i = 1; i < 8; i++) if (!addMoveIfValid(row + dr*i, col + dc*i)) break;
+            });
+            break;
+          case 'q':
+            [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr, dc]) => {
+              for (let i = 1; i < 8; i++) if (!addMoveIfValid(row + dr*i, col + dc*i)) break;
+            });
+            break;
+          case 'k':
+            [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr, dc]) => {
+              addMoveIfValid(row + dr, col + dc);
+            });
+            break;
+          default: break;
+        }
         return moves;
-      },[]);
+      }, []);
 
-      const getAllMoves = useCallback((b,player)=>{
-        const all=[];const isW=player==='white';
-        for(let r=0;r<8;r++)for(let c=0;c<8;c++){const p=b[r]?.[c];if(p&&(isW?p===p.toUpperCase():p===p.toLowerCase()))getMoves(b,r,c,p).forEach(([tr,tc])=>all.push({from:[r,c],to:[tr,tc],piece:p}));}
-        return all;
-      },[getMoves]);
-
-      const doMove = useCallback((b,from,to)=>{
-        const nb=b.map(r=>[...r]);const[fr,fc]=from;const[tr,tc]=to;const p=nb[fr][fc];const cap=nb[tr][tc];
-        if(p?.toLowerCase()==='p'&&(tr===0||tr===7))nb[tr][tc]=p==='P'?'Q':'q';else nb[tr][tc]=p;nb[fr][fc]=null;
-        return{board:nb,captured:cap};
-      },[]);
-
-      // ========================================
-      // V2 EVALUATION - 5 VERSION SYSTEM
-      // ========================================
-      const evaluate = useCallback((b, version, learn) => {
-        let score = 0;
+      const getAllMoves = useCallback((board, player) => {
+        const moves = [];
         for (let r = 0; r < 8; r++) {
           for (let c = 0; c < 8; c++) {
-            const p = b[r]?.[c];
-            if (!p) continue;
-            const isW = p === p.toUpperCase();
-            const val = PIECE_VALUES[p.toLowerCase()] || 0;
-            const posBonus = PST_CENTER[r][c];
-            score += (isW ? 1 : -1) * (val + posBonus);
+            const piece = board[r][c];
+            if (piece && isPlayerPiece(piece, player)) {
+              getValidMoves(board, r, c, piece).forEach(([toR, toC]) => {
+                moves.push({ from: [r, c], to: [toR, toC], piece });
+              });
+            }
           }
         }
-        
-        // VERSION-SPECIFIC ADJUSTMENTS (Nested Thirds Parallel Learning)
-        const boost = 1 + learn.gamesPlayed * 0.02;
-        
-        if (version === 'A') {
-          // CONSERVATIVE: Values material preservation, safety
-          score *= 0.95; // Slightly undervalue to prefer safe trades
-        } else if (version === 'B') {
-          // BALANCED: Standard evaluation
-          score *= 1.0;
-        } else if (version === 'C') {
-          // AGGRESSIVE: Values attack, center control more
-          score *= 1.1 * boost; // Gets more aggressive with experience
-        } else if (version === 'D') {
-          // EXPLORER: Adds randomness to find new patterns
-          score += (Math.random() - 0.5) * 40;
-        } else if (version === 'E') {
-          // SYNTHESIZER: Uses confidence from wins
-          const confidence = learn.gamesWon / Math.max(1, learn.gamesPlayed);
-          score *= (1 + confidence * 0.2);
-        }
-        
-        return score;
-      }, []);
+        return moves;
+      }, [getValidMoves, isPlayerPiece]);
 
-      const minimax = useCallback((b, depth, alpha, beta, isMax, version, learn) => {
-        if (depth === 0) return evaluate(b, version, learn);
-        const all = getAllMoves(b, isMax ? 'white' : 'black');
-        if (all.length === 0) return isMax ? -50000 : 50000;
-        
-        if (isMax) {
-          let max = -Infinity;
-          for (const m of all) {
-            const { board: nb } = doMove(b, m.from, m.to);
-            max = Math.max(max, minimax(nb, depth - 1, alpha, beta, false, version, learn));
-            alpha = Math.max(alpha, max);
-            if (beta <= alpha) break;
-          }
-          return max;
+      const applyMove = useCallback((board, from, to) => {
+        const newBoard = board.map(row => [...row]);
+        const [fromR, fromC] = from;
+        const [toR, toC] = to;
+        const piece = newBoard[fromR][fromC];
+
+        if (piece?.toLowerCase() === 'p' && (toR === 0 || toR === 7)) {
+          newBoard[toR][toC] = piece === 'P' ? 'Q' : 'q';
         } else {
-          let min = Infinity;
-          for (const m of all) {
-            const { board: nb } = doMove(b, m.from, m.to);
-            min = Math.min(min, minimax(nb, depth - 1, alpha, beta, true, version, learn));
-            beta = Math.min(beta, min);
-            if (beta <= alpha) break;
-          }
-          return min;
+          newBoard[toR][toC] = piece;
         }
-      }, [evaluate, getAllMoves, doMove]);
-
-      // ========================================
-      // V2 AI MOVE SELECTION - 5 VERSION VOTING
-      // ========================================
-      const pickAIMove = useCallback((b, learn) => {
-        const all = getAllMoves(b, 'black');
-        if (all.length === 0) return null;
-        
-        // ADAPTIVE DEPTH (Windshield Wiper principle)
-        // Start at depth 2, increase with experience
-        const depth = 2 + Math.min(2, Math.floor(learn.gamesPlayed / 5));
-        
-        const versions = ['A', 'B', 'C', 'D', 'E'];
-        const votes = {};
-        
-        // Each version evaluates and votes
-        versions.forEach(ver => {
-          let best = null;
-          let bestScore = Infinity;
-          const shuffled = [...all].sort(() => Math.random() - 0.5);
-          
-          for (const m of shuffled) {
-            const { board: nb } = doMove(b, m.from, m.to);
-            const score = minimax(nb, depth - 1, -Infinity, Infinity, true, ver, learn);
-            if (score < bestScore) {
-              bestScore = score;
-              best = m;
-            }
-          }
-          
-          if (best) {
-            const key = `${best.from}-${best.to}`;
-            if (!votes[key]) votes[key] = { move: best, count: 0, supporters: [] };
-            // Weight by version performance score
-            const weight = 1 + learn.versions[ver].score / 100;
-            votes[key].count += weight;
-            votes[key].supporters.push(ver);
-          }
-        });
-        
-        // Pick move with most weighted votes
-        let bestMove = null;
-        let bestCount = -1;
-        Object.values(votes).forEach(v => {
-          if (v.count > bestCount) {
-            bestCount = v.count;
-            bestMove = v.move;
-          }
-        });
-        
-        return bestMove || all[0];
-      }, [getAllMoves, doMove, minimax]);
-
-      // ========================================
-      // V2 LEARNING - UPDATE AFTER GAME
-      // ========================================
-      const learnFromGame = useCallback((winner, gMoves) => {
-        setLearning(prev => {
-          const next = { ...prev };
-          next.gamesPlayed++;
-          next.learningRate = 1 + next.gamesPlayed * 0.05;
-          
-          if (winner === 'black') {
-            // AI won - boost all version scores
-            next.gamesWon++;
-            Object.keys(next.versions).forEach(v => {
-              next.versions[v].score = Math.min(100, next.versions[v].score + 8);
-            });
-            // Store winning pattern
-            if (gMoves.length > 0) {
-              next.winningPatterns = [...next.winningPatterns.slice(-50), gMoves.slice(-5)];
-            }
-          } else if (winner === 'white') {
-            // AI lost - reduce scores, learn from loss
-            next.gamesLost++;
-            Object.keys(next.versions).forEach(v => {
-              next.versions[v].score = Math.max(10, next.versions[v].score - 4);
-            });
-            if (gMoves.length > 0) {
-              next.losingPatterns = [...next.losingPatterns.slice(-50), gMoves.slice(-5)];
-            }
-          }
-          
-          return next;
-        });
+        newBoard[fromR][fromC] = null;
+        return newBoard;
       }, []);
 
-      const aiMove = useCallback(() => {
-        if (status !== 'playing') return;
-        setThinking(true);
+      const evaluatePosition = useCallback((board, version, depth = 0, learning) => {
+        let score = 0;
+        let whiteMaterial = 0, blackMaterial = 0;
+        let centerControl = 0, development = 0;
+
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const piece = board[r][c];
+            if (!piece) continue;
+
+            const isWhite = piece === piece.toUpperCase();
+            const value = PIECE_VALUES[piece] || 0;
+            const sign = isWhite ? 1 : -1;
+
+            if (isWhite) whiteMaterial += value; else blackMaterial += value;
+
+            const pieceType = piece.toLowerCase();
+            const tableRow = isWhite ? r : 7 - r;
+            const idx = tableRow * 8 + c;
+
+            if (pieceType === 'p') score += sign * PAWN_TABLE[idx];
+            else if (pieceType === 'n') score += sign * KNIGHT_TABLE[idx];
+            else if (pieceType === 'b') score += sign * BISHOP_TABLE[idx];
+            else if (pieceType === 'k') score += sign * KING_TABLE[idx];
+
+            if ((r === 3 || r === 4) && (c === 3 || c === 4)) centerControl += sign * 15;
+            if ((pieceType === 'n' || pieceType === 'b') && r !== (isWhite ? 7 : 0)) development += sign * 20;
+          }
+        }
+
+        score += whiteMaterial - blackMaterial;
+
+        const posStr = boardToString(board);
+        if (learning.positionMemory[posStr]) {
+          score += learning.positionMemory[posStr] * learning.learningRate * 50;
+        }
+
+        const learningBoost = 1 + (learning.gamesPlayed * 0.05);
+
+        switch (version) {
+          case 'A':
+            score += centerControl * 0.5 * learningBoost;
+            score += development * 0.8;
+            break;
+          case 'B':
+            score += centerControl * 1.0 * learningBoost;
+            score += development * 1.0 * learningBoost;
+            break;
+          case 'C':
+            score += centerControl * 1.5 * learningBoost;
+            score += development * 1.2;
+            score += (whiteMaterial > blackMaterial ? 50 : -50) * learningBoost;
+            break;
+          case 'D':
+            score += centerControl * (0.8 + Math.random() * 0.4);
+            score += development * (0.8 + Math.random() * 0.4);
+            break;
+          case 'E':
+            score += centerControl * 1.2 * learningBoost;
+            score += development * 1.2 * learningBoost;
+            score += learning.gamesWonVsHuman * 5;
+            break;
+          default:
+            score += centerControl + development;
+        }
+
+        return score - depth * 0.1;
+      }, [boardToString]);
+
+      const minimax = useCallback((board, depth, alpha, beta, maximizing, version, learning) => {
+        if (depth === 0) return evaluatePosition(board, version, depth, learning);
+
+        const player = maximizing ? 'white' : 'black';
+        const moves = getAllMoves(board, player);
+        if (moves.length === 0) return maximizing ? -Infinity : Infinity;
+
+        if (maximizing) {
+          let maxEval = -Infinity;
+          for (const move of moves) {
+            const newBoard = applyMove(board, move.from, move.to);
+            const evalScore = minimax(newBoard, depth - 1, alpha, beta, false, version, learning);
+            maxEval = Math.max(maxEval, evalScore);
+            alpha = Math.max(alpha, evalScore);
+            if (beta <= alpha) break;
+          }
+          return maxEval;
+        } else {
+          let minEval = Infinity;
+          for (const move of moves) {
+            const newBoard = applyMove(board, move.from, move.to);
+            const evalScore = minimax(newBoard, depth - 1, alpha, beta, true, version, learning);
+            minEval = Math.min(minEval, evalScore);
+            beta = Math.min(beta, evalScore);
+            if (beta <= alpha) break;
+          }
+          return minEval;
+        }
+      }, [evaluatePosition, getAllMoves, applyMove]);
+
+      const selectBestMove = useCallback((board, player, learning, avoidMoves = []) => {
+        const versions = ['A', 'B', 'C', 'D', 'E'];
+        const versionMoves = {};
+
+        let moves = getAllMoves(board, player);
+        if (moves.length === 0) return null;
+
+        if (avoidMoves.length > 0) {
+          const filtered = moves.filter(m => {
+            const key = `${m.from[0]},${m.from[1]}-${m.to[0]},${m.to[1]}`;
+            return !avoidMoves.includes(key);
+          });
+          if (filtered.length > 0) moves = filtered;
+        }
+
+        const isMaximizing = player === 'white';
+        const baseDepth = 2;
+        const learningDepthBonus = Math.min(2, Math.floor(learning.gamesPlayed / 3));
+        const searchDepth = baseDepth + learningDepthBonus;
+
+        setAiThinking(`Analyzing depth ${searchDepth}... (${learning.gamesPlayed} games)`);
+
+        versions.forEach(version => {
+          let bestMove = null;
+          let bestScore = isMaximizing ? -Infinity : Infinity;
+
+          const shuffled = [...moves].sort(() => Math.random() - 0.5);
+
+          shuffled.forEach(move => {
+            const newBoard = applyMove(board, move.from, move.to);
+            let score = minimax(newBoard, searchDepth - 1, -Infinity, Infinity, !isMaximizing, version, learning);
+
+            const moveKey = `${move.piece}:${move.from[0]},${move.from[1]}-${move.to[0]},${move.to[1]}`;
+            const winningBonus = learning.winningSequences.filter(s => s.includes(moveKey)).length * 20;
+            const losingPenalty = learning.losingSequences.filter(s => s.includes(moveKey)).length * 15;
+            score += (winningBonus - losingPenalty) * learning.learningRate;
+
+            const posKey = boardToString(newBoard);
+            if (learning.humanWeaknesses[posKey]) {
+              score += learning.humanWeaknesses[posKey] * 30;
+            }
+
+            score += (Math.random() * 3);
+
+            if (isMaximizing ? score > bestScore : score < bestScore) {
+              bestScore = score;
+              bestMove = move;
+            }
+          });
+
+          versionMoves[version] = bestMove;
+        });
+
+        const moveVotes = {};
+        Object.entries(versionMoves).forEach(([version, move]) => {
+          if (!move) return;
+          const key = `${move.from[0]},${move.from[1]}-${move.to[0]},${move.to[1]}`;
+
+          if (!moveVotes[key]) {
+            moveVotes[key] = { move, votes: 0, versions: [] };
+          }
+
+          const perf = learning.versionPerformance[version];
+          let weight = 1 + (perf.score / 100);
+
+          moveVotes[key].votes += weight;
+          moveVotes[key].versions.push(version);
+        });
+
+        let bestMove = null, bestVotes = -Infinity;
+
+        Object.values(moveVotes).forEach(({ move, votes }) => {
+          if (votes > bestVotes) {
+            bestVotes = votes;
+            bestMove = move;
+          }
+        });
+
+        setAiThinking('');
+        return bestMove || moves[Math.floor(Math.random() * moves.length)];
+      }, [getAllMoves, applyMove, minimax, boardToString]);
+
+      const makeAIMove = useCallback(() => {
+        if (gameStatus !== 'active') return;
+
         setTimeout(() => {
-          const move = pickAIMove(board, learning);
+          const move = selectBestMove(board, currentPlayer, learningData);
+
           if (!move) {
-            setStatus('white-wins');
-            learnFromGame('white', gameMoves);
-            setThinking(false);
+            setGameStatus('draw');
+            setLearningData(prev => ({
+              ...prev,
+              gamesPlayed: prev.gamesPlayed + 1
+            }));
             return;
           }
-          const { board: nb, captured } = doMove(board, move.from, move.to);
-          const moveRecord = `${move.piece}${move.from}-${move.to}`;
-          
-          if (captured?.toUpperCase() === 'K') {
-            setBoard(nb);
-            setStatus('black-wins');
-            learnFromGame('black', [...gameMoves, moveRecord]);
-            setThinking(false);
+
+          const newBoard = applyMove(board, move.from, move.to);
+          const capturedPiece = board[move.to[0]][move.to[1]];
+
+          setBoard(newBoard);
+          setMoveLog(prev => [...prev, {
+            player: currentPlayer,
+            piece: move.piece,
+            from: move.from,
+            to: move.to,
+            captured: capturedPiece
+          }]);
+
+          if (capturedPiece?.toLowerCase() === 'k') {
+            const winner = currentPlayer;
+            setGameStatus(`${winner}-wins`);
+            setLearningData(prev => ({
+              ...prev,
+              gamesPlayed: prev.gamesPlayed + 1,
+              gamesWonVsHuman: winner === 'black' ? prev.gamesWonVsHuman + 1 : prev.gamesWonVsHuman,
+              gamesLostVsHuman: winner === 'white' ? prev.gamesLostVsHuman + 1 : prev.gamesLostVsHuman
+            }));
             return;
           }
-          setBoard(nb);
-          setMoves(prev => [...prev, { player: 'black', piece: move.piece }]);
-          setGameMoves(prev => [...prev, moveRecord]);
-          setTurn('white');
-          setThinking(false);
-        }, mode === 'self-play' ? 100 : 400);
-      }, [board, status, mode, learning, pickAIMove, doMove, learnFromGame, gameMoves]);
+
+          if (moveLog.length >= 100) {
+            setGameStatus('draw');
+            setLearningData(prev => ({
+              ...prev,
+              gamesPlayed: prev.gamesPlayed + 1
+            }));
+            return;
+          }
+
+          setCurrentPlayer(currentPlayer === 'white' ? 'black' : 'white');
+        }, 150);
+      }, [board, currentPlayer, gameStatus, selectBestMove, applyMove, moveLog.length, learningData]);
 
       useEffect(() => {
-        if (mode === 'play' && turn === 'black' && status === 'playing' && !thinking) {
-          const t = setTimeout(aiMove, 300);
-          return () => clearTimeout(t);
+        if (gameMode === 'self-play' && isPlaying && gameStatus === 'active') {
+          selfPlayRef.current = setTimeout(makeAIMove, selfPlaySpeed);
         }
-      }, [turn, mode, status, thinking, aiMove]);
+        return () => { if (selfPlayRef.current) clearTimeout(selfPlayRef.current); };
+      }, [gameMode, isPlaying, gameStatus, currentPlayer, makeAIMove, selfPlaySpeed]);
 
-      const handleClick = (r, c) => {
-        if (mode === 'puzzle') {
-          const puzzle = PUZZLES[currentPuzzle]; if (puzzleStatus) return;
-          if (selected) { const [sr, sc] = selected; const sol = puzzle.solution;
-            if (sr === sol[0][0] && sc === sol[0][1] && r === sol[1][0] && c === sol[1][1]) {
-              setPuzzleStatus('correct');
-              setLearning(prev => ({ ...prev, puzzleRating: prev.puzzleRating + 10, puzzlesSolved: prev.puzzlesSolved + 1 }));
+      const handleSquareClick = useCallback((row, col) => {
+        if (gameStatus !== 'active') return;
+        if (gameMode === 'self-play') return;
+        if ((gameMode === 'play-ai') && currentPlayer !== 'white') return;
+
+        const piece = board[row][col];
+
+        if (selectedSquare) {
+          const [selRow, selCol] = selectedSquare;
+          const isValid = validMoves.some(([r, c]) => r === row && c === col);
+
+          if (isValid) {
+            const selPiece = board[selRow][selCol];
+            const newBoard = applyMove(board, [selRow, selCol], [row, col]);
+            const captured = board[row][col];
+
+            setBoard(newBoard);
+            setMoveLog(prev => [...prev, {
+              player: 'white',
+              piece: selPiece,
+              from: [selRow, selCol],
+              to: [row, col],
+              captured
+            }]);
+
+            if (captured?.toLowerCase() === 'k') {
+              setGameStatus('white-wins');
+              setLearningData(prev => ({
+                ...prev,
+                gamesPlayed: prev.gamesPlayed + 1,
+                gamesLostVsHuman: prev.gamesLostVsHuman + 1
+              }));
             } else {
-              setPuzzleStatus('wrong');
-              setLearning(prev => ({ ...prev, puzzleRating: Math.max(400, prev.puzzleRating - 5) }));
+              setCurrentPlayer('black');
+              setTimeout(makeAIMove, 400);
             }
-            setSelected(null); setValidMoves([]);
-          } else { const p = puzzle.board[r]?.[c]; if (p && (puzzle.toMove === 'white' ? p === p.toUpperCase() : p === p.toLowerCase())) { setSelected([r, c]); setValidMoves(getMoves(puzzle.board, r, c, p)); } }
-          return;
-        }
-        if (mode === 'lesson') { const p = lessonBoard?.[r]?.[c]; if (p) { setSelected([r, c]); setValidMoves(getMoves(lessonBoard, r, c, p)); } else { setSelected(null); setValidMoves([]); } return; }
-        if (mode === 'opening') { const p = OPENINGS[currentOpening].board[r]?.[c]; if (p) { setSelected([r, c]); setValidMoves(getMoves(OPENINGS[currentOpening].board, r, c, p)); } else { setSelected(null); setValidMoves([]); } return; }
-        if (mode === '2player') { const p = board[r]?.[c]; const isOwn = p && (twoPlayerTurn === 'white' ? p === p.toUpperCase() : p === p.toLowerCase());
-          if (selected) { const [sr, sc] = selected; const isValid = validMoves.some(([vr, vc]) => vr === r && vc === c);
-            if (isValid) { const { board: nb, captured } = doMove(board, [sr, sc], [r, c]); if (captured?.toLowerCase() === 'k' || captured?.toUpperCase() === 'K') { setBoard(nb); setStatus(twoPlayerTurn + '-wins'); setSelected(null); setValidMoves([]); return; } setBoard(nb); setSelected(null); setValidMoves([]); setTwoPlayerTurn(twoPlayerTurn === 'white' ? 'black' : 'white'); }
-            else { setSelected(null); setValidMoves([]); if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); } } }
-          else if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); } return; }
-        if (status !== 'playing' || thinking || mode === 'self-play' || turn !== 'white') return;
-        const p = board[r]?.[c]; const isOwn = p && p === p.toUpperCase();
-        if (selected) { const [sr, sc] = selected; const isValid = validMoves.some(([vr, vc]) => vr === r && vc === c);
-          if (isValid) { const { board: nb, captured } = doMove(board, [sr, sc], [r, c]); const moveRecord = `${p}${sr}${sc}-${r}${c}`;
-            if (captured?.toLowerCase() === 'k') { setBoard(nb); setStatus('white-wins'); learnFromGame('white', [...gameMoves, moveRecord]); setSelected(null); setValidMoves([]); return; }
-            setBoard(nb); setMoves(prev => [...prev, { player: 'white' }]); setGameMoves(prev => [...prev, moveRecord]); setSelected(null); setValidMoves([]); setTurn('black'); }
-          else { setSelected(null); setValidMoves([]); if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); } } }
-        else if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); }
-      };
+          }
 
-      // Self-play
+          setSelectedSquare(null);
+          setValidMoves([]);
+        } else if (piece && isPlayerPiece(piece, 'white')) {
+          setSelectedSquare([row, col]);
+          setValidMoves(getValidMoves(board, row, col, piece));
+        }
+      }, [gameMode, gameStatus, currentPlayer, board, selectedSquare, validMoves, applyMove, isPlayerPiece, getValidMoves, makeAIMove, learningData]);
+
+      const resetGame = useCallback(() => {
+        setBoard(INITIAL_BOARD.map(row => [...row]));
+        setCurrentPlayer('white');
+        setSelectedSquare(null);
+        setValidMoves([]);
+        setGameStatus('active');
+        setMoveLog([]);
+        setPositionHistory([]);
+        setLastFourMoves([]);
+        setStuckCounter(0);
+        setCurrentGameMoves([]);
+        setGameCount(prev => prev + 1);
+      }, []);
+
       useEffect(() => {
-        if (mode === 'self-play' && playing && status === 'playing' && !thinking) {
-          const t = setTimeout(() => {
-            setThinking(true);
-            const all = getAllMoves(board, turn);
-            if (all.length === 0) { setStatus(turn === 'white' ? 'black-wins' : 'white-wins'); setThinking(false); return; }
-            let move;
-            if (turn === 'black') { move = pickAIMove(board, learning); }
-            else {
-              let best = null, bestScore = -Infinity;
-              for (const m of all) { const { board: nb } = doMove(board, m.from, m.to); const score = evaluate(nb, 'B', learning); if (score > bestScore) { bestScore = score; best = m; } }
-              move = best || all[0];
-            }
-            if (!move) move = all[0];
-            const { board: nb, captured } = doMove(board, move.from, move.to);
-            if (captured?.toLowerCase() === 'k' || captured?.toUpperCase() === 'K') {
-              setBoard(nb); setStatus(turn === 'white' ? 'white-wins' : 'black-wins');
-              setLearning(prev => ({ ...prev, gamesPlayed: prev.gamesPlayed + 1 }));
-              setThinking(false); return;
-            }
-            setBoard(nb); setTurn(turn === 'white' ? 'black' : 'white'); setThinking(false);
-          }, selfSpeed);
-          return () => clearTimeout(t);
+        if (gameMode === 'self-play' && isPlaying && gameStatus !== 'active') {
+          setTimeout(resetGame, 1500);
         }
-      }, [mode, playing, status, thinking, turn, board, selfSpeed, getAllMoves, pickAIMove, doMove, evaluate, learning]);
+      }, [gameMode, isPlaying, gameStatus, resetGame]);
 
-      useEffect(() => { if (mode === 'self-play' && playing && status !== 'playing') { const t = setTimeout(reset, 1500); return () => clearTimeout(t); } }, [mode, playing, status]);
+      const checkUnlock = useCallback(() => {
+        if (unlockInput.trim().toUpperCase() === UNLOCK_CODE) {
+          setLearningData(prev => ({
+            ...prev,
+            unlockedFeatures: true,
+            unlockedCode: unlockInput
+          }));
+          setShowUnlockModal(false);
+          setUnlockInput("");
+        } else {
+          alert("Incorrect unlock code. Please try again or purchase on Gumroad.");
+        }
+      }, [unlockInput]);
 
-      const reset = useCallback(() => { setBoard(INIT_BOARD.map(r => [...r])); setTurn('white'); setTwoPlayerTurn('white'); setSelected(null); setValidMoves([]); setStatus('playing'); setMoves([]); setGameMoves([]); setThinking(false); }, []);
-      const startLesson = (idx) => { setCurrentLesson(idx); setLessonBoard(LESSONS[idx].board.map(r => [...r])); setSelected(null); setValidMoves([]); };
-      const nextPuzzle = () => { setCurrentPuzzle(p => (p + 1) % PUZZLES.length); setPuzzleStatus(null); setSelected(null); setValidMoves([]); };
+      const isFeatureLocked = useCallback((featureName) => {
+        if (learningData.unlockedFeatures) return false;
+        return ['27-lessons', 'puzzles', 'openings', 'videos'].includes(featureName);
+      }, [learningData.unlockedFeatures]);
 
-      const renderSquare = (r, c, boardData, highlights = []) => {
-        const b = boardData || board; const p = b?.[r]?.[c]; const light = (r + c) % 2 === 0;
-        const isSel = selected?.[0] === r && selected?.[1] === c; const isTarget = validMoves.some(([vr, vc]) => vr === r && vc === c);
-        const isHighlight = highlights?.some(([hr, hc]) => hr === r && hc === c);
-        let bg = light ? '#f0d9b5' : '#b58863'; if (isSel) bg = '#ffd700'; else if (isTarget) bg = '#90EE90'; else if (isHighlight) bg = '#ff6b6b';
-        return (<div key={`${r}-${c}`} onClick={() => handleClick(r, c)} style={{ width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, background: bg, cursor: 'pointer' }}>{p && <span style={{ color: p === p.toUpperCase() ? '#fff' : '#000', textShadow: p === p.toUpperCase() ? '1px 1px 2px #000' : '1px 1px 2px #fff' }}>{SYMBOLS[p]}</span>}{isTarget && !p && <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(0,128,0,0.5)' }} />}</div>);
+      const renderLockedFeature = (featureName, defaultContent) => {
+        if (!isFeatureLocked(featureName)) return defaultContent;
+        return (
+          <div style={{
+            textAlign: 'center',
+            padding: 40,
+            background: 'rgba(0,0,0,0.5)',
+            borderRadius: 10,
+            border: '2px dashed rgba(255,215,0,0.3)'
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 15 }}>🔒</div>
+            <div style={{ fontSize: 16, fontWeight: 'bold', color: '#ffd700', marginBottom: 10 }}>
+              {featureName.toUpperCase()} - PREMIUM FEATURE
+            </div>
+            <div style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>
+              This feature is locked. Get full access for $9.99
+            </div>
+            <button onClick={() => window.open(GUMROAD_LINK, '_blank')} style={{
+              padding: '12px 24px',
+              background: 'linear-gradient(135deg, #ffd700, #ff8c00)',
+              border: 'none',
+              borderRadius: 6,
+              color: '#1a1a2e',
+              fontWeight: 'bold',
+              fontSize: 14,
+              cursor: 'pointer',
+              marginBottom: 10
+            }}>
+              🛒 BUY NOW - $9.99
+            </button>
+            <div style={{ fontSize: 12, color: '#666' }}>
+              Or enter unlock code if you purchased
+            </div>
+            <input 
+              type="text"
+              placeholder="Enter unlock code"
+              value={unlockInput}
+              onChange={(e) => setUnlockInput(e.target.value)}
+              style={{
+                marginTop: 10,
+                padding: '8px 12px',
+                borderRadius: 4,
+                border: '1px solid #444',
+                background: '#222',
+                color: '#fff',
+                width: '100%'
+              }}
+              onKeyPress={(e) => e.key === 'Enter' && checkUnlock()}
+            />
+            <button onClick={checkUnlock} style={{
+              marginTop: 8,
+              padding: '8px 16px',
+              background: '#3b82f6',
+              border: 'none',
+              borderRadius: 4,
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: 12
+            }}>
+              Unlock
+            </button>
+          </div>
+        );
       };
 
-      const LockedOverlay = ({ onBuy }) => (<div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 8, zIndex: 10 }}><div style={{ fontSize: 24, marginBottom: 10 }}>🔒</div><div style={{ fontSize: 12, color: '#fff', marginBottom: 10 }}>Premium Feature</div><button onClick={onBuy} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,#ffd700,#ffaa00)', border: 'none', borderRadius: 6, color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: 11 }}>Unlock $9.99</button></div>);
-
-      // ========== MENU ==========
-      if (mode === 'menu') {
-        return (<div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 15 }}>
-          <div style={{ fontSize: 26, fontWeight: 'bold', color: '#ffd700', marginBottom: 5 }}>♔ V2 Chess Academy ♚</div>
-          <div style={{ fontSize: 10, color: '#888', marginBottom: 3 }}>5-Version Adaptive AI • Nested Thirds Learning</div>
-          {isPremium ? <div style={{ fontSize: 10, color: '#22c55e', marginBottom: 8 }}>⭐ PREMIUM UNLOCKED</div> : <div style={{ fontSize: 9, color: '#f59e0b', marginBottom: 8 }}>Free: 3 Lessons, 3 Puzzles, 3 Openings</div>}
-          
-          {learning.gamesPlayed > 0 && <div style={{ marginBottom: 10, padding: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 6, textAlign: 'center', fontSize: 9 }}>
-            <div style={{ color: '#ffd700', marginBottom: 4 }}>Games: {learning.gamesPlayed} | Won: {learning.gamesWon} | Lost: {learning.gamesLost}</div>
-            <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-              {Object.entries(learning.versions).map(([v, d]) => (<div key={v} style={{ padding: '2px 5px', background: 'rgba(255,255,255,0.05)', borderRadius: 3 }}><span style={{ color: v === 'A' ? '#3b82f6' : v === 'B' ? '#22c55e' : v === 'C' ? '#ef4444' : v === 'D' ? '#a855f7' : '#f59e0b', fontWeight: 'bold' }}>{v}</span><span style={{ color: '#666', marginLeft: 2 }}>{d.score}</span></div>))}
+      // MENU
+      if (gameMode === 'menu') {
+        return (
+          <div style={{
+            minHeight: '100vh',
+            background: 'linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            fontFamily: "'Segoe UI', system-ui, sans-serif",
+            color: '#fff'
+          }}>
+            <div style={{
+              fontSize: 42,
+              fontWeight: 'bold',
+              marginBottom: 8,
+              background: 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+              ♔ V2 Chess Academy ♚
             </div>
-          </div>}
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%', maxWidth: 320, marginBottom: 15 }}>
-            <button onClick={() => { setMode('play'); reset(); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#f093fb,#f5576c)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>⚔️ vs V2 AI</button>
-            <button onClick={() => { setMode('2player'); reset(); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#06b6d4,#0891b2)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>👥 2 Player</button>
-            <button onClick={() => { setMode('lesson'); startLesson(0); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#4ade80,#22c55e)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>📚 27 Lessons</button>
-            <button onClick={() => { setMode('puzzle'); setPuzzleStatus(null); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#f59e0b,#d97706)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🧩 Puzzles</button>
-            <button onClick={() => setMode('opening')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>📖 Openings</button>
-            <button onClick={() => setMode('video')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#ef4444,#dc2626)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🎬 Videos</button>
-            <button onClick={() => { setMode('self-play'); reset(); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#667eea,#764ba2)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🤖 Self-Learn</button>
-            <button onClick={() => window.open('https://lichess.org', '_blank')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#374151,#1f2937)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🌐 Online</button>
-          </div>
 
-          {!isPremium && (<>
-            <button onClick={() => window.open(GUMROAD_LINK, '_blank')} style={{ padding: '10px 20px', background: 'linear-gradient(135deg,#ffd700,#ffaa00)', border: 'none', borderRadius: 8, color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: 13, marginBottom: 10 }}>💳 Buy Now - $9.99</button>
-            <button onClick={() => setShowUnlock(true)} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #555', borderRadius: 5, color: '#888', cursor: 'pointer', fontSize: 10 }}>Enter Unlock Code</button>
-          </>)}
+            <div style={{
+              fontSize: 13,
+              color: '#888',
+              marginBottom: 30,
+              textAlign: 'center',
+              maxWidth: 450
+            }}>
+              Complete Learning Platform
+              <br />
+              <span style={{ color: '#666', fontSize: 11 }}>
+                5-Version AI • 27 Lessons • 15 Openings • Puzzles • Videos
+              </span>
+            </div>
 
-          {showUnlock && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-            <div style={{ background: '#1a1a2e', padding: 20, borderRadius: 10, textAlign: 'center' }}>
-              <div style={{ fontSize: 14, color: '#fff', marginBottom: 10 }}>Enter Unlock Code</div>
-              <input value={unlockInput} onChange={e => setUnlockInput(e.target.value)} placeholder="Enter code" style={{ padding: 10, width: 200, borderRadius: 5, border: '1px solid #444', background: '#0a0a12', color: '#fff', marginBottom: 10 }} />
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-                <button onClick={unlockPremium} style={{ padding: '8px 16px', background: '#22c55e', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer' }}>Unlock</button>
-                <button onClick={() => { setShowUnlock(false); setUnlockInput(''); }} style={{ padding: '8px 16px', background: '#666', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer' }}>Cancel</button>
+            {learningData.gamesPlayed > 0 && (
+              <div style={{
+                background: 'rgba(255,215,0,0.1)',
+                border: '1px solid rgba(255,215,0,0.3)',
+                borderRadius: 8,
+                padding: '10px 20px',
+                marginBottom: 25,
+                textAlign: 'center'
+              }}>
+                <div style={{ color: '#ffd700', fontSize: 12, fontWeight: 'bold' }}>AI Learning Stats</div>
+                <div style={{ color: '#888', fontSize: 11, marginTop: 4 }}>
+                  {learningData.gamesPlayed} games • Difficulty: {learningData.difficultyLevel.toFixed(1)} • 
+                  AI: {learningData.gamesWonVsHuman}W - {learningData.gamesLostVsHuman}L
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 350 }}>
+              <button onClick={() => setGameMode('play-ai')} style={{
+                padding: '16px 24px',
+                fontSize: 15,
+                fontWeight: 'bold',
+                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                border: 'none',
+                borderRadius: 10,
+                color: '#fff',
+                cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(245,87,108,0.4)',
+                transition: 'transform 0.2s'
+              }}>
+                ⚔️ vs AI
+              </button>
+
+              <button onClick={() => setGameMode('2-player')} style={{
+                padding: '16px 24px',
+                fontSize: 15,
+                fontWeight: 'bold',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                borderRadius: 10,
+                color: '#fff',
+                cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(102,126,234,0.4)',
+                transition: 'transform 0.2s'
+              }}>
+                👥 2 Player
+              </button>
+
+              <button onClick={() => setGameMode('lessons')} style={{
+                padding: '16px 24px',
+                fontSize: 15,
+                fontWeight: 'bold',
+                background: isFeatureLocked('27-lessons') 
+                  ? 'linear-gradient(135deg, #666, #444)' 
+                  : 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
+                border: 'none',
+                borderRadius: 10,
+                color: '#fff',
+                cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(34,197,94,0.4)',
+                transition: 'transform 0.2s',
+                position: 'relative'
+              }}>
+                📚 27 Lessons
+                {isFeatureLocked('27-lessons') && <span style={{ marginLeft: 8 }}>🔒</span>}
+              </button>
+
+              <button onClick={() => setGameMode('puzzles')} style={{
+                padding: '16px 24px',
+                fontSize: 15,
+                fontWeight: 'bold',
+                background: isFeatureLocked('puzzles')
+                  ? 'linear-gradient(135deg, #666, #444)'
+                  : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                border: 'none',
+                borderRadius: 10,
+                color: '#fff',
+                cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(245,158,11,0.4)',
+                transition: 'transform 0.2s'
+              }}>
+                🧩 Puzzles
+                {isFeatureLocked('puzzles') && <span style={{ marginLeft: 8 }}>🔒</span>}
+              </button>
+
+              <button onClick={() => setGameMode('openings')} style={{
+                padding: '16px 24px',
+                fontSize: 15,
+                fontWeight: 'bold',
+                background: isFeatureLocked('openings')
+                  ? 'linear-gradient(135deg, #666, #444)'
+                  : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                border: 'none',
+                borderRadius: 10,
+                color: '#fff',
+                cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(59,130,246,0.4)',
+                transition: 'transform 0.2s'
+              }}>
+                📖 Openings
+                {isFeatureLocked('openings') && <span style={{ marginLeft: 8 }}>🔒</span>}
+              </button>
+
+              <button onClick={() => setGameMode('videos')} style={{
+                padding: '16px 24px',
+                fontSize: 15,
+                fontWeight: 'bold',
+                background: isFeatureLocked('videos')
+                  ? 'linear-gradient(135deg, #666, #444)'
+                  : 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+                border: 'none',
+                borderRadius: 10,
+                color: '#fff',
+                cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(236,72,153,0.4)',
+                transition: 'transform 0.2s'
+              }}>
+                🎬 Videos
+                {isFeatureLocked('videos') && <span style={{ marginLeft: 8 }}>🔒</span>}
+              </button>
+
+              <button onClick={() => setGameMode('self-play')} style={{
+                padding: '16px 24px',
+                fontSize: 15,
+                fontWeight: 'bold',
+                background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
+                border: 'none',
+                borderRadius: 10,
+                color: '#fff',
+                cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(168,85,247,0.4)',
+                transition: 'transform 0.2s'
+              }}>
+                🤖 Self-Play
+              </button>
+
+              <button onClick={() => window.open("https://lichess.org", "_blank")} style={{
+                padding: '16px 24px',
+                fontSize: 15,
+                fontWeight: 'bold',
+                background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                border: 'none',
+                borderRadius: 10,
+                color: '#fff',
+                cursor: 'pointer',
+                boxShadow: '0 8px 25px rgba(6,182,212,0.4)',
+                transition: 'transform 0.2s'
+              }}>
+                🌐 Play Online (Lichess)
+              </button>
+            </div>
+
+            <div style={{
+              marginTop: 40,
+              padding: 15,
+              background: 'rgba(255,255,255,0.03)',
+              borderRadius: 10,
+              maxWidth: 450,
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 'bold', color: '#ffd700', marginBottom: 8 }}>
+                ⭐ PREMIUM FEATURES
+              </div>
+              <div style={{ fontSize: 11, color: '#888', lineHeight: 1.6 }}>
+                🔓 Unlock all 27 lessons, puzzles, openings & videos for just <strong>$9.99</strong>
+                <br />
+                <button onClick={() => window.open(GUMROAD_LINK, '_blank')} style={{
+                  marginTop: 10,
+                  padding: '8px 16px',
+                  background: 'linear-gradient(135deg, #ffd700, #ff8c00)',
+                  border: 'none',
+                  borderRadius: 6,
+                  color: '#1a1a2e',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}>
+                  🛒 Buy on Gumroad
+                </button>
               </div>
             </div>
-          </div>)}
-        </div>);
+          </div>
+        );
       }
 
-      // ========== LESSON/PUZZLE/OPENING/VIDEO/2PLAYER MODES ==========
-      if (mode === 'lesson') {
-        const lesson = LESSONS[currentLesson]; const canAccess = isPremium || lesson.free;
-        const partColor = lesson.part === 'FRACTURE' ? '#ef4444' : lesson.part === 'PRESSURE' ? '#f59e0b' : '#22c55e';
-        return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
-            <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
-            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>Lesson {lesson.id}/27 {!canAccess && '🔒'}</div>
-          </div>
-          <div style={{ position: 'relative' }}>
-            <div style={{ marginBottom: 6 }}><span style={{ fontSize: 9, color: partColor, fontWeight: 'bold' }}>{lesson.part}</span><span style={{ fontSize: 9, color: '#666' }}> • {lesson.section}</span></div>
-            <div style={{ fontSize: 13, fontWeight: 'bold', color: '#fff', marginBottom: 6 }}>{lesson.title}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3, marginBottom: 10, opacity: canAccess ? 1 : 0.3 }}>
-              {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, lessonBoard, lesson.highlight)))}
+      // LESSONS MODE
+      if (gameMode === 'lessons') {
+        return renderLockedFeature('27-lessons', (
+          <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%)', padding: 20, color: '#fff' }}>
+            <button onClick={() => setGameMode('menu')} style={{
+              padding: '8px 16px',
+              background: '#3b82f6',
+              border: 'none',
+              borderRadius: 6,
+              color: '#fff',
+              cursor: 'pointer',
+              marginBottom: 20
+            }}>
+              ← Menu
+            </button>
+
+            <div style={{ maxWidth: 900, margin: '0 auto' }}>
+              <h1 style={{ marginBottom: 30, color: '#4ade80' }}>27 Chess Lessons - Nested Thirds</h1>
+
+              {!currentLesson ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 15 }}>
+                  {LESSONS.map((lesson) => (
+                    <div
+                      key={lesson.id}
+                      onClick={() => setCurrentLesson(lesson)}
+                      style={{
+                        padding: 15,
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ color: '#ffd700', fontWeight: 'bold', marginBottom: 5 }}>
+                        Lesson {lesson.id}
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 'bold' }}>{lesson.title}</div>
+                      <div style={{ fontSize: 11, color: '#888', marginTop: 5 }}>
+                        Part {lesson.part}, Section {lesson.section}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 10,
+                  padding: 30
+                }}>
+                  <button onClick={() => setCurrentLesson(null)} style={{
+                    marginBottom: 20,
+                    padding: '8px 16px',
+                    background: '#666',
+                    border: 'none',
+                    borderRadius: 6,
+                    color: '#fff',
+                    cursor: 'pointer'
+                  }}>
+                    ← Back
+                  </button>
+
+                  <div style={{ color: '#ffd700', marginBottom: 10 }}>
+                    Lesson {currentLesson.id} • Part {currentLesson.part} • Section {currentLesson.section}
+                  </div>
+                  <h2 style={{ marginBottom: 20 }}>{currentLesson.title}</h2>
+                  <div style={{ fontSize: 16, lineHeight: 1.8, color: '#ddd', marginBottom: 30 }}>
+                    {currentLesson.content}
+                  </div>
+                  <div style={{ fontSize: 14, color: '#888' }}>
+                    📖 Complete this lesson and move to the next one!
+                  </div>
+                </div>
+              )}
             </div>
-            {!canAccess && <LockedOverlay onBuy={() => window.open(GUMROAD_LINK, '_blank')} />}
           </div>
-          {canAccess && <div style={{ maxWidth: 320, padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 8 }}>
-            <div style={{ fontSize: 10, color: '#ccc', lineHeight: 1.4, marginBottom: 6 }}>{lesson.desc}</div>
-            <div style={{ fontSize: 9, color: '#4ade80' }}>🎯 {lesson.task}</div>
-          </div>}
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={() => { if (currentLesson > 0) startLesson(currentLesson - 1); }} disabled={currentLesson === 0} style={{ padding: '6px 12px', background: currentLesson === 0 ? '#333' : '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: currentLesson === 0 ? 'default' : 'pointer', fontSize: 11 }}>← Prev</button>
-            <button onClick={() => { if (currentLesson < 26) startLesson(currentLesson + 1); else setMode('menu'); }} style={{ padding: '6px 12px', background: '#22c55e', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>{currentLesson === 26 ? 'Done' : 'Next →'}</button>
-          </div>
-        </div></div>);
+        ));
       }
 
-      if (mode === 'puzzle') {
-        const puzzle = PUZZLES[currentPuzzle]; const canAccess = isPremium || puzzle.free;
-        return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
-            <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
-            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>Puzzle #{puzzle.id} {!canAccess && '🔒'}</div>
-          </div>
-          <div style={{ fontSize: 10, color: '#888', marginBottom: 6 }}>Rating: {learning.puzzleRating}</div>
-          <div style={{ position: 'relative' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3, marginBottom: 10, opacity: canAccess ? 1 : 0.3 }}>
-              {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, puzzle.board, [])))}
+      // PUZZLES MODE
+      if (gameMode === 'puzzles') {
+        return renderLockedFeature('puzzles', (
+          <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%)', padding: 20, color: '#fff' }}>
+            <button onClick={() => setGameMode('menu')} style={{
+              padding: '8px 16px',
+              background: '#3b82f6',
+              border: 'none',
+              borderRadius: 6,
+              color: '#fff',
+              cursor: 'pointer',
+              marginBottom: 20
+            }}>
+              ← Menu
+            </button>
+
+            <div style={{ maxWidth: 800, margin: '0 auto' }}>
+              <h1 style={{ marginBottom: 10, color: '#f59e0b' }}>Puzzle Trainer</h1>
+              <div style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>
+                Your Rating: <strong style={{ color: '#ffd700' }}>{puzzleRating}</strong> ELO
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 15 }}>
+                {PUZZLES.map((puzzle) => (
+                  <div
+                    key={puzzle.id}
+                    onClick={() => { setPuzzleMode('play'); setCurrentPuzzle(puzzle); }}
+                    style={{
+                      padding: 15,
+                      background: 'rgba(245,158,11,0.1)',
+                      border: '1px solid rgba(245,158,11,0.3)',
+                      borderRadius: 8,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ fontWeight: 'bold' }}>{puzzle.title}</div>
+                    <div style={{ fontSize: 11, color: '#888', marginTop: 5 }}>
+                      Difficulty: {puzzle.difficulty}/3
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            {!canAccess && <LockedOverlay onBuy={() => window.open(GUMROAD_LINK, '_blank')} />}
           </div>
-          {canAccess && <div style={{ padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 8, textAlign: 'center' }}>
-            <div style={{ fontSize: 11, color: '#fff', marginBottom: 4 }}>{puzzle.theme} • {puzzle.toMove === 'white' ? 'White' : 'Black'} to move</div>
-            {puzzleStatus === 'correct' && <div style={{ fontSize: 12, color: '#22c55e', fontWeight: 'bold' }}>✓ Correct!</div>}
-            {puzzleStatus === 'wrong' && <div style={{ fontSize: 12, color: '#ef4444', fontWeight: 'bold' }}>✗ {puzzle.hint}</div>}
-          </div>}
-          <button onClick={nextPuzzle} style={{ padding: '8px 16px', background: '#3b82f6', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer', fontSize: 11 }}>Next →</button>
-        </div></div>);
+        ));
       }
 
-      if (mode === 'opening') {
-        const opening = OPENINGS[currentOpening]; const canAccess = isPremium || opening.free;
-        return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
-            <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
-            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>Openings</div>
-          </div>
-          <div style={{ position: 'relative' }}>
-            <div style={{ fontSize: 13, fontWeight: 'bold', color: '#fff', marginBottom: 4 }}>{opening.name} {!canAccess && '🔒'}</div>
-            <div style={{ fontSize: 10, color: '#888', marginBottom: 6 }}>{opening.eco} • {opening.level}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3, marginBottom: 8, opacity: canAccess ? 1 : 0.3 }}>
-              {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, opening.board, [])))}
+      // OPENINGS MODE
+      if (gameMode === 'openings') {
+        return renderLockedFeature('openings', (
+          <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%)', padding: 20, color: '#fff' }}>
+            <button onClick={() => setGameMode('menu')} style={{
+              padding: '8px 16px',
+              background: '#3b82f6',
+              border: 'none',
+              borderRadius: 6,
+              color: '#fff',
+              cursor: 'pointer',
+              marginBottom: 20
+            }}>
+              ← Menu
+            </button>
+
+            <div style={{ maxWidth: 900, margin: '0 auto' }}>
+              <h1 style={{ marginBottom: 30, color: '#3b82f6' }}>Opening Database</h1>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                {OPENINGS.map((opening, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: 20,
+                      background: 'rgba(59,130,246,0.1)',
+                      border: '1px solid rgba(59,130,246,0.3)',
+                      borderRadius: 10
+                    }}
+                  >
+                    <div style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
+                      {opening.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#888', marginBottom: 10, fontFamily: 'monospace' }}>
+                      {opening.moves}
+                    </div>
+                    <div style={{ fontSize: 13, color: '#aaa' }}>
+                      💡 {opening.ideas}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            {!canAccess && <LockedOverlay onBuy={() => window.open(GUMROAD_LINK, '_blank')} />}
           </div>
-          {canAccess && <div style={{ maxWidth: 320, padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 8, textAlign: 'center' }}>
-            <div style={{ fontSize: 11, color: '#4ade80', marginBottom: 4 }}>{opening.moves}</div>
-            <div style={{ fontSize: 10, color: '#ccc' }}>{opening.desc}</div>
-          </div>}
-          <div className="scroll-container" style={{ maxHeight: '20vh', width: '100%', maxWidth: 320 }}>
-            {OPENINGS.map((o, i) => { const can = isPremium || o.free; return (<div key={i} onClick={() => setCurrentOpening(i)} style={{ padding: 8, marginBottom: 4, background: i === currentOpening ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.05)', borderRadius: 4, cursor: 'pointer', opacity: can ? 1 : 0.5 }}>
-              <div style={{ fontSize: 11, color: '#fff' }}>{o.name} {!can && '🔒'}</div>
-              <div style={{ fontSize: 9, color: '#666' }}>{o.level}</div>
-            </div>); })}
-          </div>
-        </div></div>);
+        ));
       }
 
-      if (mode === 'video') {
-        const categories = ['All', 'Beginner', 'Opening', 'Strategy', 'Endgame'];
-        const filtered = VIDEOS.filter(v => videoCategory === 'All' || v.category === videoCategory);
-        return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
-            <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
-            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>🎬 Videos</div>
+      // VIDEOS MODE
+      if (gameMode === 'videos') {
+        return renderLockedFeature('videos', (
+          <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%)', padding: 20, color: '#fff' }}>
+            <button onClick={() => setGameMode('menu')} style={{
+              padding: '8px 16px',
+              background: '#3b82f6',
+              border: 'none',
+              borderRadius: 6,
+              color: '#fff',
+              cursor: 'pointer',
+              marginBottom: 20
+            }}>
+              ← Menu
+            </button>
+
+            <div style={{ maxWidth: 900, margin: '0 auto' }}>
+              <h1 style={{ marginBottom: 30, color: '#ec4899' }}>Video Lessons</h1>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                {VIDEOS.map((video, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => window.open(video.url, '_blank')}
+                    style={{
+                      padding: 20,
+                      background: 'rgba(236,72,153,0.1)',
+                      border: '1px solid rgba(236,72,153,0.3)',
+                      borderRadius: 10,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 8 }}>
+                      {video.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#ec4899', marginBottom: 10 }}>
+                      by {video.creator}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#666' }}>
+                      Click to open on YouTube →
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {categories.map(c => (<button key={c} onClick={() => setVideoCategory(c)} style={{ padding: '4px 8px', background: videoCategory === c ? '#ffd700' : 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 4, color: videoCategory === c ? '#000' : '#fff', cursor: 'pointer', fontSize: 9 }}>{c}</button>))}
-          </div>
-          <div className="scroll-container" style={{ maxHeight: '65vh', width: '100%', maxWidth: 350 }}>
-            {filtered.map((v, i) => { const canAccess = isPremium || v.free; return (<div key={i} onClick={() => canAccess && window.open(v.url, '_blank')} style={{ padding: 10, marginBottom: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 6, cursor: canAccess ? 'pointer' : 'default', opacity: canAccess ? 1 : 0.5 }}>
-              <div style={{ fontSize: 12, color: '#fff', fontWeight: 'bold', marginBottom: 2 }}>{v.title} {!canAccess && '🔒'}</div>
-              <div style={{ fontSize: 10, color: '#f59e0b' }}>{v.channel}</div>
-            </div>); })}
-          </div>
-        </div></div>);
+        ));
       }
 
-      if (mode === '2player') {
-        return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
-            <span style={{ fontSize: 12, fontWeight: 'bold', color: '#ffd700' }}>👥 2 Player</span>
+      // PLAY AI MODE
+      if (gameMode === 'play-ai' || gameMode === '2-player') {
+        const renderSquare = (row, col) => {
+          const piece = board[row][col];
+          const isLight = (row + col) % 2 === 0;
+          const isSelected = selectedSquare?.[0] === row && selectedSquare?.[1] === col;
+          const isValidTarget = validMoves.some(([r, c]) => r === row && c === col);
+
+          let bg;
+          if (isSelected) bg = 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)';
+          else if (isValidTarget) bg = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
+          else bg = isLight ? 'linear-gradient(135deg, #f0d9b5 0%, #e8d0a8 100%)' : 'linear-gradient(135deg, #b58863 0%, #986a45 100%)';
+
+          return (
+            <div
+              key={`${row}-${col}`}
+              onClick={() => handleSquareClick(row, col)}
+              style={{
+                width: 52,
+                height: 52,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 36,
+                cursor: 'pointer',
+                background: bg,
+                boxShadow: isSelected ? 'inset 0 0 12px rgba(255,215,0,0.6)' : 'inset 0 0 2px rgba(0,0,0,0.1)',
+                transition: 'all 0.15s ease',
+                userSelect: 'none'
+              }}
+            >
+              {piece && (
+                <span style={{
+                  color: piece === piece.toUpperCase() ? '#fff' : '#1a1a2e',
+                  textShadow: piece === piece.toUpperCase() 
+                    ? '1px 1px 3px rgba(0,0,0,0.8), 0 0 8px rgba(255,255,255,0.3)'
+                    : '1px 1px 3px rgba(0,0,0,0.3)',
+                  filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.4))'
+                }}>
+                  {PIECE_SYMBOLS[piece]}
+                </span>
+              )}
+              {isValidTarget && !piece && (
+                <div style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  background: 'rgba(74,222,128,0.7)',
+                  boxShadow: '0 0 8px rgba(74,222,128,0.6)'
+                }} />
+              )}
+            </div>
+          );
+        };
+
+        return (
+          <div style={{
+            minHeight: '100vh',
+            background: 'linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%)',
+            display: 'flex',
+            fontFamily: "'Segoe UI', system-ui, sans-serif",
+            color: '#fff',
+            padding: 15
+          }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 15 }}>
+                <button onClick={() => { setGameMode('menu'); resetGame(); }} style={{
+                  padding: '6px 14px',
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: 5,
+                  color: '#fff',
+                  cursor: 'pointer'
+                }}>
+                  ← Menu
+                </button>
+                <div style={{ fontSize: 16, fontWeight: 'bold', color: '#ffd700' }}>
+                  {gameMode === '2-player' ? '👥 Two Player' : '⚔️ vs AI'}
+                </div>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(8, 52px)',
+                border: '3px solid #2a2a4a',
+                borderRadius: 4,
+                boxShadow: '0 15px 50px rgba(0,0,0,0.5)'
+              }}>
+                {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c)))}
+              </div>
+
+              <div style={{
+                marginTop: 15,
+                padding: '10px 20px',
+                borderRadius: 8,
+                fontWeight: 'bold',
+                background: gameStatus !== 'active'
+                  ? gameStatus === 'white-wins' ? 'linear-gradient(135deg, #4ade80, #22c55e)' 
+                  : gameStatus === 'black-wins' ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                  : 'linear-gradient(135deg, #f59e0b, #d97706)'
+                  : currentPlayer === 'white' ? 'linear-gradient(135deg, #f0f0f0, #d0d0d0)' : 'linear-gradient(135deg, #374151, #1f2937)',
+                color: (gameStatus !== 'active' || currentPlayer === 'white') ? '#1a1a2e' : '#fff'
+              }}>
+                {gameStatus === 'white-wins' ? '🎉 White Wins!' : 
+                 gameStatus === 'black-wins' ? '🤖 Black Wins!' :
+                 gameStatus === 'draw' ? '🤝 Draw!' :
+                 `${currentPlayer === 'white' ? 'White' : 'Black'} to move`}
+              </div>
+
+              <div style={{ marginTop: 15, display: 'flex', gap: 8 }}>
+                <button onClick={resetGame} style={{
+                  padding: '8px 16px',
+                  background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                  border: 'none',
+                  borderRadius: 6,
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}>
+                  🔄 New Game
+                </button>
+              </div>
+            </div>
+
+            <div style={{
+              width: 260,
+              marginLeft: 20,
+              background: 'rgba(255,255,255,0.03)',
+              borderRadius: 10,
+              padding: 15,
+              border: '1px solid rgba(255,255,255,0.08)',
+              maxHeight: '80vh',
+              overflowY: 'auto'
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 'bold', color: '#ffd700', marginBottom: 10 }}>
+                📊 Stats
+              </div>
+              <div style={{ fontSize: 11, marginBottom: 15 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ color: '#888' }}>Games:</span>
+                  <span style={{ color: '#22c55e', fontWeight: 'bold' }}>{learningData.gamesPlayed}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ color: '#888' }}>Difficulty:</span>
+                  <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>{learningData.difficultyLevel.toFixed(1)}/10</span>
+                </div>
+              </div>
+
+              <div style={{ fontSize: 12, fontWeight: 'bold', color: '#fff', marginBottom: 8 }}>
+                Version Stats
+              </div>
+              {Object.entries(learningData.versionPerformance).map(([v, data]) => (
+                <div key={v} style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 4,
+                  padding: '5px 8px',
+                  marginBottom: 4,
+                  fontSize: 10
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 'bold' }}>V{v}</span>
+                    <span style={{ color: '#888' }}>{data.score}pts</span>
+                  </div>
+                  <div style={{ color: '#666', fontSize: 9 }}>W:{data.wins} L:{data.losses}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div style={{ fontSize: 10, color: '#ef4444', marginBottom: 4 }}>⬆️ Black</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3 }}>
-            {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, board, [])))}
-          </div>
-          <div style={{ fontSize: 10, color: '#4ade80', marginTop: 4 }}>⬇️ White</div>
-          <div style={{ marginTop: 10, padding: '8px 16px', borderRadius: 5, fontWeight: 'bold', fontSize: 12, background: status.includes('wins') ? '#ffd700' : twoPlayerTurn === 'white' ? '#4ade80' : '#ef4444', color: '#000' }}>
-            {status === 'white-wins' ? '⚪ White Wins!' : status === 'black-wins' ? '⚫ Black Wins!' : twoPlayerTurn === 'white' ? '⚪ White Turn' : '⚫ Black Turn'}
-          </div>
-          <button onClick={reset} style={{ marginTop: 10, padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>🔄 Reset</button>
-        </div></div>);
+        );
       }
 
-      // ========== VS AI / SELF-PLAY ==========
-      return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <button onClick={() => { setMode('menu'); setPlaying(false); }} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
-          <span style={{ fontSize: 12, fontWeight: 'bold', color: '#ffd700' }}>{mode === 'self-play' ? '🤖 V2 Self-Learn' : '⚔️ vs V2 AI'}</span>
-        </div>
-        <div style={{ fontSize: 9, color: '#ef4444', marginBottom: 3 }}>⬆️ V2 AI (Black) • {learning.gamesPlayed} games</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3 }}>
-          {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, board, [])))}
-        </div>
-        <div style={{ fontSize: 9, color: '#4ade80', marginTop: 3 }}>⬇️ YOU (White)</div>
-        <div style={{ marginTop: 10, padding: '8px 16px', borderRadius: 5, fontWeight: 'bold', fontSize: 12, background: status === 'white-wins' ? '#22c55e' : status === 'black-wins' ? '#ef4444' : thinking ? '#f59e0b' : '#4ade80', color: '#000' }}>
-          {status === 'white-wins' ? '🎉 You Win!' : status === 'black-wins' ? '🤖 AI Wins!' : thinking ? '🤔 V2 Thinking...' : '👆 Your Turn!'}
-        </div>
-        {mode === 'self-play' && <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
-          <button onClick={() => setPlaying(!playing)} style={{ padding: '6px 14px', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', background: playing ? '#ef4444' : '#22c55e', fontWeight: 'bold', fontSize: 11 }}>{playing ? '⏸ Pause' : '▶ Play'}</button>
-          <select value={selfSpeed} onChange={e => setSelfSpeed(Number(e.target.value))} style={{ padding: 6, background: '#333', border: '1px solid #555', borderRadius: 4, color: '#fff', fontSize: 11 }}><option value={800}>Slow</option><option value={500}>Normal</option><option value={200}>Fast</option></select>
-        </div>}
-        {mode === 'play' && <button onClick={reset} style={{ marginTop: 10, padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>🔄 New Game</button>}
-        <div style={{ marginTop: 10, display: 'flex', gap: 4 }}>
-          {Object.entries(learning.versions).map(([v, d]) => (<div key={v} style={{ padding: '2px 5px', background: 'rgba(255,255,255,0.05)', borderRadius: 3, fontSize: 8 }}><span style={{ color: v === 'A' ? '#3b82f6' : v === 'B' ? '#22c55e' : v === 'C' ? '#ef4444' : v === 'D' ? '#a855f7' : '#f59e0b', fontWeight: 'bold' }}>{v}</span><span style={{ color: '#666', marginLeft: 2 }}>{d.score}</span></div>))}
-        </div>
-      </div></div>);
+      // SELF-PLAY MODE
+      if (gameMode === 'self-play') {
+        const renderSquare = (row, col) => {
+          const piece = board[row][col];
+          const isLight = (row + col) % 2 === 0;
+          let bg = isLight ? 'linear-gradient(135deg, #f0d9b5 0%, #e8d0a8 100%)' : 'linear-gradient(135deg, #b58863 0%, #986a45 100%)';
+
+          return (
+            <div
+              key={`${row}-${col}`}
+              style={{
+                width: 52,
+                height: 52,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 36,
+                background: bg,
+                userSelect: 'none'
+              }}
+            >
+              {piece && <span>{PIECE_SYMBOLS[piece]}</span>}
+            </div>
+          );
+        };
+
+        return (
+          <div style={{
+            minHeight: '100vh',
+            background: 'linear-gradient(180deg, #0a0a12 0%, #1a1a2e 50%, #0f1929 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: 20,
+            color: '#fff'
+          }}>
+            <div style={{ marginBottom: 20 }}>
+              <button onClick={() => { setGameMode('menu'); setIsPlaying(false); resetGame(); }} style={{
+                padding: '8px 16px',
+                background: '#3b82f6',
+                border: 'none',
+                borderRadius: 6,
+                color: '#fff',
+                cursor: 'pointer'
+              }}>
+                ← Menu
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 52px)', border: '3px solid #2a2a4a', borderRadius: 4 }}>
+              {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c)))}
+            </div>
+
+            <div style={{ marginTop: 20, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button onClick={() => setIsPlaying(!isPlaying)} style={{
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: 6,
+                color: '#fff',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                background: isPlaying ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #22c55e, #16a34a)'
+              }}>
+                {isPlaying ? '⏸ Pause' : '▶ Play'}
+              </button>
+              <select value={selfPlaySpeed} onChange={(e) => setSelfPlaySpeed(Number(e.target.value))} style={{
+                padding: '8px 12px',
+                background: '#2a2a4a',
+                border: '1px solid #3a3a5a',
+                borderRadius: 6,
+                color: '#fff',
+                cursor: 'pointer'
+              }}>
+                <option value={800}>Slow</option>
+                <option value={400}>Normal</option>
+                <option value={150}>Fast</option>
+                <option value={50}>Ultra</option>
+              </select>
+            </div>
+
+            <div style={{ marginTop: 20, fontSize: 13, color: '#888' }}>
+              Game {gameCount + 1} | Moves: {moveLog.length}
+            </div>
+          </div>
+        );
+      }
+
+      return null;
     }
 
-    ReactDOM.render(<ChessV2 />, document.getElementById('root'));
+    ReactDOM.render(<ChessV2Academy />, document.getElementById('root'));
   </script>
 </body>
 </html>
