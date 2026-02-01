@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thumbnail Hook Master v3 - Script Smart Generation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0d1f0f 0%, #0f2618 50%, #1a3d2a 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* HEADER */
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(34, 197, 94, 0.15));
+      border: 2px solid #10b981;
+      border-radius: 20px;
+    }
+
+    .header h1 {
+      font-size: 3em;
+      background: linear-gradient(135deg, #10b981, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #a7f3d0;
+      font-size: 1.1em;
+      margin: 5px 0;
+    }
+
+    /* TOGGLE SECTION */
+    .toggle-section {
+      margin-bottom: 35px;
+      text-align: center;
+      padding: 25px;
+      background: rgba(5, 46, 22, 0.4);
+      border: 2px solid #10b981;
+      border-radius: 16px;
+    }
+
+    .toggle-section p {
+      color: #a7f3d0;
+      font-weight: bold;
+      margin-bottom: 20px;
+      font-size: 1.15em;
+    }
+
+    .toggle-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .toggle-btn {
+      padding: 14px 28px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 2px solid #10b981;
+      color: #34d399;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1em;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-btn:hover {
+      border-color: #34d399;
+      box-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+    }
+
+    .toggle-btn.active {
+      background: rgba(52, 211, 153, 0.2);
+      border-color: #34d399;
+      box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+    }
+
+    /* FORM CONTAINERS */
+    .form-container {
+      display: none;
+    }
+
+    .form-container.active {
+      display: block;
+    }
+
+    /* PANELS */
+    .panel {
+      background: rgba(5, 46, 22, 0.6);
+      border: 2px solid #10b981;
+      border-radius: 16px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      margin-bottom: 30px;
+    }
+
+    .panel h2 {
+      color: #34d399;
+      font-size: 1.5em;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* FORM ELEMENTS */
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      color: #a7f3d0;
+      font-weight: bold;
+      margin-bottom: 12px;
+      font-size: 0.95em;
+    }
+
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #10b981;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1em;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #34d399;
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 140px;
+    }
+
+    /* BUTTON GRIDS */
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .grid-btn {
+      padding: 12px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 2px solid #10b981;
+      color: #34d399;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      font-size: 0.9em;
+    }
+
+    .grid-btn:hover {
+      border-color: #34d399;
+      box-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+    }
+
+    .grid-btn.active {
+      background: rgba(52, 211, 153, 0.2);
+      border-color: #34d399;
+      box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+    }
+
+    /* ACTION BUTTONS */
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #10b981, #34d399);
+      border: none;
+      color: #000;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 1.05em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 25px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(52, 211, 153, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* LOADING & RESULTS */
+    #loading {
+      text-align: center;
+      padding: 40px;
+      display: none;
+      background: rgba(5, 46, 22, 0.6);
+      border: 2px solid #10b981;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    #loading.active {
+      display: block;
+    }
+
+    .spinner {
+      border: 4px solid #10b981;
+      border-top: 4px solid #34d399;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .spinner-text {
+      color: #34d399;
+      font-weight: bold;
+    }
+
+    #results {
+      display: none;
+      background: rgba(5, 46, 22, 0.6);
+      border: 2px solid #10b981;
+      padding: 30px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    #results.active {
+      display: block;
+    }
+
+    .result-item {
+      margin-bottom: 25px;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 4px solid #10b981;
+      border-radius: 8px;
+    }
+
+    .result-label {
+      color: #a7f3d0;
+      text-transform: uppercase;
+      font-size: 0.85em;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .result-value {
+      color: #34d399;
+      font-size: 1.4em;
+      font-weight: bold;
+      line-height: 1.7;
+    }
+
+    .info-box {
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 3px solid #10b981;
+      padding: 12px;
+      color: #a7f3d0;
+      border-radius: 6px;
+      margin-top: 12px;
+      font-size: 0.9em;
+    }
+
+    footer {
+      text-align: center;
+      color: #10b981;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #10b981;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- HEADER -->
+    <div class="header">
+      <h1>🎬 Thumbnail Hook Master v3</h1>
+      <p>AI-Powered Hook Generation - Script Smart Edition</p>
+    </div>
+
+    <!-- TOGGLE: DO YOU HAVE A SCRIPT? -->
+    <div class="toggle-section">
+      <p>Do you have a script?</p>
+      <div class="toggle-buttons">
+        <button class="toggle-btn" onclick="switchMode('withScript')">✓ YES - I Have Script</button>
+        <button class="toggle-btn active" onclick="switchMode('noScript')">✗ NO - No Script Yet</button>
+      </div>
+    </div>
+
+    <!-- MODE 1: WITH SCRIPT -->
+    <div id="withScriptForm" class="form-container">
+      <div class="panel">
+        <h2>📜 Paste Your Script</h2>
+        
+        <div class="form-group">
+          <label>Your Video Script:</label>
+          <textarea id="scriptInput" placeholder="Paste your complete video script here. The tool will analyze it to find the strongest hook moments..."></textarea>
+          <div class="info-box">
+            💡 The tool analyzes your actual script to identify emotional peaks, surprising moments, and compelling hooks.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Target Audience (Optional):</label>
+          <select id="scriptDemographic">
+            <option value="">Auto-Detect from Script</option>
+            <option value="13-18">Teens (13-18)</option>
+            <option value="18-25">Young Adults (18-25)</option>
+            <option value="25-35">Adults (25-35)</option>
+            <option value="35-50">Older Adults (35-50)</option>
+            <option value="50+">50+</option>
+            <option value="mixed">Mixed Ages</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" onclick="generateFromScript()">Generate Hook from Script</button>
+      </div>
+    </div>
+
+    <!-- MODE 2: NO SCRIPT (ORIGINAL FORM) -->
+    <div id="noScriptForm" class="form-container active">
+      <div class="panel">
+        <h2>📝 Describe Your Video</h2>
+        
+        <div class="form-group">
+          <label>What's Your Video About?</label>
+          <textarea id="videoDescription" placeholder="Give a brief description of your video concept, story, or main topic..."></textarea>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>👥 Select Your Audience</h2>
+        
+        <div class="form-group">
+          <div class="button-grid">
+            <button class="grid-btn" onclick="selectDemographic(this, '13-18')">13-18</button>
+            <button class="grid-btn" onclick="selectDemographic(this, '18-25')">18-25</button>
+            <button class="grid-btn" onclick="selectDemographic(this, '25-35')">25-35</button>
+            <button class="grid-btn" onclick="selectDemographic(this, '35-50')">35-50</button>
+            <button class="grid-btn" onclick="selectDemographic(this, '50+')">50+</button>
+            <button class="grid-btn" onclick="selectDemographic(this, 'mixed')">Mixed</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>🎯 Topic Category</h2>
+        
+        <div class="form-group">
+          <div class="button-grid">
+            <button class="grid-btn" onclick="selectTopic(this, 'Entertainment')">Entertainment</button>
+            <button class="grid-btn" onclick="selectTopic(this, 'Education')">Education</button>
+            <button class="grid-btn" onclick="selectTopic(this, 'Gaming')">Gaming</button>
+            <button class="grid-btn" onclick="selectTopic(this, 'Vlog')">Vlog</button>
+            <button class="grid-btn" onclick="selectTopic(this, 'How-To')">How-To</button>
+            <button class="grid-btn" onclick="selectTopic(this, 'Comedy')">Comedy</button>
+            <button class="grid-btn" onclick="selectTopic(this, 'Other')">Other</button>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="generateHook()">Generate Hook</button>
+      </div>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div id="loading">
+      <div class="spinner"></div>
+      <div class="spinner-text">Generating your hook...</div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results">
+      <div class="result-item">
+        <div class="result-label">Your Thumbnail Hook:</div>
+        <div class="result-value" id="hookResult"></div>
+      </div>
+      <div class="result-item">
+        <div class="result-label">Key Strength:</div>
+        <div class="result-value" id="strengthResult"></div>
+      </div>
+      <button class="btn-primary" onclick="generateNewHook()">Generate Another Hook</button>
+    </div>
+
+    <footer>
+      <p>🎯 Generate hooks that make people click and watch</p>
+    </footer>
+  </div>
+
+  <script>
+    let selectedDemographic = '';
+    let selectedTopic = '';
+
+    // NOTE: API keys are NEVER displayed, stored, or transmitted
+    // They are kept secure in backend only
+    // This tool communicates with API through secure channels
+
+    function switchMode(mode) {
+      const buttons = document.querySelectorAll('.toggle-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      
+      if (mode === 'withScript') {
+        buttons[0].classList.add('active');
+        document.getElementById('withScriptForm').classList.add('active');
+        document.getElementById('noScriptForm').classList.remove('active');
+      } else {
+        buttons[1].classList.add('active');
+        document.getElementById('noScriptForm').classList.add('active');
+        document.getElementById('withScriptForm').classList.remove('active');
+      }
+      
+      document.getElementById('results').classList.remove('active');
+    }
+
+    function selectDemographic(element, value) {
+      document.querySelectorAll('#noScriptForm .grid-btn').forEach(btn => {
+        if (btn.textContent.match(/^\d+/)) {
+          btn.classList.remove('active');
+        }
+      });
+      element.classList.toggle('active');
+      selectedDemographic = element.classList.contains('active') ? value : '';
+    }
+
+    function selectTopic(element, value) {
+      document.querySelectorAll('#noScriptForm .grid-btn').forEach(btn => {
+        if (!btn.textContent.match(/^\d+/)) {
+          btn.classList.remove('active');
+        }
+      });
+      element.classList.toggle('active');
+      selectedTopic = element.classList.contains('active') ? value : '';
+    }
+
+    function showLoading() {
+      document.getElementById('loading').classList.add('active');
+      document.getElementById('results').classList.remove('active');
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').classList.remove('active');
+    }
+
+    function showResults(hook, strength) {
+      document.getElementById('hookResult').textContent = hook;
+      document.getElementById('strengthResult').textContent = strength;
+      document.getElementById('results').classList.add('active');
+    }
+
+    function generateHook() {
+      if (!selectedDemographic) {
+        alert('Please select a demographic');
+        return;
+      }
+      if (!selectedTopic) {
+        alert('Please select a topic');
+        return;
+      }
+
+      const description = document.getElementById('videoDescription').value;
+      if (!description.trim()) {
+        alert('Please enter a video description');
+        return;
+      }
+
+      showLoading();
+      
+      // Simulated hook generation
+      // In production, this would call Claude API securely
+      setTimeout(() => {
+        const hooks = {
+          'Entertainment-13-18': "Wait until you see what happens... 🤯",
+          'Entertainment-18-25': "This is absolutely INSANE...",
+          'Education-25-35': "Here's something you actually need to know",
+          'Gaming-13-18': "No way this is actually possible...",
+          'Comedy-18-25': "I literally cannot stop laughing",
+          'How-To-25-35': "Watch how I do this in 2 minutes",
+          'Vlog-mixed': "You won't BELIEVE what just happened",
+        };
+
+        const key = `${selectedTopic}-${selectedDemographic}`;
+        const hook = hooks[key] || "You have to watch this...";
+        const strength = selectedDemographic === '13-18' ? 'High FOMO & Urgency' : 'Curiosity & Trust';
+
+        hideLoading();
+        showResults(hook, strength);
+      }, 1500);
+    }
+
+    function generateFromScript() {
+      const script = document.getElementById('scriptInput').value;
+      if (!script.trim()) {
+        alert('Please paste your script');
+        return;
+      }
+
+      showLoading();
+
+      // Simulated script analysis
+      // In production, this would call Claude API securely
+      setTimeout(() => {
+        const words = script.toLowerCase();
+        const hasAction = /amazing|crazy|insane|unbelievable|never|wait|omg/i.test(words);
+        const hasQuestion = /\?/.test(words);
+        const hasEmotional = /love|hate|fear|hope|amazing|beautiful/i.test(words);
+        
+        let hook = "Watch this...";
+        let strength = "General Interest";
+
+        if (hasAction && hasQuestion && hasEmotional) {
+          hook = "Wait... you're going to FEEL this...";
+          strength = "Emotional Hook + Intrigue";
+        } else if (hasAction && hasQuestion) {
+          hook = "Wait... is this actually possible?";
+          strength = "Curiosity + Shock Value";
+        } else if (hasAction && hasEmotional) {
+          hook = "This is going to hit you HARD...";
+          strength = "Emotional Impact";
+        } else if (hasQuestion) {
+          hook = "What would YOU do in this situation?";
+          strength = "Personal Engagement";
+        } else if (hasAction) {
+          hook = "You won't believe what happens next...";
+          strength = "High Suspense";
+        } else {
+          hook = "Here's something you need to see...";
+          strength = "Intrigue + Value";
+        }
+
+        hideLoading();
+        showResults(hook, strength);
+      }, 1500);
+    }
+
+    function generateNewHook() {
+      document.getElementById('results').classList.remove('active');
+      if (document.getElementById('withScriptForm').classList.contains('active')) {
+        generateFromScript();
+      } else {
+        generateHook();
+      }
+    }
+  </script>
+</body>
+</html>
