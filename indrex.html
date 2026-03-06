@@ -227,6 +227,7 @@ function rTitle(){
     const prof=getProfile();
     $.innerHTML=`<div class="scr fi" style="background:radial-gradient(ellipse at 50% 35%,rgba(255,215,0,.06) 0%,transparent 65%)">
     <div class="crown">\u2654</div><div class="mt">V2 CHESS</div><div class="stt">CHAMPIONSHIP</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:10px;letter-spacing:2px">by DROME7207</div>
     ${prof?`<div style="font-family:'Russo One';font-size:20px;color:var(--text);margin-bottom:3px">Welcome back, <span style="color:var(--gold)">${prof.name}</span></div><div class="ptag-sm" style="margin-bottom:15px">${prof.country}${prof.state?', '+prof.state:''}</div>`:''}
     <button class="btn btn-g" style="font-size:22px;padding:20px 70px;letter-spacing:4px" onclick="goNext()">ENTER THE RING</button>
     <div style="max-width:580px;margin-top:35px;text-align:center;line-height:1.8">
