@@ -60,19 +60,19 @@
       { id: 4, part: 'FRACTURE', section: 'Develop', title: 'Control Center', desc: 'd4, d5, e4, e5 are key squares. Control them!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [[3,3],[3,4],[4,3],[4,4]], task: 'Center = Power!', free: false },
       { id: 5, part: 'FRACTURE', section: 'Develop', title: 'Develop Pieces', desc: 'Get Knights and Bishops out early!', board: [['r',null,'b','q','k','b',null,'r'],['p','p','p','p','p','p','p','p'],[null,null,'n',null,null,'n',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,'N',null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R',null,'B','Q','K','B',null,'R']], highlight: [[5,2],[5,5],[2,2],[2,5]], task: 'Knights developed!', free: false },
       { id: 6, part: 'FRACTURE', section: 'Develop', title: 'Castle Early', desc: 'Castle to protect King and activate Rook.', board: [['r',null,null,null,'k',null,null,'r'],['p','p','p',null,null,'p','p','p'],[null,null,'n','p',null,'n',null,null],[null,null,'b',null,'p',null,'b',null],[null,null,'B',null,'P',null,'B',null],[null,null,'N','P',null,'N',null,null],['P','P','P',null,null,'P','P','P'],['R',null,null,null,'K',null,null,'R']], highlight: [[7,4],[0,4]], task: 'Both should castle!', free: false },
-      { id: 7, part: 'FRACTURE', section: 'Turn', title: 'One Piece Once', desc: 'Don\'t move same piece twice in opening.', board: [['r','n','b','q','k','b',null,'r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,'n',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'N'],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B',null,'R']], highlight: [[4,7]], task: 'Knight moved twice = bad!', free: false },
-      { id: 8, part: 'FRACTURE', section: 'Turn', title: 'Queen Stays Home', desc: 'Don\'t bring Queen out early.', board: [['r','n','b',null,'k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,'q'],[null,null,'B',null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], highlight: [[3,7]], task: 'Queen out too early!', free: false },
+      { id: 7, part: 'FRACTURE', section: 'Turn', title: 'One Piece Once', desc: "Don't move same piece twice in opening.", board: [['r','n','b','q','k','b',null,'r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,'n',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'N'],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B',null,'R']], highlight: [[4,7]], task: 'Knight moved twice = bad!', free: false },
+      { id: 8, part: 'FRACTURE', section: 'Turn', title: 'Queen Stays Home', desc: "Don't bring Queen out early.", board: [['r','n','b',null,'k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,'q'],[null,null,'B',null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], highlight: [[3,7]], task: 'Queen out too early!', free: false },
       { id: 9, part: 'FRACTURE', section: 'Turn', title: 'Protect Pieces', desc: 'Before moving, check: Is my piece safe?', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'B',null,null,null,null],[null,null,null,null,null,'p',null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[4,5]], task: 'Bishop is HANGING!', free: false },
       { id: 10, part: 'PRESSURE', section: 'Seed', title: 'The Fork', desc: 'Attack TWO pieces at once!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,'q',null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[0,4],[5,2]], task: 'Knight FORKS King+Queen!', free: false },
       { id: 11, part: 'PRESSURE', section: 'Seed', title: 'The Pin', desc: 'Trap a piece against a more valuable one!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,'r',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[6,4],[1,4],[0,4]], task: 'Rook PINNED to King!', free: false },
-      { id: 12, part: 'PRESSURE', section: 'Seed', title: 'The Skewer', desc: 'Attack valuable piece, take what\'s behind!', board: [[null,null,null,null,null,null,null,null],[null,'k',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'B'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'r']], highlight: [[4,7],[1,1],[7,7]], task: 'Bishop SKEWERS King→Rook!', free: false },
+      { id: 12, part: 'PRESSURE', section: 'Seed', title: 'The Skewer', desc: "Attack valuable piece, take what's behind!", board: [[null,null,null,null,null,null,null,null],[null,'k',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'B'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'r']], highlight: [[4,7],[1,1],[7,7]], task: 'Bishop SKEWERS King→Rook!', free: false },
       { id: 13, part: 'PRESSURE', section: 'Develop', title: 'Discovered Attack', desc: 'Move one piece to reveal attack by another!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'R',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[2,4],[4,4],[0,4]], task: 'Knight moves = CHECK!', free: false },
       { id: 14, part: 'PRESSURE', section: 'Develop', title: 'Double Attack', desc: 'Attack two things at once!', board: [[null,null,'r',null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,'b'],[null,null,null,null,'K',null,null,null]], highlight: [[4,4],[0,4],[6,7]], task: 'Queen attacks King AND Bishop!', free: false },
       { id: 15, part: 'PRESSURE', section: 'Develop', title: 'Remove Defender', desc: 'Capture the protecting piece first!', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,'r',null,null,null],[null,null,null,null,'n',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'B',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'R',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[2,4],[1,4],[4,4]], task: 'Take Knight, then Rook!', free: false },
       { id: 16, part: 'PRESSURE', section: 'Turn', title: 'Active Pieces', desc: 'Rooks on open files, Bishops on diagonals.', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,'B',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,'K',null,null,null]], highlight: [[7,0],[3,1]], task: 'Active pieces!', free: false },
       { id: 17, part: 'PRESSURE', section: 'Turn', title: 'Pawn Structure', desc: 'Doubled pawns weak. Connected pawns strong!', board: [[null,null,null,null,'k',null,null,null],['p',null,'p',null,null,'p','p','p'],[null,'p',null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P',null,null,null,null,null,null,null],['P',null,'P','P',null,'P','P','P'],[null,null,null,null,'K',null,null,null]], highlight: [[5,0],[6,0]], task: 'Doubled pawns = weak!', free: false },
-      { id: 18, part: 'PRESSURE', section: 'Turn', title: 'Weak Squares', desc: 'Squares you can\'t defend with pawns.', board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,'p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'N',null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],[null,null,null,null,'K',null,null,null]], highlight: [[4,5]], task: 'Knight on weak square!', free: false },
-      { id: 19, part: 'SHIFT', section: 'Seed', title: 'K+Q vs K', desc: 'Push enemy King to edge. Don\'t stalemate!', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[5,4],[7,4],[1,4]], task: 'Push King to edge!', free: false },
+      { id: 18, part: 'PRESSURE', section: 'Turn', title: 'Weak Squares', desc: "Squares you can't defend with pawns.", board: [[null,null,null,null,'k',null,null,null],[null,null,null,null,null,'p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,'N',null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],[null,null,null,null,'K',null,null,null]], highlight: [[4,5]], task: 'Knight on weak square!', free: false },
+      { id: 19, part: 'SHIFT', section: 'Seed', title: 'K+Q vs K', desc: "Push enemy King to edge. Don't stalemate!", board: [[null,null,null,null,null,null,null,null],[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'Q',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[5,4],[7,4],[1,4]], task: 'Push King to edge!', free: false },
       { id: 20, part: 'SHIFT', section: 'Seed', title: 'K+R vs K', desc: 'Rook cuts off King. Your King approaches.', board: [[null,null,null,null,null,null,null,null],[null,null,null,'k',null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'K',null,null,null,null]], highlight: [[3,0],[7,3],[1,3]], task: 'Rook cuts off King!', free: false },
       { id: 21, part: 'SHIFT', section: 'Seed', title: 'Pawn Promotion', desc: 'Get pawn to last rank = new Queen!', board: [[null,null,null,null,null,null,null,null],[null,null,null,'P',null,null,null,null],[null,null,null,'K',null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,'k',null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[1,3],[2,3]], task: 'King escorts pawn!', free: false },
       { id: 22, part: 'SHIFT', section: 'Develop', title: 'Active King', desc: 'In endgame, King becomes fighter!', board: [[null,null,null,null,null,null,null,null],['p',null,null,null,null,null,null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null],[null,null,null,null,null,null,null,null],['P',null,null,null,null,null,null,'P'],[null,null,null,null,null,null,null,'k']], highlight: [[4,4],[7,7]], task: 'White King active!', free: false },
@@ -80,7 +80,7 @@
       { id: 24, part: 'SHIFT', section: 'Develop', title: 'Opposition', desc: 'Kings face off. Who moves loses ground!', board: [[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'k',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'K',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null]], highlight: [[2,4],[4,4]], task: 'White has opposition!', free: false },
       { id: 25, part: 'SHIFT', section: 'Turn', title: 'Pattern Recognition', desc: 'Learn patterns: back rank mate, etc.', board: [[null,null,null,null,null,null,'k',null],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['R',null,null,null,null,null,'K',null]], highlight: [[7,0],[0,6]], task: 'Ra8# = Back rank mate!', free: false },
       { id: 26, part: 'SHIFT', section: 'Turn', title: 'Calculation', desc: 'Think 2-3 moves ahead.', board: [[null,null,null,null,'k',null,null,'r'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,'N',null,null,null,null],[null,null,null,null,null,null,'q',null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,'K',null,null,null]], highlight: [[3,3],[4,6]], task: 'Calculate: Nf6+!', free: false },
-      { id: 27, part: 'SHIFT', section: 'Turn', title: 'You Are Ready!', desc: 'Go play and apply what you learned!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [], task: '🎓 Complete! Now PLAY!', free: false }
+      { id: 27, part: 'SHIFT', section: 'Turn', title: 'You Are Ready!', desc: 'Go play and apply what you learned!', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']], highlight: [], task: '🎉 Complete! Now PLAY!', free: false }
     ];
 
     // PUZZLES
@@ -102,8 +102,8 @@
       { name: 'Scotch Game', eco: 'C45', moves: '1.e4 e5 2.Nf3 Nc6 3.d4', desc: 'Open center early.', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,null,null,null,'p',null,null,null],[null,null,null,'P','P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P',null,null,'P','P','P'],['R','N','B','Q','K','B',null,'R']], level: 'Beginner', free: true },
       { name: 'Sicilian Defense', eco: 'B20', moves: '1.e4 c5', desc: 'Sharp and complex!', board: [['r','n','b','q','k','b','n','r'],['p','p',null,'p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,'p',null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate', free: false },
       { name: 'French Defense', eco: 'C00', moves: '1.e4 e6', desc: 'Solid but cramped.', board: [['r','n','b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,null,null,'p',null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate', free: false },
-      { name: 'Queen\'s Gambit', eco: 'D00', moves: '1.d4 d5 2.c4', desc: 'Control center.', board: [['r','n','b','q','k','b','n','r'],['p','p','p',null,'p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,'p',null,null,null,null],[null,null,'P','P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate', free: false },
-      { name: 'King\'s Indian', eco: 'E60', moves: '1.d4 Nf6 2.c4 g6', desc: 'Fianchetto attack.', board: [['r','n','b','q','k','b',null,'r'],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,'n','p',null],[null,null,null,null,null,null,null,null],[null,null,'P','P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Advanced', free: false },
+      { name: "Queen's Gambit", eco: 'D00', moves: '1.d4 d5 2.c4', desc: 'Control center.', board: [['r','n','b','q','k','b','n','r'],['p','p','p',null,'p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,'p',null,null,null,null],[null,null,'P','P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Intermediate', free: false },
+      { name: "King's Indian", eco: 'E60', moves: '1.d4 Nf6 2.c4 g6', desc: 'Fianchetto attack.', board: [['r','n','b','q','k','b',null,'r'],['p','p','p','p','p','p',null,'p'],[null,null,null,null,null,'n','p',null],[null,null,null,null,null,null,null,null],[null,null,'P','P',null,null,null,null],[null,null,null,null,null,null,null,null],['P','P',null,null,'P','P','P','P'],['R','N','B','Q','K','B','N','R']], level: 'Advanced', free: false },
       { name: 'Ruy Lopez', eco: 'C60', moves: '1.e4 e5 2.Nf3 Nc6 3.Bb5', desc: 'The Spanish Game.', board: [['r',null,'b','q','k','b','n','r'],['p','p','p','p',null,'p','p','p'],[null,null,'n',null,null,null,null,null],[null,'B',null,null,'p',null,null,null],[null,null,null,null,'P',null,null,null],[null,null,null,null,null,'N',null,null],['P','P','P','P',null,'P','P','P'],['R','N','B','Q','K',null,null,'R']], level: 'Advanced', free: false }
     ];
 
@@ -125,7 +125,7 @@
     const SYMBOLS = { K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙', k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' };
 
     function ChessV2() {
-      const [board, setBoard] = useState(() => INIT_BOARD.map(r=>[...r]));
+      const [board, setBoard] = useState(() => INIT_BOARD.map(r => [...r]));
       const [turn, setTurn] = useState('white');
       const [selected, setSelected] = useState(null);
       const [validMoves, setValidMoves] = useState([]);
@@ -148,7 +148,18 @@
       const [unlockInput, setUnlockInput] = useState('');
       const [isPremium, setIsPremium] = useState(false);
 
-      useEffect(() => { try { if(localStorage.getItem('v2chess_premium')==='true') setIsPremium(true); } catch(e){} }, []);
+      // Castling rights: track whether kings and rooks have moved
+      // { wKing, bKing, wRookK (h1), wRookQ (a1), bRookK (h8), bRookQ (a8) }
+      const [castleRights, setCastleRights] = useState({
+        wKing: true, bKing: true,
+        wRookK: true, wRookQ: true,
+        bRookK: true, bRookQ: true
+      });
+
+      // En passant target square: [row, col] of the square behind the pawn that just moved 2 squares
+      const [enPassantTarget, setEnPassantTarget] = useState(null);
+
+      useEffect(() => { try { if (localStorage.getItem('v2chess_premium') === 'true') setIsPremium(true); } catch(e) {} }, []);
 
       const unlockPremium = () => {
         if (unlockInput.toUpperCase() === UNLOCK_CODE || unlockInput.toUpperCase() === FREE_TRIAL_CODE) {
@@ -158,31 +169,184 @@
       };
 
       // Chess logic
-      const getMoves = useCallback((b,r,c,p) => {
-        if(!p)return[];const moves=[];const isW=p===p.toUpperCase();
-        const canGo=(row,col)=>{if(row<0||row>7||col<0||col>7)return false;const t=b[row]?.[col];if(!t)return true;return isW?t===t.toLowerCase():t===t.toUpperCase();};
-        const slide=(dr,dc)=>{for(let i=1;i<8;i++){const nr=r+dr*i,nc=c+dc*i;if(nr<0||nr>7||nc<0||nc>7)break;if(!canGo(nr,nc))break;moves.push([nr,nc]);if(b[nr]?.[nc])break;}};
-        const type=p.toLowerCase();
-        if(type==='p'){const dir=isW?-1:1;const start=isW?6:1;if(r+dir>=0&&r+dir<=7&&b[r+dir]?.[c]===null){moves.push([r+dir,c]);if(r===start&&b[r+2*dir]?.[c]===null)moves.push([r+2*dir,c]);}[-1,1].forEach(dc=>{const nr=r+dir,nc=c+dc;if(nr>=0&&nr<=7&&nc>=0&&nc<=7){const t=b[nr]?.[nc];if(t&&(isW?t===t.toLowerCase():t===t.toUpperCase()))moves.push([nr,nc]);}});}
-        else if(type==='n')[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc])=>{if(canGo(r+dr,c+dc))moves.push([r+dr,c+dc]);});
-        else if(type==='b')[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr,dc])=>slide(dr,dc));
-        else if(type==='r')[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr,dc])=>slide(dr,dc));
-        else if(type==='q')[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr,dc])=>slide(dr,dc));
-        else if(type==='k')[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc])=>{if(canGo(r+dr,c+dc))moves.push([r+dr,c+dc]);});
+      // getMoves now accepts optional castleRights and enPassantTarget for special moves
+      const getMoves = useCallback((b, r, c, p, crArg, epArg) => {
+        if (!p) return [];
+        const moves = [];
+        const isW = p === p.toUpperCase();
+        const cr = crArg || { wKing: false, bKing: false, wRookK: false, wRookQ: false, bRookK: false, bRookQ: false };
+        const ep = epArg || null;
+
+        const canGo = (row, col) => {
+          if (row < 0 || row > 7 || col < 0 || col > 7) return false;
+          const t = b[row]?.[col];
+          if (!t) return true;
+          return isW ? t === t.toLowerCase() : t === t.toUpperCase();
+        };
+        const isEmpty = (row, col) => row >= 0 && row <= 7 && col >= 0 && col <= 7 && !b[row]?.[col];
+        const isEnemy = (row, col) => {
+          if (row < 0 || row > 7 || col < 0 || col > 7) return false;
+          const t = b[row]?.[col];
+          if (!t) return false;
+          return isW ? t === t.toLowerCase() : t === t.toUpperCase();
+        };
+
+        const slide = (dr, dc) => {
+          for (let i = 1; i < 8; i++) {
+            const nr = r + dr * i, nc = c + dc * i;
+            if (nr < 0 || nr > 7 || nc < 0 || nc > 7) break;
+            const t = b[nr]?.[nc];
+            if (!t) { moves.push([nr, nc]); continue; }
+            if (canGo(nr, nc)) { moves.push([nr, nc]); }
+            break;
+          }
+        };
+
+        const type = p.toLowerCase();
+
+        if (type === 'p') {
+          const dir = isW ? -1 : 1;
+          const startRow = isW ? 6 : 1;
+          // Forward 1
+          if (r + dir >= 0 && r + dir <= 7 && isEmpty(r + dir, c)) {
+            moves.push([r + dir, c]);
+            // Forward 2 from start
+            if (r === startRow && isEmpty(r + dir * 2, c)) {
+              moves.push([r + dir * 2, c]);
+            }
+          }
+          // Diagonal captures
+          for (const dc of [-1, 1]) {
+            if (isEnemy(r + dir, c + dc)) moves.push([r + dir, c + dc]);
+            // En passant
+            if (ep && r + dir === ep[0] && c + dc === ep[1]) {
+              moves.push([r + dir, c + dc]);
+            }
+          }
+        } else if (type === 'n') {
+          [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc]) => {
+            if (canGo(r+dr, c+dc)) moves.push([r+dr, c+dc]);
+          });
+        } else if (type === 'b') {
+          [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr,dc]) => slide(dr,dc));
+        } else if (type === 'r') {
+          [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr,dc]) => slide(dr,dc));
+        } else if (type === 'q') {
+          [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr,dc]) => slide(dr,dc));
+        } else if (type === 'k') {
+          [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc]) => {
+            if (canGo(r+dr, c+dc)) moves.push([r+dr, c+dc]);
+          });
+
+          // Castling
+          if (isW && r === 7 && c === 4) {
+            // White kingside: king e1->g1, rook h1->f1
+            if (cr.wKing && cr.wRookK && isEmpty(7,5) && isEmpty(7,6)) {
+              moves.push([7, 6]);
+            }
+            // White queenside: king e1->c1, rook a1->d1
+            if (cr.wKing && cr.wRookQ && isEmpty(7,3) && isEmpty(7,2) && isEmpty(7,1)) {
+              moves.push([7, 2]);
+            }
+          }
+          if (!isW && r === 0 && c === 4) {
+            // Black kingside: king e8->g8, rook h8->f8
+            if (cr.bKing && cr.bRookK && isEmpty(0,5) && isEmpty(0,6)) {
+              moves.push([0, 6]);
+            }
+            // Black queenside: king e8->c8, rook a8->d8
+            if (cr.bKing && cr.bRookQ && isEmpty(0,3) && isEmpty(0,2) && isEmpty(0,1)) {
+              moves.push([0, 2]);
+            }
+          }
+        }
+
         return moves;
-      },[]);
+      }, []);
 
-      const getAllMoves = useCallback((b,player)=>{
-        const all=[];const isW=player==='white';
-        for(let r=0;r<8;r++)for(let c=0;c<8;c++){const p=b[r]?.[c];if(p&&(isW?p===p.toUpperCase():p===p.toLowerCase()))getMoves(b,r,c,p).forEach(([tr,tc])=>all.push({from:[r,c],to:[tr,tc],piece:p}));}
+      const getAllMoves = useCallback((b, player, crArg, epArg) => {
+        const all = []; const isW = player === 'white';
+        for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+          const p = b[r]?.[c];
+          if (p && (isW ? p === p.toUpperCase() : p === p.toLowerCase())) {
+            getMoves(b, r, c, p, crArg, epArg).forEach(([tr, tc]) => all.push({ from: [r, c], to: [tr, tc] }));
+          }
+        }
         return all;
-      },[getMoves]);
+      }, [getMoves]);
 
-      const doMove = useCallback((b,from,to)=>{
-        const nb=b.map(r=>[...r]);const[fr,fc]=from;const[tr,tc]=to;const p=nb[fr][fc];const cap=nb[tr][tc];
-        if(p?.toLowerCase()==='p'&&(tr===0||tr===7))nb[tr][tc]=p==='P'?'Q':'q';else nb[tr][tc]=p;nb[fr][fc]=null;
-        return{board:nb,captured:cap};
-      },[]);
+      // doMove returns { board, captured, newCastleRights, newEnPassant }
+      const doMove = useCallback((b, from, to, crArg) => {
+        const nb = b.map(r => [...r]);
+        const [fr, fc] = from; const [tr, tc] = to;
+        const p = nb[fr][fc];
+        const cap = nb[tr][tc];
+        const type = p ? p.toLowerCase() : '';
+        const isW = p === p?.toUpperCase();
+
+        let newEP = null;
+        let newCR = crArg ? { ...crArg } : { wKing: true, bKing: true, wRookK: true, wRookQ: true, bRookK: true, bRookQ: true };
+
+        // En passant capture
+        if (type === 'p' && fc !== tc && !cap) {
+          // Diagonal move to empty = en passant capture
+          nb[fr][tc] = null; // remove the captured pawn
+        }
+
+        // Pawn double-push: set en passant target
+        if (type === 'p' && Math.abs(tr - fr) === 2) {
+          newEP = [(fr + tr) / 2, tc];
+        }
+
+        // Promotion: auto-queen
+        if (type === 'p' && (tr === 0 || tr === 7)) {
+          nb[tr][tc] = isW ? 'Q' : 'q';
+        } else {
+          nb[tr][tc] = p;
+        }
+        nb[fr][fc] = null;
+
+        // Castling: move rook as well
+        if (type === 'k') {
+          if (isW) {
+            newCR.wKing = false;
+            // White kingside castling
+            if (fr === 7 && fc === 4 && tr === 7 && tc === 6) {
+              nb[7][5] = 'R'; nb[7][7] = null;
+            }
+            // White queenside castling
+            if (fr === 7 && fc === 4 && tr === 7 && tc === 2) {
+              nb[7][3] = 'R'; nb[7][0] = null;
+            }
+          } else {
+            newCR.bKing = false;
+            // Black kingside castling
+            if (fr === 0 && fc === 4 && tr === 0 && tc === 6) {
+              nb[0][5] = 'r'; nb[0][7] = null;
+            }
+            // Black queenside castling
+            if (fr === 0 && fc === 4 && tr === 0 && tc === 2) {
+              nb[0][3] = 'r'; nb[0][0] = null;
+            }
+          }
+        }
+
+        // Track rook moves for castling rights
+        if (type === 'r') {
+          if (fr === 7 && fc === 7) newCR.wRookK = false;
+          if (fr === 7 && fc === 0) newCR.wRookQ = false;
+          if (fr === 0 && fc === 7) newCR.bRookK = false;
+          if (fr === 0 && fc === 0) newCR.bRookQ = false;
+        }
+
+        // If rook is captured, revoke castling rights for that side
+        if (tr === 7 && tc === 7) newCR.wRookK = false;
+        if (tr === 7 && tc === 0) newCR.wRookQ = false;
+        if (tr === 0 && tc === 7) newCR.bRookK = false;
+        if (tr === 0 && tc === 0) newCR.bRookQ = false;
+
+        return { board: nb, captured: cap, newCastleRights: newCR, newEnPassant: newEP };
+      }, []);
 
       // ========================================
       // V2 EVALUATION - 5 VERSION SYSTEM
@@ -195,46 +359,48 @@
             if (!p) continue;
             const isW = p === p.toUpperCase();
             const val = PIECE_VALUES[p.toLowerCase()] || 0;
-            const posBonus = PST_CENTER[r][c];
-            score += (isW ? 1 : -1) * (val + posBonus);
+            const pos = PST_CENTER[r][c];
+            score += isW ? -(val + pos) : (val + pos);
           }
         }
-        
+
         // VERSION-SPECIFIC ADJUSTMENTS (Nested Thirds Parallel Learning)
-        const boost = 1 + learn.gamesPlayed * 0.02;
-        
+        const lr = learn.learningRate;
+
         if (version === 'A') {
           // CONSERVATIVE: Values material preservation, safety
-          score *= 0.95; // Slightly undervalue to prefer safe trades
+          score *= (1 + lr * 0.1);
         } else if (version === 'B') {
           // BALANCED: Standard evaluation
           score *= 1.0;
         } else if (version === 'C') {
           // AGGRESSIVE: Values attack, center control more
-          score *= 1.1 * boost; // Gets more aggressive with experience
+          score *= (1 - lr * 0.05);
         } else if (version === 'D') {
           // EXPLORER: Adds randomness to find new patterns
-          score += (Math.random() - 0.5) * 40;
+          score += (Math.random() - 0.5) * 50;
         } else if (version === 'E') {
           // SYNTHESIZER: Uses confidence from wins
-          const confidence = learn.gamesWon / Math.max(1, learn.gamesPlayed);
-          score *= (1 + confidence * 0.2);
+          const winRate = learn.gamesPlayed > 0 ? learn.gamesWon / learn.gamesPlayed : 0.5;
+          score *= (1 + (winRate - 0.5) * 0.2);
         }
-        
+
         return score;
       }, []);
 
       const minimax = useCallback((b, depth, alpha, beta, isMax, version, learn) => {
         if (depth === 0) return evaluate(b, version, learn);
-        const all = getAllMoves(b, isMax ? 'white' : 'black');
-        if (all.length === 0) return isMax ? -50000 : 50000;
-        
+        const player = isMax ? 'black' : 'white';
+        const all = getAllMoves(b, player);
+        if (all.length === 0) return isMax ? -99999 : 99999;
+
         if (isMax) {
           let max = -Infinity;
           for (const m of all) {
             const { board: nb } = doMove(b, m.from, m.to);
-            max = Math.max(max, minimax(nb, depth - 1, alpha, beta, false, version, learn));
-            alpha = Math.max(alpha, max);
+            const score = minimax(nb, depth - 1, alpha, beta, false, version, learn);
+            max = Math.max(max, score);
+            alpha = Math.max(alpha, score);
             if (beta <= alpha) break;
           }
           return max;
@@ -242,8 +408,9 @@
           let min = Infinity;
           for (const m of all) {
             const { board: nb } = doMove(b, m.from, m.to);
-            min = Math.min(min, minimax(nb, depth - 1, alpha, beta, true, version, learn));
-            beta = Math.min(beta, min);
+            const score = minimax(nb, depth - 1, alpha, beta, true, version, learn);
+            min = Math.min(min, score);
+            beta = Math.min(beta, score);
             if (beta <= alpha) break;
           }
           return min;
@@ -256,39 +423,39 @@
       const pickAIMove = useCallback((b, learn) => {
         const all = getAllMoves(b, 'black');
         if (all.length === 0) return null;
-        
+
         // ADAPTIVE DEPTH (Windshield Wiper principle)
         // Start at depth 2, increase with experience
-        const depth = 2 + Math.min(2, Math.floor(learn.gamesPlayed / 5));
-        
+        const depth = Math.min(2 + Math.floor(learn.gamesPlayed / 10), 4);
         const versions = ['A', 'B', 'C', 'D', 'E'];
         const votes = {};
-        
+
+        // Shuffle for variety
+        const shuffled = [...all].sort(() => Math.random() - 0.5);
+
         // Each version evaluates and votes
         versions.forEach(ver => {
-          let best = null;
           let bestScore = Infinity;
-          const shuffled = [...all].sort(() => Math.random() - 0.5);
-          
+          let best = null;
+
           for (const m of shuffled) {
             const { board: nb } = doMove(b, m.from, m.to);
-            const score = minimax(nb, depth - 1, -Infinity, Infinity, true, ver, learn);
+            const score = minimax(nb, depth - 1, -Infinity, Infinity, false, ver, learn);
             if (score < bestScore) {
               bestScore = score;
               best = m;
             }
           }
-          
+
           if (best) {
             const key = `${best.from}-${best.to}`;
             if (!votes[key]) votes[key] = { move: best, count: 0, supporters: [] };
             // Weight by version performance score
-            const weight = 1 + learn.versions[ver].score / 100;
-            votes[key].count += weight;
+            votes[key].count += learn.versions[ver].score;
             votes[key].supporters.push(ver);
           }
         });
-        
+
         // Pick move with most weighted votes
         let bestMove = null;
         let bestCount = -1;
@@ -298,7 +465,7 @@
             bestMove = v.move;
           }
         });
-        
+
         return bestMove || all[0];
       }, [getAllMoves, doMove, minimax]);
 
@@ -307,31 +474,30 @@
       // ========================================
       const learnFromGame = useCallback((winner, gMoves) => {
         setLearning(prev => {
-          const next = { ...prev };
+          const next = { ...prev, versions: { ...prev.versions } };
           next.gamesPlayed++;
-          next.learningRate = 1 + next.gamesPlayed * 0.05;
-          
+
           if (winner === 'black') {
             // AI won - boost all version scores
             next.gamesWon++;
             Object.keys(next.versions).forEach(v => {
-              next.versions[v].score = Math.min(100, next.versions[v].score + 8);
+              next.versions[v] = { ...next.versions[v], score: Math.min(100, next.versions[v].score + 2) };
             });
             // Store winning pattern
             if (gMoves.length > 0) {
-              next.winningPatterns = [...next.winningPatterns.slice(-50), gMoves.slice(-5)];
+              next.winningPatterns = [...next.winningPatterns.slice(-9), gMoves[0]];
             }
           } else if (winner === 'white') {
             // AI lost - reduce scores, learn from loss
             next.gamesLost++;
             Object.keys(next.versions).forEach(v => {
-              next.versions[v].score = Math.max(10, next.versions[v].score - 4);
+              next.versions[v] = { ...next.versions[v], score: Math.max(10, next.versions[v].score - 1) };
             });
             if (gMoves.length > 0) {
-              next.losingPatterns = [...next.losingPatterns.slice(-50), gMoves.slice(-5)];
+              next.losingPatterns = [...next.losingPatterns.slice(-9), gMoves[0]];
             }
           }
-          
+
           return next;
         });
       }, []);
@@ -347,9 +513,9 @@
             setThinking(false);
             return;
           }
-          const { board: nb, captured } = doMove(board, move.from, move.to);
-          const moveRecord = `${move.piece}${move.from}-${move.to}`;
-          
+          const { board: nb, captured, newCastleRights, newEnPassant } = doMove(board, move.from, move.to, castleRights);
+          const moveRecord = { from: move.from, to: move.to };
+
           if (captured?.toUpperCase() === 'K') {
             setBoard(nb);
             setStatus('black-wins');
@@ -358,117 +524,177 @@
             return;
           }
           setBoard(nb);
-          setMoves(prev => [...prev, { player: 'black', piece: move.piece }]);
+          setCastleRights(newCastleRights);
+          setEnPassantTarget(newEnPassant);
           setGameMoves(prev => [...prev, moveRecord]);
           setTurn('white');
           setThinking(false);
-        }, mode === 'self-play' ? 100 : 400);
-      }, [board, status, mode, learning, pickAIMove, doMove, learnFromGame, gameMoves]);
+        }, 300);
+      }, [board, status, mode, learning, pickAIMove, doMove, learnFromGame, gameMoves, castleRights]);
 
       useEffect(() => {
-        if (mode === 'play' && turn === 'black' && status === 'playing' && !thinking) {
-          const t = setTimeout(aiMove, 300);
-          return () => clearTimeout(t);
+        if (turn === 'black' && mode === 'vsai' && status === 'playing' && !thinking) {
+          aiMove();
         }
       }, [turn, mode, status, thinking, aiMove]);
 
       const handleClick = (r, c) => {
         if (mode === 'puzzle') {
-          const puzzle = PUZZLES[currentPuzzle]; if (puzzleStatus) return;
-          if (selected) { const [sr, sc] = selected; const sol = puzzle.solution;
-            if (sr === sol[0][0] && sc === sol[0][1] && r === sol[1][0] && c === sol[1][1]) {
+          const puzzle = PUZZLES[currentPuzzle];
+          if (selected) {
+            const [sr, sc] = selected;
+            const isCorrect = sr === puzzle.solution[0][0] && sc === puzzle.solution[0][1] && r === puzzle.solution[1][0] && c === puzzle.solution[1][1];
+            if (isCorrect) {
               setPuzzleStatus('correct');
               setLearning(prev => ({ ...prev, puzzleRating: prev.puzzleRating + 10, puzzlesSolved: prev.puzzlesSolved + 1 }));
             } else {
               setPuzzleStatus('wrong');
-              setLearning(prev => ({ ...prev, puzzleRating: Math.max(400, prev.puzzleRating - 5) }));
             }
             setSelected(null); setValidMoves([]);
-          } else { const p = puzzle.board[r]?.[c]; if (p && (puzzle.toMove === 'white' ? p === p.toUpperCase() : p === p.toLowerCase())) { setSelected([r, c]); setValidMoves(getMoves(puzzle.board, r, c, p)); } }
+            return;
+          }
+          const p = puzzle.board[r]?.[c];
+          if (p) { setSelected([r, c]); setValidMoves(getMoves(puzzle.board, r, c, p, castleRights, enPassantTarget)); }
           return;
         }
-        if (mode === 'lesson') { const p = lessonBoard?.[r]?.[c]; if (p) { setSelected([r, c]); setValidMoves(getMoves(lessonBoard, r, c, p)); } else { setSelected(null); setValidMoves([]); } return; }
-        if (mode === 'opening') { const p = OPENINGS[currentOpening].board[r]?.[c]; if (p) { setSelected([r, c]); setValidMoves(getMoves(OPENINGS[currentOpening].board, r, c, p)); } else { setSelected(null); setValidMoves([]); } return; }
-        if (mode === '2player') { const p = board[r]?.[c]; const isOwn = p && (twoPlayerTurn === 'white' ? p === p.toUpperCase() : p === p.toLowerCase());
-          if (selected) { const [sr, sc] = selected; const isValid = validMoves.some(([vr, vc]) => vr === r && vc === c);
-            if (isValid) { const { board: nb, captured } = doMove(board, [sr, sc], [r, c]); if (captured?.toLowerCase() === 'k' || captured?.toUpperCase() === 'K') { setBoard(nb); setStatus(twoPlayerTurn + '-wins'); setSelected(null); setValidMoves([]); return; } setBoard(nb); setSelected(null); setValidMoves([]); setTwoPlayerTurn(twoPlayerTurn === 'white' ? 'black' : 'white'); }
-            else { setSelected(null); setValidMoves([]); if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); } } }
-          else if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); } return; }
-        if (status !== 'playing' || thinking || mode === 'self-play' || turn !== 'white') return;
-        const p = board[r]?.[c]; const isOwn = p && p === p.toUpperCase();
-        if (selected) { const [sr, sc] = selected; const isValid = validMoves.some(([vr, vc]) => vr === r && vc === c);
-          if (isValid) { const { board: nb, captured } = doMove(board, [sr, sc], [r, c]); const moveRecord = `${p}${sr}${sc}-${r}${c}`;
-            if (captured?.toLowerCase() === 'k') { setBoard(nb); setStatus('white-wins'); learnFromGame('white', [...gameMoves, moveRecord]); setSelected(null); setValidMoves([]); return; }
-            setBoard(nb); setMoves(prev => [...prev, { player: 'white' }]); setGameMoves(prev => [...prev, moveRecord]); setSelected(null); setValidMoves([]); setTurn('black'); }
-          else { setSelected(null); setValidMoves([]); if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); } } }
-        else if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p)); }
+
+        if (mode === '2player') {
+          const p = board[r]?.[c];
+          const isOwn = twoPlayerTurn === 'white' ? p === p?.toUpperCase() : p === p?.toLowerCase();
+          if (selected) {
+            const isValid = validMoves.some(([vr, vc]) => vr === r && vc === c);
+            if (isValid) {
+              const { board: nb, captured, newCastleRights, newEnPassant } = doMove(board, selected, [r, c], castleRights);
+              setBoard(nb);
+              setCastleRights(newCastleRights);
+              setEnPassantTarget(newEnPassant);
+              setSelected(null); setValidMoves([]);
+              if (captured?.toUpperCase() === 'K' || captured?.toLowerCase() === 'k') {
+                setStatus(twoPlayerTurn === 'white' ? 'white-wins' : 'black-wins');
+              } else {
+                setTwoPlayerTurn(twoPlayerTurn === 'white' ? 'black' : 'white');
+              }
+            } else { setSelected(null); setValidMoves([]); if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p, castleRights, enPassantTarget)); } }
+          } else if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p, castleRights, enPassantTarget)); }
+          return;
+        }
+
+        if (mode !== 'vsai') return;
+        if (turn !== 'white' || status !== 'playing' || thinking) return;
+        const p = board[r]?.[c];
+        const isOwn = p && p === p.toUpperCase();
+        if (selected) {
+          const isValid = validMoves.some(([vr, vc]) => vr === r && vc === c);
+          if (isValid) {
+            const { board: nb, captured, newCastleRights, newEnPassant } = doMove(board, selected, [r, c], castleRights);
+            setBoard(nb);
+            setCastleRights(newCastleRights);
+            setEnPassantTarget(newEnPassant);
+            setSelected(null); setValidMoves([]);
+            if (captured?.toLowerCase() === 'k') {
+              setStatus('white-wins');
+              learnFromGame('white', gameMoves);
+            } else {
+              setGameMoves(prev => [...prev, { from: selected, to: [r, c] }]);
+              setTurn('black');
+            }
+          } else { setSelected(null); setValidMoves([]); if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p, castleRights, enPassantTarget)); } }
+        } else if (isOwn) { setSelected([r, c]); setValidMoves(getMoves(board, r, c, p, castleRights, enPassantTarget)); }
       };
 
       // Self-play
       useEffect(() => {
+        if (mode === 'self-play' && playing && status !== 'playing') { setPlaying(false); return; }
         if (mode === 'self-play' && playing && status === 'playing' && !thinking) {
           const t = setTimeout(() => {
             setThinking(true);
-            const all = getAllMoves(board, turn);
-            if (all.length === 0) { setStatus(turn === 'white' ? 'black-wins' : 'white-wins'); setThinking(false); return; }
             let move;
-            if (turn === 'black') { move = pickAIMove(board, learning); }
-            else {
-              let best = null, bestScore = -Infinity;
-              for (const m of all) { const { board: nb } = doMove(board, m.from, m.to); const score = evaluate(nb, 'B', learning); if (score > bestScore) { bestScore = score; best = m; } }
-              move = best || all[0];
+            if (turn === 'black') {
+              move = pickAIMove(board, learning);
+            } else {
+              const wMoves = getAllMoves(board, 'white');
+              move = wMoves[Math.floor(Math.random() * wMoves.length)];
             }
-            if (!move) move = all[0];
-            const { board: nb, captured } = doMove(board, move.from, move.to);
+            if (!move) { setStatus(turn === 'white' ? 'black-wins' : 'white-wins'); setThinking(false); return; }
+            const { board: nb, captured, newCastleRights, newEnPassant } = doMove(board, move.from, move.to, castleRights);
             if (captured?.toLowerCase() === 'k' || captured?.toUpperCase() === 'K') {
               setBoard(nb); setStatus(turn === 'white' ? 'white-wins' : 'black-wins');
-              setLearning(prev => ({ ...prev, gamesPlayed: prev.gamesPlayed + 1 }));
+              learnFromGame(turn === 'black' ? 'black' : 'white', gameMoves);
               setThinking(false); return;
             }
-            setBoard(nb); setTurn(turn === 'white' ? 'black' : 'white'); setThinking(false);
+            setBoard(nb);
+            setCastleRights(newCastleRights);
+            setEnPassantTarget(newEnPassant);
+            setTurn(t2 => t2 === 'white' ? 'black' : 'white');
+            setThinking(false);
           }, selfSpeed);
           return () => clearTimeout(t);
         }
-      }, [mode, playing, status, thinking, turn, board, selfSpeed, getAllMoves, pickAIMove, doMove, evaluate, learning]);
+      }, [mode, playing, status, thinking, turn, board, selfSpeed, getAllMoves, pickAIMove, doMove, evaluate, learning, castleRights, learnFromGame, gameMoves]);
 
-      useEffect(() => { if (mode === 'self-play' && playing && status !== 'playing') { const t = setTimeout(reset, 1500); return () => clearTimeout(t); } }, [mode, playing, status]);
+      useEffect(() => { if (mode === 'self-play' && playing && status !== 'playing') { setPlaying(false); learnFromGame(status === 'white-wins' ? 'white' : 'black', gameMoves); } }, [mode, playing, status]);
 
-      const reset = useCallback(() => { setBoard(INIT_BOARD.map(r => [...r])); setTurn('white'); setTwoPlayerTurn('white'); setSelected(null); setValidMoves([]); setStatus('playing'); setMoves([]); setGameMoves([]); setThinking(false); }, []);
-      const startLesson = (idx) => { setCurrentLesson(idx); setLessonBoard(LESSONS[idx].board.map(r => [...r])); setSelected(null); setValidMoves([]); };
+      const reset = useCallback(() => {
+        setBoard(INIT_BOARD.map(r => [...r]));
+        setTurn('white');
+        setSelected(null);
+        setValidMoves([]);
+        setStatus('playing');
+        setGameMoves([]);
+        setMoves([]);
+        setThinking(false);
+        setTwoPlayerTurn('white');
+        setCastleRights({ wKing: true, bKing: true, wRookK: true, wRookQ: true, bRookK: true, bRookQ: true });
+        setEnPassantTarget(null);
+      }, []);
+
+      const startLesson = (idx) => { setCurrentLesson(idx); setLessonBoard(LESSONS[idx].board.map(r => [...r])); setMode('lesson'); };
       const nextPuzzle = () => { setCurrentPuzzle(p => (p + 1) % PUZZLES.length); setPuzzleStatus(null); setSelected(null); setValidMoves([]); };
 
       const renderSquare = (r, c, boardData, highlights = []) => {
-        const b = boardData || board; const p = b?.[r]?.[c]; const light = (r + c) % 2 === 0;
-        const isSel = selected?.[0] === r && selected?.[1] === c; const isTarget = validMoves.some(([vr, vc]) => vr === r && vc === c);
+        const b = boardData || board;
+        const p = b?.[r]?.[c];
+        const light = (r + c) % 2 === 0;
+        const isSel = selected?.[0] === r && selected?.[1] === c;
+        const isTarget = validMoves.some(([vr, vc]) => vr === r && vc === c);
         const isHighlight = highlights?.some(([hr, hc]) => hr === r && hc === c);
-        let bg = light ? '#f0d9b5' : '#b58863'; if (isSel) bg = '#ffd700'; else if (isTarget) bg = '#90EE90'; else if (isHighlight) bg = '#ff6b6b';
-        return (<div key={`${r}-${c}`} onClick={() => handleClick(r, c)} style={{ width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, background: bg, cursor: 'pointer' }}>{p && <span style={{ color: p === p.toUpperCase() ? '#fff' : '#000', textShadow: p === p.toUpperCase() ? '1px 1px 2px #000' : '1px 1px 2px #fff' }}>{SYMBOLS[p]}</span>}{isTarget && !p && <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(0,128,0,0.5)' }} />}</div>);
+        let bg = light ? '#f0d9b5' : '#b58863';
+        if (isSel) bg = '#ffd700';
+        else if (isTarget) bg = '#90ee90';
+        else if (isHighlight) bg = '#ff8c00';
+        return (<div key={`${r}-${c}`} onClick={() => handleClick(r, c)} style={{ width: 38, height: 38, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 24, userSelect: 'none' }}>
+          {p ? SYMBOLS[p] || p : ''}
+        </div>);
       };
 
-      const LockedOverlay = ({ onBuy }) => (<div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 8, zIndex: 10 }}><div style={{ fontSize: 24, marginBottom: 10 }}>🔒</div><div style={{ fontSize: 12, color: '#fff', marginBottom: 10 }}>Premium Feature</div><button onClick={onBuy} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,#ffd700,#ffaa00)', border: 'none', borderRadius: 6, color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: 11 }}>Unlock $9.99</button></div>);
+      const LockedOverlay = ({ onBuy }) => (<div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 3, zIndex: 10 }}>
+        <div style={{ fontSize: 20, marginBottom: 8 }}>🔒</div>
+        <div style={{ fontSize: 10, color: '#ffd700', marginBottom: 8, textAlign: 'center' }}>Premium Content</div>
+        <button onClick={onBuy} style={{ padding: '6px 12px', background: '#ffd700', border: 'none', borderRadius: 5, color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: 10 }}>Unlock $9.99</button>
+      </div>);
 
       // ========== MENU ==========
       if (mode === 'menu') {
         return (<div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 15 }}>
-          <div style={{ fontSize: 26, fontWeight: 'bold', color: '#ffd700', marginBottom: 5 }}>♔ V2 Chess Academy ♚</div>
+          <div style={{ fontSize: 26, fontWeight: 'bold', color: '#ffd700', marginBottom: 5 }}>♟ V2 Chess Academy ♟</div>
           <div style={{ fontSize: 10, color: '#888', marginBottom: 3 }}>5-Version Adaptive AI • Nested Thirds Learning</div>
           {isPremium ? <div style={{ fontSize: 10, color: '#22c55e', marginBottom: 8 }}>⭐ PREMIUM UNLOCKED</div> : <div style={{ fontSize: 9, color: '#f59e0b', marginBottom: 8 }}>Free: 3 Lessons, 3 Puzzles, 3 Openings</div>}
-          
-          {learning.gamesPlayed > 0 && <div style={{ marginBottom: 10, padding: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 6, textAlign: 'center', fontSize: 9 }}>
+
+          {learning.gamesPlayed > 0 && <div style={{ marginBottom: 10, padding: '6px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: 6, textAlign: 'center' }}>
             <div style={{ color: '#ffd700', marginBottom: 4 }}>Games: {learning.gamesPlayed} | Won: {learning.gamesWon} | Lost: {learning.gamesLost}</div>
             <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
               {Object.entries(learning.versions).map(([v, d]) => (<div key={v} style={{ padding: '2px 5px', background: 'rgba(255,255,255,0.05)', borderRadius: 3 }}><span style={{ color: v === 'A' ? '#3b82f6' : v === 'B' ? '#22c55e' : v === 'C' ? '#ef4444' : v === 'D' ? '#a855f7' : '#f59e0b', fontWeight: 'bold' }}>{v}</span><span style={{ color: '#666', marginLeft: 2 }}>{d.score}</span></div>))}
             </div>
           </div>}
-          
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%', maxWidth: 320, marginBottom: 15 }}>
-            <button onClick={() => { setMode('play'); reset(); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#f093fb,#f5576c)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>⚔️ vs V2 AI</button>
-            <button onClick={() => { setMode('2player'); reset(); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#06b6d4,#0891b2)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>👥 2 Player</button>
-            <button onClick={() => { setMode('lesson'); startLesson(0); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#4ade80,#22c55e)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>📚 27 Lessons</button>
-            <button onClick={() => { setMode('puzzle'); setPuzzleStatus(null); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#f59e0b,#d97706)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🧩 Puzzles</button>
+            <button onClick={() => { reset(); setMode('vsai'); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#1a6b3c,#0f4d2b)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>♟ vs AI</button>
+            <button onClick={() => { reset(); setMode('self-play'); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#1e3a5f,#0f2740)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🤖 Self-Play</button>
+            <button onClick={() => setMode('lesson')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#f59e0b,#d97706)', border: 'none', borderRadius: 8, color: '#000', cursor: 'pointer' }}>📚 Lessons</button>
+            <button onClick={() => setMode('puzzle')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#3b82f6,#2563eb)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🧩 Puzzles</button>
             <button onClick={() => setMode('opening')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>📖 Openings</button>
             <button onClick={() => setMode('video')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#ef4444,#dc2626)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🎬 Videos</button>
-            <button onClick={() => { setMode('self-play'); reset(); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#667eea,#764ba2)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🤖 Self-Learn</button>
+            <button onClick={() => { reset(); setMode('2player'); }} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#6b7280,#4b5563)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>👥 2 Player</button>
             <button onClick={() => window.open('https://lichess.org', '_blank')} style={{ padding: 12, fontSize: 12, fontWeight: 'bold', background: 'linear-gradient(135deg,#374151,#1f2937)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>🌐 Online</button>
           </div>
 
@@ -477,13 +703,13 @@
             <button onClick={() => setShowUnlock(true)} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #555', borderRadius: 5, color: '#888', cursor: 'pointer', fontSize: 10 }}>Enter Unlock Code</button>
           </>)}
 
-          {showUnlock && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          {showUnlock && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
             <div style={{ background: '#1a1a2e', padding: 20, borderRadius: 10, textAlign: 'center' }}>
               <div style={{ fontSize: 14, color: '#fff', marginBottom: 10 }}>Enter Unlock Code</div>
               <input value={unlockInput} onChange={e => setUnlockInput(e.target.value)} placeholder="Enter code" style={{ padding: 10, width: 200, borderRadius: 5, border: '1px solid #444', background: '#0a0a12', color: '#fff', marginBottom: 10 }} />
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
                 <button onClick={unlockPremium} style={{ padding: '8px 16px', background: '#22c55e', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer' }}>Unlock</button>
-                <button onClick={() => { setShowUnlock(false); setUnlockInput(''); }} style={{ padding: '8px 16px', background: '#666', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => setShowUnlock(false)} style={{ padding: '8px 16px', background: '#444', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer' }}>Cancel</button>
               </div>
             </div>
           </div>)}
@@ -492,12 +718,13 @@
 
       // ========== LESSON/PUZZLE/OPENING/VIDEO/2PLAYER MODES ==========
       if (mode === 'lesson') {
-        const lesson = LESSONS[currentLesson]; const canAccess = isPremium || lesson.free;
+        const lesson = LESSONS[currentLesson];
+        const canAccess = lesson.free || isPremium;
         const partColor = lesson.part === 'FRACTURE' ? '#ef4444' : lesson.part === 'PRESSURE' ? '#f59e0b' : '#22c55e';
         return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
             <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
-            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>Lesson {lesson.id}/27 {!canAccess && '🔒'}</div>
+            <div style={{ flex: 1, textAlign: 'center', fontSize: 10, color: '#888' }}>{currentLesson + 1}/{LESSONS.length}</div>
           </div>
           <div style={{ position: 'relative' }}>
             <div style={{ marginBottom: 6 }}><span style={{ fontSize: 9, color: partColor, fontWeight: 'bold' }}>{lesson.part}</span><span style={{ fontSize: 9, color: '#666' }}> • {lesson.section}</span></div>
@@ -507,23 +734,24 @@
             </div>
             {!canAccess && <LockedOverlay onBuy={() => window.open(GUMROAD_LINK, '_blank')} />}
           </div>
-          {canAccess && <div style={{ maxWidth: 320, padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 8 }}>
+          {canAccess && <div style={{ maxWidth: 304, marginBottom: 10 }}>
             <div style={{ fontSize: 10, color: '#ccc', lineHeight: 1.4, marginBottom: 6 }}>{lesson.desc}</div>
             <div style={{ fontSize: 9, color: '#4ade80' }}>🎯 {lesson.task}</div>
           </div>}
           <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={() => { if (currentLesson > 0) startLesson(currentLesson - 1); }} disabled={currentLesson === 0} style={{ padding: '6px 12px', background: currentLesson === 0 ? '#333' : '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: currentLesson === 0 ? 'default' : 'pointer', fontSize: 11 }}>← Prev</button>
-            <button onClick={() => { if (currentLesson < 26) startLesson(currentLesson + 1); else setMode('menu'); }} style={{ padding: '6px 12px', background: '#22c55e', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>{currentLesson === 26 ? 'Done' : 'Next →'}</button>
+            <button onClick={() => startLesson(Math.max(0, currentLesson - 1))} style={{ padding: '6px 12px', background: '#374151', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>← Prev</button>
+            <button onClick={() => startLesson(Math.min(LESSONS.length - 1, currentLesson + 1))} style={{ padding: '6px 12px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>Next →</button>
           </div>
         </div></div>);
       }
 
       if (mode === 'puzzle') {
-        const puzzle = PUZZLES[currentPuzzle]; const canAccess = isPremium || puzzle.free;
+        const puzzle = PUZZLES[currentPuzzle];
+        const canAccess = puzzle.free || isPremium;
         return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
             <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
-            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>Puzzle #{puzzle.id} {!canAccess && '🔒'}</div>
+            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>🧩 Puzzles</div>
           </div>
           <div style={{ fontSize: 10, color: '#888', marginBottom: 6 }}>Rating: {learning.puzzleRating}</div>
           <div style={{ position: 'relative' }}>
@@ -532,37 +760,38 @@
             </div>
             {!canAccess && <LockedOverlay onBuy={() => window.open(GUMROAD_LINK, '_blank')} />}
           </div>
-          {canAccess && <div style={{ padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 8, textAlign: 'center' }}>
+          {canAccess && <div style={{ maxWidth: 304, marginBottom: 10 }}>
             <div style={{ fontSize: 11, color: '#fff', marginBottom: 4 }}>{puzzle.theme} • {puzzle.toMove === 'white' ? 'White' : 'Black'} to move</div>
-            {puzzleStatus === 'correct' && <div style={{ fontSize: 12, color: '#22c55e', fontWeight: 'bold' }}>✓ Correct!</div>}
-            {puzzleStatus === 'wrong' && <div style={{ fontSize: 12, color: '#ef4444', fontWeight: 'bold' }}>✗ {puzzle.hint}</div>}
+            {puzzleStatus === 'correct' && <div style={{ color: '#22c55e', fontSize: 11 }}>✓ Correct!</div>}
+            {puzzleStatus === 'wrong' && <div style={{ color: '#ef4444', fontSize: 11 }}>✗ Wrong. Hint: {puzzle.hint}</div>}
           </div>}
           <button onClick={nextPuzzle} style={{ padding: '8px 16px', background: '#3b82f6', border: 'none', borderRadius: 5, color: '#fff', cursor: 'pointer', fontSize: 11 }}>Next →</button>
         </div></div>);
       }
 
       if (mode === 'opening') {
-        const opening = OPENINGS[currentOpening]; const canAccess = isPremium || opening.free;
+        const opening = OPENINGS[currentOpening];
+        const canAccess = opening.free || isPremium;
         return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
             <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
             <div style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: 'bold', color: '#ffd700' }}>Openings</div>
           </div>
           <div style={{ position: 'relative' }}>
-            <div style={{ fontSize: 13, fontWeight: 'bold', color: '#fff', marginBottom: 4 }}>{opening.name} {!canAccess && '🔒'}</div>
+            <div style={{ fontSize: 12, fontWeight: 'bold', color: '#ffd700', marginBottom: 4 }}>{opening.name}</div>
             <div style={{ fontSize: 10, color: '#888', marginBottom: 6 }}>{opening.eco} • {opening.level}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3, marginBottom: 8, opacity: canAccess ? 1 : 0.3 }}>
               {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, opening.board, [])))}
             </div>
             {!canAccess && <LockedOverlay onBuy={() => window.open(GUMROAD_LINK, '_blank')} />}
           </div>
-          {canAccess && <div style={{ maxWidth: 320, padding: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 8, textAlign: 'center' }}>
+          {canAccess && <div style={{ maxWidth: 304, marginBottom: 10 }}>
             <div style={{ fontSize: 11, color: '#4ade80', marginBottom: 4 }}>{opening.moves}</div>
             <div style={{ fontSize: 10, color: '#ccc' }}>{opening.desc}</div>
           </div>}
           <div className="scroll-container" style={{ maxHeight: '20vh', width: '100%', maxWidth: 320 }}>
-            {OPENINGS.map((o, i) => { const can = isPremium || o.free; return (<div key={i} onClick={() => setCurrentOpening(i)} style={{ padding: 8, marginBottom: 4, background: i === currentOpening ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.05)', borderRadius: 4, cursor: 'pointer', opacity: can ? 1 : 0.5 }}>
-              <div style={{ fontSize: 11, color: '#fff' }}>{o.name} {!can && '🔒'}</div>
+            {OPENINGS.map((o, i) => { const acc = o.free || isPremium; return (<div key={i} onClick={() => setCurrentOpening(i)} style={{ padding: '6px 10px', background: i === currentOpening ? 'rgba(255,215,0,0.1)' : 'rgba(255,255,255,0.03)', borderBottom: '1px solid #222', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 10, color: acc ? '#fff' : '#555' }}>{o.name} {!acc && '🔒'}</div>
               <div style={{ fontSize: 9, color: '#666' }}>{o.level}</div>
             </div>); })}
           </div>
@@ -570,8 +799,8 @@
       }
 
       if (mode === 'video') {
-        const categories = ['All', 'Beginner', 'Opening', 'Strategy', 'Endgame'];
-        const filtered = VIDEOS.filter(v => videoCategory === 'All' || v.category === videoCategory);
+        const categories = ['All', ...new Set(VIDEOS.map(v => v.category))];
+        const filtered = videoCategory === 'All' ? VIDEOS : VIDEOS.filter(v => v.category === videoCategory);
         return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', maxWidth: 350 }}>
             <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
@@ -581,9 +810,9 @@
             {categories.map(c => (<button key={c} onClick={() => setVideoCategory(c)} style={{ padding: '4px 8px', background: videoCategory === c ? '#ffd700' : 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 4, color: videoCategory === c ? '#000' : '#fff', cursor: 'pointer', fontSize: 9 }}>{c}</button>))}
           </div>
           <div className="scroll-container" style={{ maxHeight: '65vh', width: '100%', maxWidth: 350 }}>
-            {filtered.map((v, i) => { const canAccess = isPremium || v.free; return (<div key={i} onClick={() => canAccess && window.open(v.url, '_blank')} style={{ padding: 10, marginBottom: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 6, cursor: canAccess ? 'pointer' : 'default', opacity: canAccess ? 1 : 0.5 }}>
-              <div style={{ fontSize: 12, color: '#fff', fontWeight: 'bold', marginBottom: 2 }}>{v.title} {!canAccess && '🔒'}</div>
-              <div style={{ fontSize: 10, color: '#f59e0b' }}>{v.channel}</div>
+            {filtered.map((v, i) => { const acc = v.free || isPremium; return (<div key={i} onClick={() => acc && window.open(v.url, '_blank')} style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid #222', cursor: acc ? 'pointer' : 'default', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div><div style={{ fontSize: 11, color: acc ? '#fff' : '#555' }}>{v.title} {!acc && '🔒'}</div>
+              <div style={{ fontSize: 10, color: '#f59e0b' }}>{v.channel}</div></div>
             </div>); })}
           </div>
         </div></div>);
@@ -595,37 +824,37 @@
             <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
             <span style={{ fontSize: 12, fontWeight: 'bold', color: '#ffd700' }}>👥 2 Player</span>
           </div>
-          <div style={{ fontSize: 10, color: '#ef4444', marginBottom: 4 }}>⬆️ Black</div>
+          <div style={{ fontSize: 10, color: '#ef4444', marginBottom: 4 }}>⬛ Black</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3 }}>
             {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, board, [])))}
           </div>
-          <div style={{ fontSize: 10, color: '#4ade80', marginTop: 4 }}>⬇️ White</div>
+          <div style={{ fontSize: 10, color: '#4ade80', marginTop: 4 }}>⬜ White</div>
           <div style={{ marginTop: 10, padding: '8px 16px', borderRadius: 5, fontWeight: 'bold', fontSize: 12, background: status.includes('wins') ? '#ffd700' : twoPlayerTurn === 'white' ? '#4ade80' : '#ef4444', color: '#000' }}>
-            {status === 'white-wins' ? '⚪ White Wins!' : status === 'black-wins' ? '⚫ Black Wins!' : twoPlayerTurn === 'white' ? '⚪ White Turn' : '⚫ Black Turn'}
+            {status === 'white-wins' ? '⬜ White Wins!' : status === 'black-wins' ? '⬛ Black Wins!' : twoPlayerTurn === 'white' ? '⬜ White Turn' : '⬛ Black Turn'}
           </div>
-          <button onClick={reset} style={{ marginTop: 10, padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>🔄 Reset</button>
+          <button onClick={reset} style={{ marginTop: 10, padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>↺ Reset</button>
         </div></div>);
       }
 
       // ========== VS AI / SELF-PLAY ==========
       return (<div style={{ minHeight: '100vh', padding: 10 }}><div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <button onClick={() => { setMode('menu'); setPlaying(false); }} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
+          <button onClick={() => setMode('menu')} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>← Menu</button>
           <span style={{ fontSize: 12, fontWeight: 'bold', color: '#ffd700' }}>{mode === 'self-play' ? '🤖 V2 Self-Learn' : '⚔️ vs V2 AI'}</span>
         </div>
-        <div style={{ fontSize: 9, color: '#ef4444', marginBottom: 3 }}>⬆️ V2 AI (Black) • {learning.gamesPlayed} games</div>
+        <div style={{ fontSize: 9, color: '#ef4444', marginBottom: 3 }}>⬛ V2 AI (Black) • {learning.gamesPlayed} games</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,38px)', border: '2px solid #444', borderRadius: 3 }}>
           {[...Array(8)].map((_, r) => [...Array(8)].map((_, c) => renderSquare(r, c, board, [])))}
         </div>
-        <div style={{ fontSize: 9, color: '#4ade80', marginTop: 3 }}>⬇️ YOU (White)</div>
+        <div style={{ fontSize: 9, color: '#4ade80', marginTop: 3 }}>⬜ YOU (White)</div>
         <div style={{ marginTop: 10, padding: '8px 16px', borderRadius: 5, fontWeight: 'bold', fontSize: 12, background: status === 'white-wins' ? '#22c55e' : status === 'black-wins' ? '#ef4444' : thinking ? '#f59e0b' : '#4ade80', color: '#000' }}>
-          {status === 'white-wins' ? '🎉 You Win!' : status === 'black-wins' ? '🤖 AI Wins!' : thinking ? '🤔 V2 Thinking...' : '👆 Your Turn!'}
+          {status === 'white-wins' ? '🎉 You Win!' : status === 'black-wins' ? '🤖 AI Wins!' : thinking ? '🤖 V2 Thinking...' : '♟ Your Turn!'}
         </div>
-        {mode === 'self-play' && <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
+        {mode === 'self-play' && <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
           <button onClick={() => setPlaying(!playing)} style={{ padding: '6px 14px', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', background: playing ? '#ef4444' : '#22c55e', fontWeight: 'bold', fontSize: 11 }}>{playing ? '⏸ Pause' : '▶ Play'}</button>
           <select value={selfSpeed} onChange={e => setSelfSpeed(Number(e.target.value))} style={{ padding: 6, background: '#333', border: '1px solid #555', borderRadius: 4, color: '#fff', fontSize: 11 }}><option value={800}>Slow</option><option value={500}>Normal</option><option value={200}>Fast</option></select>
         </div>}
-        {mode === 'play' && <button onClick={reset} style={{ marginTop: 10, padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}>🔄 New Game</button>}
+        <button onClick={reset} style={{ marginTop: 8, padding: '5px 12px', background: '#374151', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 10 }}>↺ New Game</button>
         <div style={{ marginTop: 10, display: 'flex', gap: 4 }}>
           {Object.entries(learning.versions).map(([v, d]) => (<div key={v} style={{ padding: '2px 5px', background: 'rgba(255,255,255,0.05)', borderRadius: 3, fontSize: 8 }}><span style={{ color: v === 'A' ? '#3b82f6' : v === 'B' ? '#22c55e' : v === 'C' ? '#ef4444' : v === 'D' ? '#a855f7' : '#f59e0b', fontWeight: 'bold' }}>{v}</span><span style={{ color: '#666', marginLeft: 2 }}>{d.score}</span></div>))}
         </div>
