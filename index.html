@@ -855,4 +855,164 @@
                                 {pieceChar}
                               </span>
                             )}
-                    
+                          </div>
+                        );
+                      }))}
+                    </div>
+                    <div className="b-ranks">{ranks.map(r => <div key={r} className="r-label">{r}</div>)}</div>
+                  </div>
+                  <div className="board-labels bottom">{files.map(f => <div key={f} className="b-label">{f}</div>)}</div>
+                </div>
+
+                <div className="info-bar">
+                  <div className="info-item">
+                    <div className="info-val" style={{ color: '#FFD700' }}>{moveCount}</div>
+                    <div className="info-lbl">Move</div>
+                  </div>
+                  <div className="info-item">
+                    <div className="info-val" style={{ color: getColor(redLine) }}>{redLine}%</div>
+                    <div className="info-lbl">Red Line</div>
+                  </div>
+                  <div className="info-item">
+                    <div className="info-val" style={{ color: winnerVersion ? VERSIONS[winnerVersion].color : '#7A7189' }}>
+                      {winnerVersion ? `V${winnerVersion}` : '--'}
+                    </div>
+                    <div className="info-lbl">Leading</div>
+                  </div>
+                  <div className="info-item">
+                    <div className="info-val" style={{ color: '#00E5FF' }}>{wipers}%</div>
+                    <div className="info-lbl">Wipers</div>
+                  </div>
+                </div>
+
+                <div className="game-btns">
+                  <button className="g-btn primary"   onClick={newGame}>🔄 New</button>
+                  <button className="g-btn purple"    onClick={() => { setStep(0); setScreen('onboarding'); }}>❓ Help</button>
+                  <button className="g-btn secondary" onClick={undoMove}>↩️ Undo</button>
+                </div>
+              </div>
+
+              {/* RIGHT PANEL */}
+              <div className="panel right">
+                {/* Red Line & Wipers */}
+                <div className="section">
+                  <div className="section-head"><div className="section-title" style={{ color: '#FF5252' }}>🎯 Red Line & Wipers</div></div>
+                  <div className="section-body">
+                    <div className="metrics">
+                      <div className="metric">
+                        <div className="m-head">
+                          <div className="m-title">🎯 Red Line</div>
+                          <div className="m-val" style={{ color: getColor(redLine) }}>{redLine}%</div>
+                        </div>
+                        <div className="m-bar"><div className="m-fill" style={{ width: `${redLine}%`, background: getColor(redLine) }}></div></div>
+                        <div className="m-status">{redLine <= 33 ? '✓ Excellent!' : redLine <= 66 ? '⚠ Drifting' : '✗ Off track'}</div>
+                      </div>
+                      <div className="metric">
+                        <div className="m-head">
+                          <div className="m-title">🌧️ Wipers</div>
+                          <div className="m-val" style={{ color: '#FFD700' }}>{wipers}%</div>
+                        </div>
+                        <div className="m-bar"><div className="m-fill" style={{ width: `${wipers}%`, background: '#FFD700' }}></div></div>
+                        <div className="m-status">{wipers <= 33 ? '25% — Light' : wipers <= 66 ? '50% — Moderate' : '100% — Heavy'}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Coaches */}
+                <div className="section">
+                  <div className="section-head"><div className="section-title" style={{ color: '#8B5CF6' }}>🤖 AI Coaches</div></div>
+                  <div className="section-body">
+                    {Object.entries(AGENTS).map(([id, a]) => (
+                      <div key={id} className={`agent ${speaking === id ? 'speaking' : ''}`}>
+                        <div className="a-avatar" style={{ background: a.color }}>{a.avatar}</div>
+                        <div className="a-content">
+                          <div className="a-name">{a.name}</div>
+                          <div className="a-role">{a.role}</div>
+                          <div className="a-msg" style={{ borderColor: a.color }}>{agentMsgs[id]}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Move Log */}
+                <div className="section">
+                  <div className="section-head"><div className="section-title" style={{ color: '#00E5FF' }}>📜 Move Log</div></div>
+                  <div className="section-body">
+                    {log.map((e, i) => (
+                      <div key={i} className={`log-entry ${e.type}`}>
+                        <div className="log-head">
+                          <span className={`log-type ${e.type}`}>{e.type === 'mistake' ? '❌' : '✓'}</span>
+                          <span className="log-time">{e.time}</span>
+                        </div>
+                        <div className="log-content">{e.content}</div>
+                        <div className="log-lesson">💡 {e.lesson}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Patterns */}
+                <div className="section">
+                  <div className="section-head"><div className="section-title" style={{ color: '#22C55E' }}>📚 Patterns</div></div>
+                  <div className="section-body">
+                    {Object.entries(patterns).map(([k, p]) => (
+                      <div key={k} className="pattern">
+                        <div className="pat-icon">{p.icon}</div>
+                        <div className="pat-info">
+                          <div className="pat-name">{p.name}</div>
+                          <div className="pat-bar"><div className="pat-fill" style={{ width: `${p.conf*100}%`, background: getColor(p.conf, 'pat') }}></div></div>
+                        </div>
+                        <div className="pat-val" style={{ color: getColor(p.conf, 'pat') }}>{Math.round(p.conf*100)}%</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Gate overlay ─────────────────────────────────────────────── */}
+          {showGateOverlay && (
+            <div className="gate-overlay" onClick={(e) => { if (e.target.className === 'gate-overlay') setShowGateOverlay(false); }}>
+              <div className="gate-box">
+                <div className="gate-crown">👑</div>
+                <div className="gate-title">Unlock Full Access</div>
+                <div className="gate-sub">You've used your 5 free moves.</div>
+                <div className="gate-preview">✅ Tutorial &amp; Menu always free · ✅ First 5 moves vs AI free</div>
+                <div className="gate-price">$14.99</div>
+                <div className="gate-once">One-time purchase · Lifetime access · No subscription</div>
+                <a className="gate-buy" href={GUMROAD_URL} target="_blank" rel="noopener">🛒 Buy on Gumroad — $14.99</a>
+                <div className="gate-divider"><span>OR enter friend code</span></div>
+                <div className="gate-code-row">
+                  <input
+                    className="gate-input"
+                    value={codeInput}
+                    onChange={e => { setCodeInput(e.target.value); setCodeError(''); }}
+                    onKeyDown={e => e.key === 'Enter' && tryCode()}
+                    placeholder="e.g. 1TURKEY2CHICKEN3"
+                    maxLength={20}
+                  />
+                  <button className="gate-unlock-btn" onClick={tryCode}>Unlock</button>
+                </div>
+                <div className="gate-error">{codeError}</div>
+                <div className="gate-free-note">Got a code from a friend? Enter it above for free access.</div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Floating lock FAB ────────────────────────────────────────── */}
+          <button className={`lock-fab ${unlocked ? 'unlocked' : ''}`} onClick={() => setShowGateOverlay(true)} title={unlocked ? 'Full Access' : 'Unlock Full Game'}>
+            <span className="lock-fab-tip">{unlocked ? '✅ Unlocked' : '🔒 5 moves free'}</span>
+            {unlocked ? '✅' : '🔒'}
+          </button>
+
+        </>
+      );
+        };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
