@@ -1,1017 +1,1750 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>V2 Chess Academy + V3 Features - AI Learning System</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-primary: #0f0a1a;
-      --bg-secondary: #1a1225;
-      --bg-card: #231a30;
-      --bg-card-light: #2d2440;
-      --accent-gold: #FFD700;
-      --accent-green: #00E676;
-      --accent-blue: #00B0FF;
-      --accent-purple: #E040FB;
-      --accent-red: #FF5252;
-      --accent-orange: #FF9100;
-      --accent-pink: #FF4081;
-      --accent-cyan: #00E5FF;
-      --text-primary: #FFFFFF;
-      --text-secondary: #B8B0C8;
-      --text-muted: #7A7189;
-      --border: #3d2d55;
-      --glow-gold: rgba(255, 215, 0, 0.4);
-      --glow-purple: rgba(224, 64, 251, 0.4);
-      --glow-green: rgba(0, 230, 118, 0.4);
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Championship Chess V6 — Nested Thirds</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600&display=swap" rel="stylesheet">
+<style>
+/* ═══ ROOT ═══════════════════════════════════════════════════ */
+* { margin:0; padding:0; box-sizing:border-box; }
 
-    /* MENU */
-    .menu-screen { min-height: 100vh; background: linear-gradient(135deg, #0f0a1a, #1a1025, #251530); display: flex; flex-direction: column; align-items: center; padding: 40px; position: relative; }
-    .particles { position: absolute; inset: 0; pointer-events: none; }
-    .particle { position: absolute; width: 4px; height: 4px; border-radius: 50%; opacity: 0.6; animation: floatP 15s infinite linear; }
-    .particle:nth-child(1) { left: 10%; background: #E040FB; }
-    .particle:nth-child(2) { left: 25%; background: #FFD700; animation-delay: -3s; }
-    .particle:nth-child(3) { left: 45%; background: #00E5FF; animation-delay: -6s; }
-    .particle:nth-child(4) { left: 65%; background: #FF4081; animation-delay: -9s; }
-    .particle:nth-child(5) { left: 85%; background: #00E676; animation-delay: -12s; }
-    @keyframes floatP { 0% { transform: translateY(100vh); opacity: 0; } 10%,90% { opacity: 0.7; } 100% { transform: translateY(-100vh); opacity: 0; } }
+:root {
+  --bg:      #0a0a0f;
+  --bg2:     #12121a;
+  --bg3:     #1a1a24;
+  --gold:    #d4a574;
+  --gold2:   #f0c987;
+  --gold3:   #8b6914;
+  --white:   #f5f5f5;
+  --dim:     #6a6a7a;
+  --lsq:     #ecd9b9;
+  --dsq:     #ae8a68;
+  --ok:      #4a9c6a;
+  --lock:    #4a4a4a;
+  --frac:    #e8a84a;
+  --pres:    #e05050;
+  --shft:    #9b59b6;
+}
 
-    .menu-title h1 { font-size: 52px; font-weight: 900; display: flex; align-items: center; gap: 16px; }
-    .crown { font-size: 44px; animation: bounce 2s ease-in-out infinite; }
-    @keyframes bounce { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-8px) rotate(5deg); } }
-    .title-text { background: linear-gradient(135deg, #FFD700, #FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .menu-subtitle { font-size: 16px; color: var(--accent-cyan); margin: 8px 0; font-weight: 600; }
-    .menu-free { font-size: 14px; color: var(--accent-green); margin-bottom: 20px; }
-    .v3-badge { display: inline-block; padding: 6px 14px; background: linear-gradient(135deg, #FF6B35, #F7931E); border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 20px; }
-    .menu-grid { display: grid; grid-template-columns: repeat(2, 220px); gap: 16px; z-index: 10; }
-    .menu-btn { padding: 18px 24px; border: none; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.3s; color: white; text-transform: uppercase; }
-    .menu-btn:hover { transform: translateY(-4px) scale(1.02); }
-    .btn-vs-ai { background: linear-gradient(135deg, #9C27B0, #7B1FA2); }
-    .btn-2player { background: linear-gradient(135deg, #3F51B5, #303F9F); }
-    .btn-lessons { background: linear-gradient(135deg, #00BCD4, #0097A7); }
-    .btn-puzzles { background: linear-gradient(135deg, #E91E63, #C2185B); }
-    .btn-openings { background: linear-gradient(135deg, #8BC34A, #689F38); }
-    .btn-videos { background: linear-gradient(135deg, #FF5722, #E64A19); }
-    .btn-selflearn { background: linear-gradient(135deg, #FFC107, #FFA000); color: #1a1a2e; }
-    .btn-online { background: linear-gradient(135deg, #673AB7, #512DA8); }
+body { font-family:'Cormorant Garamond',Georgia,serif; background:var(--bg); min-height:100vh; color:var(--white); }
 
-    /* ONBOARDING */
-    .onboarding { display: none; min-height: 100vh; background: linear-gradient(135deg, #0f0a1a, #1a1025); padding: 40px; }
-    .onboarding.visible { display: block; }
-    .onboarding-header { text-align: center; margin-bottom: 30px; }
-    .onboarding-title { font-size: 36px; font-weight: 900; background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .onboarding-sub { font-size: 16px; color: var(--text-secondary); margin-top: 8px; }
-    .onboarding-mode { display: inline-block; padding: 8px 20px; background: var(--accent-purple); border-radius: 20px; font-size: 13px; font-weight: 700; margin-top: 12px; }
+.screen { display:none; min-height:100vh; padding:40px 20px; }
+.screen.active { display:flex; flex-direction:column; justify-content:center; align-items:center; }
 
-    .progress { max-width: 600px; margin: 0 auto 30px; display: flex; gap: 8px; }
-    .progress-step { flex: 1; height: 6px; background: var(--bg-card); border-radius: 3px; }
-    .progress-step.active { background: var(--accent-gold); box-shadow: 0 0 10px var(--glow-gold); }
-    .progress-step.done { background: var(--accent-green); }
+/* ═══ 1. CHARACTER SCREEN ════════════════════════════════════ */
+#charScreen { background:radial-gradient(ellipse at 50% 15%, rgba(212,165,116,.09) 0%, transparent 60%), var(--bg); }
 
-    .tut-container { max-width: 850px; margin: 0 auto; }
-    .tut-card { display: none; background: var(--bg-card); border: 2px solid var(--border); border-radius: 20px; padding: 36px; animation: fadeIn 0.4s; }
-    .tut-card.visible { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.char-hd { text-align:center; margin-bottom:36px; }
+.char-hd h1 { font-family:'Cinzel',serif; font-size:2em; color:var(--gold2); letter-spacing:5px; }
+.char-hd p  { color:var(--dim); font-style:italic; margin-top:8px; font-size:1.05em; }
 
-    .tut-header { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
-    .tut-icon { width: 70px; height: 70px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
-    .tut-title { font-size: 26px; font-weight: 800; }
-    .tut-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.arch-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; max-width:860px; width:100%; margin-bottom:28px; }
+@media(max-width:700px){ .arch-grid { grid-template-columns:repeat(3,1fr); } }
+@media(max-width:500px){ .arch-grid { grid-template-columns:repeat(2,1fr); } }
 
-    .tut-content { font-size: 15px; color: var(--text-secondary); line-height: 1.8; }
-    .tut-content strong { color: var(--text-primary); font-weight: 700; }
-    .tut-content ul { margin: 16px 0 16px 24px; }
-    .tut-content li { margin: 10px 0; }
+.arch-card {
+  background:var(--bg3); border:2px solid rgba(212,165,116,.18); border-radius:10px;
+  padding:18px 12px; text-align:center; cursor:pointer; transition:all .22s;
+}
+.arch-card:hover  { border-color:var(--gold); transform:translateY(-3px); box-shadow:0 8px 22px rgba(212,165,116,.18); }
+.arch-card.sel    { border-color:var(--gold2); background:rgba(212,165,116,.1); box-shadow:0 0 28px rgba(212,165,116,.22); }
+.arch-em  { font-size:2em; margin-bottom:7px; }
+.arch-lbl { font-family:'Cinzel',serif; font-size:.72em; color:var(--gold); letter-spacing:2px; text-transform:uppercase; }
 
-    .tut-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
-    .tut-box { background: var(--bg-primary); padding: 18px; border-radius: 12px; border: 2px solid var(--border); }
-    .tut-box-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-    .tut-box-content { font-size: 12px; color: var(--text-muted); }
+.wound-panel {
+  max-width:560px; width:100%; background:var(--bg3);
+  border:2px solid var(--gold3); border-radius:12px; padding:28px; margin:0 auto 26px; display:none;
+}
+.wound-panel.vis { display:block; }
+.wp-title { font-family:'Cinzel',serif; font-size:1.5em; color:var(--gold2); text-align:center; margin-bottom:18px; }
+.wp-row   { margin-bottom:13px; padding-bottom:13px; border-bottom:1px solid rgba(212,165,116,.11); }
+.wp-row:last-of-type { border-bottom:none; margin-bottom:0; }
+.wp-lbl   { font-family:'Cinzel',serif; font-size:.62em; letter-spacing:3px; color:var(--dim); text-transform:uppercase; margin-bottom:5px; }
+.wp-val   { font-size:1.02em; line-height:1.6; }
+.wp-wound { color:var(--frac); }
+.wp-desire{ color:var(--gold); }
+.wp-fear  { color:var(--pres); }
 
-    .tut-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; }
-    .nav-btn { padding: 12px 28px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
-    .nav-btn:hover { transform: translateY(-2px); }
-    .nav-btn.primary { background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: var(--bg-primary); }
-    .nav-btn.secondary { background: var(--bg-card-light); color: var(--text-primary); }
-    .nav-btn.skip { background: transparent; color: var(--text-muted); }
-    .step-ind { font-size: 12px; color: var(--text-muted); }
+.gold-btn {
+  display:block; width:100%; padding:14px; margin-top:20px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#000;
+  border:none; border-radius:6px; font-family:'Cinzel',serif; font-size:1.08em;
+  font-weight:700; cursor:pointer; letter-spacing:3px; text-transform:uppercase; transition:all .2s;
+}
+.gold-btn:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(240,201,135,.38); }
 
-    /* GAME */
-    .game { display: none; min-height: 100vh; background: var(--bg-primary); }
-    .game.visible { display: block; }
+.ghost-btn {
+  display:block; width:100%; padding:12px; margin-top:12px;
+  background:rgba(212,165,116,.06); color:var(--gold); border:1px solid var(--gold3);
+  border-radius:6px; font-family:'Cinzel',serif; font-size:.95em; cursor:pointer;
+  letter-spacing:2px; text-transform:uppercase; transition:all .2s;
+}
+.ghost-btn:hover { background:rgba(212,165,116,.12); }
 
-    .header { background: var(--bg-secondary); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); }
-    .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-    .logo-icon { font-size: 32px; animation: bounce 2s ease-in-out infinite; }
-    .logo h1 { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .logo-sub { font-size: 10px; color: var(--accent-purple); font-weight: 700; }
-    .header-btns { display: flex; gap: 10px; align-items: center; }
-    .h-btn { padding: 10px 18px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.3s; background: var(--bg-card); color: var(--text-primary); }
-    .h-btn:hover { transform: translateY(-2px); background: var(--bg-card-light); }
-    .h-btn.back { background: var(--accent-purple); color: white; }
-    .check-alert { color: #FF5252; font-weight: 800; font-size: 14px; padding: 8px 14px; background: rgba(255,82,82,0.1); border-radius: 8px; border: 1px solid rgba(255,82,82,0.3); animation: pulse 1s ease-in-out infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+#versionStep { max-width:810px; width:100%; }
+.ver-hd { text-align:center; margin-bottom:26px; }
+.ver-hd h2 { font-family:'Cinzel',serif; font-size:1.75em; color:var(--gold2); }
+.ver-hd p  { color:var(--dim); font-style:italic; margin-top:7px; font-size:.97em; }
 
-    .main { display: grid; grid-template-columns: 300px 1fr 350px; gap: 20px; padding: 20px; min-height: calc(100vh - 72px); }
+.ver-list { display:grid; gap:13px; }
+.ver-card {
+  background:var(--bg3); border:2px solid rgba(212,165,116,.18); border-radius:10px;
+  padding:20px 24px; cursor:pointer; transition:all .22s;
+  display:grid; grid-template-columns:36px 1fr 24px; gap:18px; align-items:center;
+}
+.ver-card:hover { border-color:var(--gold); transform:translateX(5px); box-shadow:0 0 18px rgba(212,165,116,.14); }
+.ver-num  { font-family:'Cinzel',serif; font-size:1.4em; color:var(--gold3); font-weight:700; }
+.ver-name { font-family:'Cinzel',serif; font-size:1em; color:var(--gold2); margin-bottom:4px; }
+.ver-path { font-style:italic; color:var(--dim); font-size:.9em; line-height:1.5; }
+.ver-arr  { color:var(--gold3); font-size:1.2em; }
 
-    .panel { display: flex; flex-direction: column; gap: 16px; }
-    .section { background: var(--bg-card); border: 2px solid var(--border); border-radius: 16px; padding: 18px; }
-    .section-head { margin-bottom: 14px; }
-    .section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-    .section-body { font-size: 12px; }
+/* ═══ 2. INTRO SCREEN ════════════════════════════════════════ */
+#introScreen { background:linear-gradient(180deg,#0a0a0f 0%,#1a0a2e 50%,#0a0a0f 100%); }
 
-    .v-card { background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; position: relative; transition: all 0.3s; }
-    .v-card.active { border-color: var(--accent-gold); box-shadow: 0 0 20px var(--glow-gold); }
-    .v-card.winner { border-color: var(--accent-green); box-shadow: 0 0 25px var(--glow-green); }
-    .v-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .v-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-    .v-info { flex: 1; }
-    .v-name { font-size: 13px; font-weight: 800; }
-    .v-approach { font-size: 9px; color: var(--text-muted); }
-    .v-score { font-size: 20px; font-weight: 900; min-width: 45px; text-align: right; }
-    .v-thinking { background: var(--bg-primary); padding: 10px; border-radius: 8px; margin-bottom: 8px; }
-    .think-label { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
-    .think-dot { width: 6px; height: 6px; border-radius: 50%; }
-    .think-text { font-size: 11px; color: var(--text-secondary); font-style: italic; }
-    .v-move { display: flex; justify-content: space-between; font-size: 11px; }
-    .move-val { font-weight: 800; }
+.intro-card {
+  background:var(--bg3); border:3px solid var(--gold); border-radius:12px;
+  padding:50px; max-width:700px; width:100%; box-shadow:0 30px 80px rgba(0,0,0,.8); text-align:center;
+}
+.intro-card h1 { font-family:'Cinzel',serif; font-size:3.2em; margin-bottom:18px; color:var(--gold2); }
+.intro-sub { font-size:1.35em; color:var(--gold); margin-bottom:36px; font-style:italic; }
+.intro-story {
+  background:rgba(0,0,0,.4); border-left:4px solid var(--gold); padding:28px;
+  margin:28px 0; line-height:1.85; font-size:1.08em; color:var(--white); text-align:left;
+}
+.intro-story p { margin-bottom:18px; }
+.intro-story p:last-child { margin-bottom:0; }
+.hl { color:var(--gold2); font-weight:600; }
+.intro-q {
+  background:linear-gradient(135deg,rgba(212,165,116,.1),rgba(212,165,116,.05));
+  border:2px solid var(--gold); border-radius:8px; padding:22px; margin:28px 0;
+  font-size:1.25em; font-family:'Cinzel',serif; color:var(--gold2);
+}
+.name-row { margin:26px 0; }
+.name-row input {
+  width:100%; padding:14px; background:var(--bg2); border:2px solid var(--gold3);
+  color:var(--white); font-family:'Cormorant Garamond',Georgia,serif; font-size:1.18em;
+  border-radius:6px; text-align:center; outline:none; transition:border .2s;
+}
+.name-row input:focus { border-color:var(--gold); }
+.start-btn {
+  width:100%; padding:17px; font-size:1.35em;
+  background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#000;
+  border:none; border-radius:6px; font-family:'Cinzel',serif; font-weight:700;
+  cursor:pointer; margin-top:18px; text-transform:uppercase; letter-spacing:3px; transition:all .2s;
+}
+.start-btn:hover { transform:translateY(-2px); box-shadow:0 14px 38px rgba(240,201,135,.38); }
 
-    .center { flex: 1; display: flex; flex-direction: column; }
-    .game-head { text-align: center; margin-bottom: 14px; }
-    .game-title { font-size: 24px; font-weight: 900; background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .game-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-    .game-sub.your-turn { color: var(--accent-green); font-weight: 700; font-size: 12px; }
-    .game-sub.ai-turn { color: var(--accent-purple); font-weight: 700; font-size: 12px; }
-    .game-sub.game-over { color: var(--accent-gold); font-weight: 900; font-size: 14px; }
+/* ═══ 3. TOURNAMENT SCREEN ═══════════════════════════════════ */
+#tournScreen { background:linear-gradient(135deg,rgba(21,21,32,.96) 0%,rgba(26,26,38,.96) 100%); }
 
-    .player-bar { display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 18px; background: var(--bg-card); padding: 12px 20px; border-radius: 12px; }
-    .player { display: flex; align-items: center; gap: 10px; }
-    .p-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 3px solid var(--border); }
-    .p-avatar.human { background: linear-gradient(135deg, #FFD700, #FFA500); }
-    .p-avatar.ai { background: linear-gradient(135deg, #E040FB, #9C27B0); }
-    .p-name { font-size: 14px; font-weight: 800; }
-    .p-label { font-size: 10px; color: var(--text-muted); }
-    .vs { font-size: 16px; font-weight: 900; color: var(--accent-red); }
+.t-header { text-align:center; margin-bottom:26px; max-width:700px; }
+.t-header h1 { font-family:'Cinzel',serif; font-size:2.6em; color:var(--gold2); }
 
-    .board-wrap { display: flex; flex-direction: column; align-items: center; background: var(--bg-card); border: 3px solid var(--border); border-radius: 16px; padding: 14px; }
-    .board-labels { display: flex; gap: 0; }
-    .board-labels.top { margin-bottom: 4px; }
-    .board-labels.bottom { margin-top: 4px; }
-    .b-label { width: 60px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text-muted); }
+.p-card {
+  text-align:center; margin-bottom:18px; padding:18px 24px;
+  background:var(--bg3); border:3px solid var(--gold); border-radius:8px;
+  max-width:620px; width:100%;
+}
+.p-av   { font-size:2.8em; margin:8px 0 4px; }
+.p-name { font-family:'Cinzel',serif; font-size:1.75em; color:var(--gold2); }
+.p-arch { font-size:.83em; color:var(--gold); margin-top:4px; letter-spacing:2px; }
+.p-wound{ font-style:italic; color:var(--dim); font-size:.88em; margin-top:7px; padding-top:9px; border-top:1px solid rgba(212,165,116,.14); }
 
-    .board-main { display: flex; gap: 0; }
-    .b-ranks { display: flex; flex-direction: column; gap: 0; }
-    .r-label { width: 20px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text-muted); }
+.round-beat {
+  max-width:600px; width:100%; text-align:center; padding:14px 22px;
+  margin-bottom:16px; background:rgba(212,165,116,.06); border-left:3px solid var(--gold);
+  border-radius:4px; font-style:italic; font-size:1.08em; color:var(--gold); display:none;
+}
+.round-beat.vis { display:block; }
 
-    .chess-board { display: grid; grid-template-columns: repeat(8, 60px); grid-template-rows: repeat(8, 60px); gap: 0; border: 3px solid #8B6914; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-    .cell { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: all 0.2s; }
-    .cell.light { background: #F0D9B5; }
-    .cell.dark { background: #B58863; }
-    .cell:hover { opacity: 0.85; }
-    .cell.selected { box-shadow: inset 0 0 0 4px var(--accent-gold); z-index: 5; }
-    .cell.valid::before { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: rgba(0,230,118,0.5); z-index: 4; }
-    .cell.valid.occupied::before { content: ''; position: absolute; inset: 0; border-radius: 0; background: transparent; box-shadow: inset 0 0 0 4px rgba(0,230,118,0.6); z-index: 4; width: 100%; height: 100%; }
-    .cell.last { box-shadow: inset 0 0 0 3px var(--accent-purple); }
-    .piece { font-size: 42px; user-select: none; transition: transform 0.2s; position: relative; z-index: 3; }
-    .piece:hover { transform: scale(1.1); }
-    .piece.white { color: #FFFFFF; filter: drop-shadow(0 1px 4px rgba(0,0,0,0.9)) drop-shadow(0 0 8px rgba(0,0,0,0.5)); }
-    .piece.black { color: #111111; filter: drop-shadow(0 1px 3px rgba(255,255,255,0.5)) drop-shadow(0 0 6px rgba(0,0,0,0.4)); }
+/* Save state indicator */
+.save-notice {
+  max-width:600px; width:100%; text-align:center; padding:8px 18px;
+  margin-bottom:10px; background:rgba(74,156,106,.08); border:1px solid rgba(74,156,106,.3);
+  border-radius:4px; font-size:.8em; color:var(--ok); display:none;
+}
+.save-notice.vis { display:block; }
 
-    /* ── PAYWALL ─────────────────────────────────────────────────────── */
-    .gate-overlay { position: fixed; inset: 0; background: rgba(10,5,20,0.92); backdrop-filter: blur(12px); z-index: 9000; display: flex; align-items: center; justify-content: center; }
-    .gate-box { background: linear-gradient(135deg,#1a1030,#231540); border: 2px solid #FFD700; border-radius: 24px; padding: 40px 36px; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 0 60px rgba(255,215,0,0.25); }
-    .gate-crown { font-size: 52px; margin-bottom: 12px; animation: bounce 2s ease-in-out infinite; }
-    .gate-title { font-size: 26px; font-weight: 900; background: linear-gradient(135deg,#FFD700,#FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
-    .gate-sub { color: #B8B0C8; font-size: 14px; margin-bottom: 6px; }
-    .gate-preview { color: #00E676; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
-    .gate-price { font-size: 42px; font-weight: 900; color: #FFD700; margin-bottom: 6px; }
-    .gate-once { color: #7A7189; font-size: 12px; margin-bottom: 20px; }
-    .gate-buy { display: block; padding: 16px; background: linear-gradient(135deg,#FF6B35,#F7931E); border: none; border-radius: 14px; font-size: 18px; font-weight: 800; color: white; cursor: pointer; width: 100%; margin-bottom: 20px; transition: all 0.3s; text-decoration: none; }
-    .gate-buy:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,107,53,0.4); }
-    .gate-divider { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .gate-divider::before,.gate-divider::after { content: ''; flex: 1; height: 1px; background: #3d2d55; }
-    .gate-divider span { color: #7A7189; font-size: 12px; }
-    .gate-code-row { display: flex; gap: 8px; margin-bottom: 8px; }
-    .gate-input { flex: 1; padding: 12px 14px; background: #0f0a1a; border: 2px solid #3d2d55; border-radius: 10px; color: #fff; font-size: 14px; font-family: 'Inter',sans-serif; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-    .gate-input:focus { outline: none; border-color: #FFD700; }
-    .gate-input::placeholder { text-transform: none; letter-spacing: 0; color: #7A7189; font-weight: 400; }
-    .gate-unlock-btn { padding: 12px 18px; background: linear-gradient(135deg,#9C27B0,#7B1FA2); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer; font-size: 14px; white-space: nowrap; transition: all 0.2s; }
-    .gate-unlock-btn:hover { background: linear-gradient(135deg,#AB47BC,#8E24AA); }
-    .gate-error { color: #FF5252; font-size: 12px; margin-bottom: 8px; min-height: 18px; }
-    .gate-free-note { color: #7A7189; font-size: 11px; }
+.t-bracket { max-width:660px; width:100%; margin-bottom:28px; }
+.b-title   { font-family:'Cinzel',serif; font-size:1.35em; color:var(--gold2); margin-bottom:14px; text-align:center; }
+.opp-list  { display:grid; gap:13px; }
 
-    /* floating lock button */
-    .lock-fab { position: fixed; bottom: 18px; right: 18px; z-index: 8000; width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg,#FFD700,#FFA500); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 16px rgba(255,215,0,0.4); transition: all 0.3s; }
-    .lock-fab:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(255,215,0,0.6); }
-    .lock-fab.unlocked { background: linear-gradient(135deg,#00E676,#00C853); box-shadow: 0 4px 16px rgba(0,230,118,0.4); }
-    .lock-fab-tip { position: absolute; bottom: 52px; right: 0; background: #1a1225; border: 1px solid #3d2d55; border-radius: 8px; padding: 4px 10px; font-size: 11px; color: #B8B0C8; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
-    .lock-fab:hover .lock-fab-tip { opacity: 1; }
-    .free-badge { display: inline-block; background: #00E676; color: #0f0a1a; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
-    .locked-btn { opacity: 0.7; position: relative; }
+.opp-card {
+  background:var(--bg3); border:3px solid; border-radius:8px; padding:16px 18px;
+  cursor:pointer; transition:all .28s; display:flex; justify-content:space-between; align-items:center;
+}
+.opp-card.locked { border-color:var(--lock); opacity:.4; cursor:not-allowed; }
+.opp-card.bronze { border-color:#cd7f32; }
+.opp-card.silver { border-color:#c0c0c0; }
+.opp-card.gold   { border-color:#ffd700; }
+.opp-card.champ  { border-color:#a855f7; }
+.opp-card:not(.locked):hover { transform:translateY(-3px); box-shadow:0 8px 22px rgba(212,165,116,.28); }
+.opp-av   { font-size:2.1em; margin-right:13px; }
+.opp-info { flex:1; }
+.opp-nm   { font-family:'Cinzel',serif; font-size:1.07em; color:var(--gold); margin-bottom:3px; }
+.opp-ci   { font-size:.82em; color:var(--dim); }
+.opp-st   { text-align:right; font-size:.9em; font-weight:600; }
+.s-won    { color:var(--ok); }
+.s-lock   { color:var(--lock); }
+.s-avail  { color:var(--gold2); }
 
-    .info-bar { display: flex; gap: 14px; margin-top: 20px; padding: 14px 20px; background: var(--bg-card); border-radius: 12px; }
-    .info-item { text-align: center; min-width: 70px; }
-    .info-val { font-size: 24px; font-weight: 900; }
-    .info-lbl { font-size: 10px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; }
-    .game-btns { display: flex; gap: 10px; margin-top: 18px; }
-    .g-btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
-    .g-btn:hover { transform: translateY(-2px); }
-    .g-btn.primary { background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange)); color: var(--bg-primary); }
-    .g-btn.purple { background: var(--accent-purple); color: white; }
-    .g-btn.secondary { background: var(--bg-card); border: 2px solid var(--border); color: var(--text-primary); }
+/* ═══ 4. GAME SCREEN ═════════════════════════════════════════ */
+#gameScreen { background:linear-gradient(135deg,rgba(21,21,32,.96) 0%,rgba(26,26,38,.96) 100%); }
 
-    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .metric { background: var(--bg-primary); border-radius: 10px; padding: 14px; }
-    .m-head { display: flex; justify-content: space-between; margin-bottom: 10px; }
-    .m-title { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-    .m-val { font-size: 20px; font-weight: 900; }
-    .m-bar { height: 8px; background: var(--bg-card); border-radius: 4px; overflow: hidden; }
-    .m-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-    .m-status { font-size: 9px; color: var(--text-muted); margin-top: 6px; }
+.game-wrap {
+  display:grid; grid-template-columns:1fr 314px; gap:26px; max-width:1050px; width:100%;
+}
+@media(max-width:1000px){ .game-wrap { grid-template-columns:1fr; } }
 
-    .agent { display: flex; gap: 12px; padding: 12px; background: var(--bg-primary); border-radius: 10px; margin-bottom: 10px; border: 2px solid transparent; transition: all 0.4s; }
-    .agent.speaking { border-color: var(--accent-purple); box-shadow: 0 0 20px var(--glow-purple); }
-    .a-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-    .a-content { flex: 1; }
-    .a-name { font-size: 12px; font-weight: 700; }
-    .a-role { font-size: 9px; color: var(--text-muted); }
-    .a-msg { font-size: 11px; color: var(--text-secondary); margin-top: 6px; padding: 8px; background: var(--bg-card); border-radius: 8px; border-left: 3px solid; line-height: 1.5; }
+.p-strip {
+  background:rgba(212,165,116,.05); border:1px solid rgba(212,165,116,.18);
+  border-radius:8px; padding:9px 15px; margin-bottom:11px;
+  display:flex; align-items:center; gap:12px;
+}
+.strip-em { font-size:1.55em; }
+.strip-nm { font-family:'Cinzel',serif; font-size:.93em; color:var(--gold2); }
+.strip-wd { font-style:italic; color:var(--dim); font-size:.77em; margin-top:2px; }
 
-    .log-entry { padding: 12px; background: var(--bg-primary); border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--border); }
-    .log-entry.mistake { border-left-color: var(--accent-red); }
-    .log-entry.success { border-left-color: var(--accent-green); }
-    .log-head { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .log-type { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 6px; }
-    .log-type.mistake { background: rgba(255,82,82,0.2); color: var(--accent-red); }
-    .log-type.success { background: rgba(0,230,118,0.2); color: var(--accent-green); }
-    .log-time { font-size: 9px; color: var(--text-muted); }
-    .log-content { font-size: 11px; color: var(--text-secondary); }
-    .log-lesson { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 10px; color: var(--accent-green); }
+.board {
+  display:grid; grid-template-columns:repeat(8,1fr);
+  background:var(--dsq); border:4px solid var(--gold); padding:4px; border-radius:8px;
+}
+.sq { aspect-ratio:1; display:flex; justify-content:center; align-items:center; font-size:2.4em; cursor:pointer; user-select:none; transition:background .1s; }
+.sq.lt  { background:var(--lsq); }
+.sq.dk  { background:var(--dsq); }
+.sq.sel { background:rgba(240,201,135,.78) !important; }
+.sq.vm  { background:rgba(74,200,120,.42) !important; cursor:pointer; }
+.sq.vc  { background:rgba(220,60,60,.54) !important; cursor:crosshair; }
+.sq.lmf { background:rgba(212,165,116,.24) !important; }
+.sq.lmt { background:rgba(212,165,116,.42) !important; }
+.sq.chk { background:rgba(220,60,60,.65) !important; }
 
-    .pattern { display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--bg-primary); border-radius: 8px; margin-bottom: 8px; }
-    .pat-icon { font-size: 20px; }
-    .pat-info { flex: 1; }
-    .pat-name { font-size: 11px; font-weight: 700; }
-    .pat-bar { height: 6px; background: var(--bg-card); border-radius: 3px; margin-top: 6px; overflow: hidden; }
-    .pat-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-    .pat-val { font-size: 14px; font-weight: 800; min-width: 45px; text-align: right; }
+.board-foot { text-align:center; margin-top:11px; }
+.b-vs { color:var(--gold); font-family:'Cinzel',serif; font-size:1em; }
+.b-ind{ color:var(--dim); font-style:italic; font-size:.8em; margin-top:4px; }
 
-    @media (max-width: 1400px) {
-      .main { grid-template-columns: 280px 1fr 320px; }
-      .chess-board { grid-template-columns: repeat(8,55px); grid-template-rows: repeat(8,55px); }
-      .cell { width: 55px; height: 55px; font-size: 38px; }
-      .b-label, .r-label { width: 55px; height: 55px; }
-    }
-  </style>
+.sidebar {
+  background:var(--bg3); border:3px solid var(--gold); border-radius:12px;
+  padding:20px; display:flex; flex-direction:column; gap:13px;
+}
+.opp-game-hd { text-align:center; border-bottom:2px solid var(--gold3); padding-bottom:13px; }
+.opp-game-av { font-size:3em; margin:6px 0; }
+.opp-game-nm { font-family:'Cinzel',serif; font-size:1.28em; color:var(--gold2); }
+
+.ps-label {
+  font-size:.63em; font-family:'Cinzel',serif; letter-spacing:3px; text-transform:uppercase;
+  text-align:center; margin-top:5px; transition:color .7s;
+}
+.ps-base { color:var(--dim); }
+.ps-frac { color:var(--frac); }
+.ps-pres { color:var(--pres); }
+.ps-shft { color:var(--shft); }
+
+.wiper { display:flex; gap:4px; justify-content:center; margin-top:7px; }
+.wdot  {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--bg2); border:1px solid var(--gold3); transition:background .4s;
+}
+.wdot.on { background:var(--gold); }
+
+.dlg {
+  background:var(--bg2); border:2px solid var(--gold3); border-radius:6px;
+  padding:15px; min-height:98px; font-size:.91em; line-height:1.62; color:var(--white); transition:border-color .7s;
+}
+.dlg.f { border-color:var(--frac); }
+.dlg.p { border-color:var(--pres); }
+.dlg.s { border-color:var(--shft); }
+.dlg-sp { color:var(--gold2); font-family:'Cinzel',serif; font-weight:700; margin-bottom:6px; font-size:.85em; }
+
+.pw-block {
+  background:rgba(212,165,116,.04); border:1px solid rgba(212,165,116,.14);
+  border-radius:6px; padding:11px; font-size:.79em;
+}
+.pw-title { font-family:'Cinzel',serif; font-size:.67em; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-bottom:7px; }
+.pw-row   { margin-bottom:4px; }
+.pw-lbl   { color:var(--dim); }
+.pw-val   { color:var(--white); font-style:italic; }
+
+.cap-row  { display:flex; justify-content:space-between; font-size:.77em; color:var(--dim); }
+
+.adv-wrap { display:flex; flex-direction:column; gap:4px; }
+.adv-lbl  { font-size:.67em; font-family:'Cinzel',serif; letter-spacing:2px; color:var(--dim); text-align:center; }
+.adv-bg   { background:rgba(255,255,255,.07); border-radius:4px; height:6px; overflow:hidden; position:relative; }
+.adv-bar  { height:100%; border-radius:4px; transition:width .5s,background .5s; position:absolute; }
+.adv-bar.ply { background:var(--gold); left:50%; }
+.adv-bar.opp { background:var(--pres); right:50%; }
+
+.mv-ind { font-size:.77em; color:var(--dim); text-align:center; font-style:italic; }
+
+.dlg.plr { border-color:var(--gold2); }
+
+.retort-wrap { display:flex; flex-direction:column; gap:5px; }
+.retort-lbl  { font-size:.63em; font-family:'Cinzel',serif; letter-spacing:2px; color:var(--dim); text-align:center; margin-bottom:2px; }
+.retort-btn  {
+  padding:8px 10px; background:rgba(212,165,116,.04); color:var(--dim);
+  border:1px solid rgba(212,165,116,.18); border-radius:5px;
+  font-family:'Cormorant Garamond',Georgia,serif; font-size:.83em;
+  cursor:pointer; text-align:left; transition:all .2s; font-style:italic; line-height:1.4;
+}
+.retort-btn:hover:not(:disabled) { background:rgba(212,165,116,.1); color:var(--gold); border-color:var(--gold3); }
+.retort-btn:disabled { opacity:.28; cursor:not-allowed; }
+
+/* ═══ 5. CHAMPION SCREEN ═════════════════════════════════════ */
+#champScreen { background:radial-gradient(ellipse at 50% 25%,rgba(212,165,116,.16) 0%,transparent 60%),var(--bg); }
+
+.champ-card {
+  max-width:670px; width:100%; text-align:center; padding:55px 46px;
+  background:var(--bg3); border:3px solid var(--gold2); border-radius:16px;
+  box-shadow:0 0 80px rgba(212,165,116,.18);
+}
+.champ-trophy { font-size:5em; margin-bottom:18px; animation:glow 2s infinite; }
+@keyframes glow {
+  0%,100% { filter:drop-shadow(0 0 15px rgba(212,165,116,.5)); }
+  50%      { filter:drop-shadow(0 0 42px rgba(212,165,116,.95)); }
+}
+.champ-title  { font-family:'Cinzel',serif; font-size:2.7em; color:var(--gold2); letter-spacing:7px; margin-bottom:8px; }
+.champ-name   { font-family:'Cinzel',serif; font-size:1.75em; color:var(--gold); margin-bottom:4px; }
+.champ-arch   { color:var(--dim); font-size:.95em; margin-bottom:26px; letter-spacing:2px; }
+.champ-div    { border:none; border-top:1px solid rgba(212,165,116,.22); margin:22px 0; }
+.champ-ver    { font-family:'Cinzel',serif; font-size:1.05em; color:var(--shft); letter-spacing:3px; text-transform:uppercase; margin-bottom:11px; }
+.champ-line   { font-size:1.26em; font-style:italic; color:var(--gold2); line-height:1.82; max-width:490px; margin:0 auto 26px; }
+
+.arc-stage-row {
+  display:flex; justify-content:space-between;
+  font-family:'Cinzel',serif; font-size:.65em; letter-spacing:1px; margin-bottom:8px; max-width:440px; margin-left:auto; margin-right:auto;
+}
+.arc-grid {
+  display:grid; grid-template-columns:repeat(7,1fr);
+  gap:6px; margin:0 auto 26px; max-width:440px;
+}
+.arc-beat {
+  background:rgba(212,165,116,.05); border:1px solid rgba(212,165,116,.18);
+  border-radius:7px; padding:9px 4px; font-size:.65em; color:var(--dim); text-align:center;
+}
+.arc-beat.f  { border-color:var(--frac); color:var(--frac); background:rgba(232,168,74,.1); }
+.arc-beat.p  { border-color:var(--pres); color:var(--pres); background:rgba(224,80,80,.1); }
+.arc-beat.s  { border-color:var(--shft); color:var(--shft); background:rgba(155,89,182,.1); }
+
+.replay-btn {
+  padding:13px 48px; background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#000;
+  border:none; border-radius:8px; font-family:'Cinzel',serif; font-size:1.08em;
+  font-weight:700; cursor:pointer; letter-spacing:3px; text-transform:uppercase; transition:all .2s;
+}
+.replay-btn:hover { transform:translateY(-3px); box-shadow:0 14px 38px rgba(240,201,135,.38); }
+
+/* ═══ PAYWALL ═══════════════════════════════════════════════════ */
+.gate-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.90); z-index:9999;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.gate-box {
+  background:var(--bg3); border:3px solid var(--gold); border-radius:16px;
+  padding:44px 38px; max-width:480px; width:100%; text-align:center;
+  box-shadow:0 0 80px rgba(212,165,116,.24);
+}
+.gate-crown  { font-size:3.2em; margin-bottom:12px; }
+.gate-title  { font-family:'Cinzel',serif; font-size:1.9em; color:var(--gold2); margin-bottom:8px; letter-spacing:3px; }
+.gate-sub    { color:var(--dim); font-style:italic; margin-bottom:18px; font-size:1.05em; line-height:1.55; }
+.gate-preview{ font-size:.85em; color:#4a9c6a; margin-bottom:20px; }
+.gate-price  { font-family:'Cinzel',serif; font-size:2.4em; color:var(--gold2); margin-bottom:4px; }
+.gate-once   { font-size:.8em; color:var(--dim); margin-bottom:22px; }
+.gate-buy {
+  display:block; padding:15px 28px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#000; border-radius:8px; font-family:'Cinzel',serif; font-size:1.08em;
+  font-weight:700; text-decoration:none; letter-spacing:2px; margin-bottom:22px;
+  transition:all .2s;
+}
+.gate-buy:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(240,201,135,.38); }
+.gate-divider { text-align:center; color:var(--dim); font-size:.82em; margin:16px 0; position:relative; }
+.gate-divider::before,.gate-divider::after {
+  content:''; position:absolute; top:50%; width:38%; height:1px;
+  background:rgba(212,165,116,.2);
+}
+.gate-divider::before { left:0; } .gate-divider::after { right:0; }
+.gate-code-row { display:flex; gap:10px; margin-bottom:10px; }
+.gate-input {
+  flex:1; padding:11px 14px; background:var(--bg2); border:2px solid var(--gold3);
+  color:var(--white); border-radius:6px; font-size:1em; outline:none; font-family:monospace;
+  transition:border .2s;
+}
+.gate-input:focus { border-color:var(--gold); }
+.gate-unlock-btn {
+  padding:11px 18px; background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#000; border:none; border-radius:6px; font-family:'Cinzel',serif;
+  font-size:.9em; font-weight:700; cursor:pointer; letter-spacing:1px;
+}
+.gate-error { color:#e05050; font-size:.84em; min-height:20px; margin-bottom:6px; }
+.gate-free-note { font-size:.78em; color:var(--dim); font-style:italic; }
+.lock-fab {
+  position:fixed; bottom:22px; right:22px; z-index:8888;
+  width:52px; height:52px; border-radius:50%;
+  background:linear-gradient(135deg,var(--gold3),var(--gold));
+  border:none; font-size:1.5em; cursor:pointer;
+  box-shadow:0 4px 18px rgba(212,165,116,.45);
+  display:flex; align-items:center; justify-content:center; position:relative;
+}
+.lock-fab.unlocked { display:none; }
+.lock-fab-tip {
+  position:absolute; bottom:58px; right:0; background:var(--bg3);
+  border:1px solid var(--gold3); color:var(--gold); font-size:.62em;
+  padding:5px 10px; border-radius:6px; white-space:nowrap;
+  opacity:0; pointer-events:none; transition:opacity .2s;
+  font-family:'Cinzel',serif; letter-spacing:1px;
+}
+.lock-fab:hover .lock-fab-tip { opacity:1; }
+</style>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.min.js"></script>
-  <script type="text/babel">
-    const { useState } = React;
 
-    // ── Piece Unicode Map (color+type → symbol) ──────────────────────────────
-    const PIECE_MAP = {
-      bp: '♟', bn: '♞', bb: '♝', br: '♜', bq: '♛', bk: '♚',
-      wp: '♙', wn: '♘', wb: '♗', wr: '♖', wq: '♕', wk: '♔'
-    };
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SCREEN 1 — CHARACTER ENGINE                           ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<div id="charScreen" class="screen active">
+  <div class="char-hd">
+    <h1>WHO ARE YOU, CHALLENGER?</h1>
+    <p>Choose your archetype. The board will know.</p>
+  </div>
 
-    const VERSIONS = {
-      A: { id: 'A', name: 'Conservative', approach: 'Safe & Defensive', color: '#3B82F6', icon: '🛡️' },
-      B: { id: 'B', name: 'Balanced', approach: 'Classical Play', color: '#22C55E', icon: '⚖️' },
-      C: { id: 'C', name: 'Aggressive', approach: 'Attack Mode', color: '#F97316', icon: '⚔️' },
-      D: { id: 'D', name: 'Experimental', approach: 'Testing Ideas', color: '#EF4444', icon: '🧪' },
-      E: { id: 'E', name: 'Synthesizer', approach: 'Optimal Choice', color: '#E040FB', icon: '🔮' }
-    };
+  <div id="archetypeStep" style="max-width:860px;width:100%">
+    <div class="arch-grid" id="archGrid"></div>
+    <div class="wound-panel" id="woundPanel">
+      <div class="wp-title" id="wpTitle"></div>
+      <div class="wp-row"><div class="wp-lbl">WOUND</div><div class="wp-val wp-wound"  id="wpWound"></div></div>
+      <div class="wp-row"><div class="wp-lbl">DESIRE</div><div class="wp-val wp-desire" id="wpDesire"></div></div>
+      <div class="wp-row"><div class="wp-lbl">FEAR</div>  <div class="wp-val wp-fear"   id="wpFear"></div></div>
+      <button class="gold-btn" onclick="showVersionStep()">CHOOSE YOUR PATH →</button>
+    </div>
+    <button class="ghost-btn" style="max-width:560px;margin:0 auto;display:block" onclick="skipCharacter()">SKIP — ENTER AS UNKNOWN CHALLENGER</button>
+  </div>
 
-    const AGENTS = {
-      professor: { name: 'Professor', role: 'Strategic Advisor', avatar: '🎓', color: '#3B82F6' },
-      critic:    { name: 'Critic',    role: 'Move Analyst',      avatar: '🔍', color: '#EF4444' },
-      mentor:    { name: 'Mentor',    role: 'Supportive Coach',  avatar: '🧙', color: '#8B5CF6' },
-      spark:     { name: 'Spark',     role: 'Creative Ideas',    avatar: '⚡', color: '#FFD700' },
-      data:      { name: 'Data',      role: 'Pattern Tracker',   avatar: '📊', color: '#22C55E' }
-    };
+  <div id="versionStep" style="display:none;max-width:810px;width:100%">
+    <div class="ver-hd">
+      <h2>FIVE PATHS FORWARD</h2>
+      <p id="verSubtitle">Same wound. Five different lives from this point.</p>
+    </div>
+    <div class="ver-list" id="verList"></div>
+    <button class="ghost-btn" style="margin-top:16px" onclick="goBackToArchetypes()">← CHOOSE DIFFERENT ARCHETYPE</button>
+  </div>
+</div>
 
-    const STEPS = [
-      { id: 'welcome',  icon: '👋', bg: 'linear-gradient(135deg,#FFD700,#FF9100)', title: 'Welcome to V2 Chess Academy!', sub: 'Learn how the AI system works' },
-      { id: 'versions', icon: '🔀', bg: 'linear-gradient(135deg,#E040FB,#9C27B0)', title: '5 Parallel Versions', sub: 'Multiple AI strategies at once' },
-      { id: 'redline',  icon: '🎯', bg: 'linear-gradient(135deg,#FF5252,#D32F2F)', title: 'Red Line System', sub: 'Tracking your progress' },
-      { id: 'agents',   icon: '🤖', bg: 'linear-gradient(135deg,#8B5CF6,#6D28D9)', title: 'AI Coaching Team', sub: '5 agents with different personalities' },
-      { id: 'board',    icon: '♟️', bg: 'linear-gradient(135deg,#B58863,#8B6914)', title: 'The Board & Pieces', sub: 'You = WHITE, AI = BLACK' },
-      { id: 'patterns', icon: '📚', bg: 'linear-gradient(135deg,#22C55E,#16A34A)', title: 'Pattern Learning', sub: "Track what you're good at" },
-      { id: 'ready',    icon: '🚀', bg: 'linear-gradient(135deg,#FFD700,#FF9100)', title: "You're Ready!", sub: 'Time to play' }
-    ];
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SCREEN 2 — INTRO                                      ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<div id="introScreen" class="screen">
+  <div class="intro-card">
+    <h1>CHAMPIONSHIP CHESS</h1>
+    <p class="intro-sub">Do You Have What It Takes?</p>
+    <div class="intro-story" id="introStory">
+      <p>I don't know why you're here.</p>
+      <p>We took one look at you and thought... <span class="hl">maybe.</span></p>
+      <p>Seven opponents stand between you and the championship. Seven players who have crushed everyone before them.</p>
+      <p>The weakest first. <span class="hl">Beat them.</span></p>
+      <p>But can you really do this? <span class="hl">Do you have what it takes?</span></p>
+      <p style="margin-top:26px;color:var(--gold2)">Only one way to find out.</p>
+    </div>
+    <div class="intro-q">What is your name, challenger?</div>
+    <div class="name-row"><input type="text" id="playerName" placeholder="Enter your name..."></div>
+    <button class="start-btn" onclick="beginChallenge()">ACCEPT THE CHALLENGE</button>
+  </div>
+</div>
 
-    const THINKING_PHRASES = [
-      'Evaluating position...', 'Calculating lines...', 'Considering candidate moves.',
-      'Analyzing threats.', 'Looking for weaknesses.', 'Computing best response.',
-      'Scanning for tactics.', 'Weighing strategic options.'
-    ];
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SCREEN 3 — TOURNAMENT                                 ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<div id="tournScreen" class="screen">
+  <div class="t-header"><h1>THE GAUNTLET</h1></div>
+  <div class="p-card">
+    <div class="p-av"   id="pAv"></div>
+    <div class="p-name" id="pName"></div>
+    <div class="p-arch" id="pArch"></div>
+    <div class="p-wound"id="pWound"></div>
+  </div>
+  <div class="round-beat" id="roundBeat"></div>
+  <div class="save-notice" id="saveNotice">✓ Progress saved — you can close and return</div>
+  <div class="t-bracket">
+    <div class="b-title">Defeat each opponent to unlock the next</div>
+    <div class="opp-list" id="oppList"></div>
+  </div>
+</div>
 
-    const AGENT_MESSAGES = {
-      professor: [
-        'Control the center — it\'s the key to the game.',
-        'Develop your pieces before launching an attack.',
-        'A knight outpost can be devastating in the middlegame.',
-        'Think about pawn structure — it lasts the whole game.',
-        'Castle early. Your king needs shelter.'
-      ],
-      critic: [
-        'That move is playable. Let\'s see the follow-up.',
-        'Blunder check: passed! Clean move.',
-        'There might have been a sharper continuation here.',
-        'Watch out for tactical shots in this position.',
-        'Material balance looks fine. Focus on piece activity.'
-      ],
-      mentor: [
-        'Great move! Keep up the momentum.',
-        'You\'re developing a nice rhythm. Stay focused!',
-        'Think about your next TWO moves, not just one.',
-        'Every move matters. Make it count!',
-        'You\'re improving every game. Patience wins!'
-      ],
-      spark: [
-        'I see a fork opportunity brewing! 🔥',
-        'What if we sacrifice a pawn for the initiative?',
-        'Look for pins and skewers in this position!',
-        'Attack the f7 square — it\'s often vulnerable!',
-        'Surprise your opponent with a bold move! ⚡'
-      ],
-      data: [
-        'This opening is played in 34% of master games.',
-        'Your center control score just increased.',
-        'Development is on pace — keep pushing.',
-        'Pattern recognized: classical opening structure.',
-        'Statistically, castling here wins 67% of the time.'
-      ]
-    };
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SCREEN 4 — GAME                                       ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<div id="gameScreen" class="screen">
+  <div class="game-wrap">
+    <div>
+      <div class="p-strip">
+        <span class="strip-em" id="stripEm"></span>
+        <div>
+          <div class="strip-nm" id="stripNm"></div>
+          <div class="strip-wd" id="stripWd"></div>
+        </div>
+      </div>
+      <div class="board" id="board"></div>
+      <div class="board-foot">
+        <div class="b-vs"><span id="pDisp"></span> vs <span id="oDisp"></span></div>
+        <div class="b-ind" id="moveInd">Click a piece to begin</div>
+      </div>
+    </div>
 
-    // ── Initial version states ────────────────────────────────────────────────
-    const initVersionStates = () =>
-      Object.fromEntries(Object.keys(VERSIONS).map(id => [id, {
-        score: 50, thinking: 'Awaiting first move...', suggestedMove: '--', active: false, winner: false
-      }]));
+    <div class="sidebar">
+      <div class="opp-game-hd">
+        <div class="opp-game-av" id="gAv"></div>
+        <div class="opp-game-nm" id="gNm"></div>
+        <div class="ps-label ps-base" id="psLabel">Studying You</div>
+        <div class="wiper" id="wiperBar"></div>
+      </div>
+      <div class="dlg" id="dlg">
+        <div class="dlg-sp" id="dlgSp"></div>
+        <div id="dlgTx">The match awaits...</div>
+      </div>
+      <div class="pw-block">
+        <div class="pw-title">YOUR FIGHTER PROFILE</div>
+        <div class="pw-row"><span class="pw-lbl">Wound: </span><span class="pw-val" id="gWound"></span></div>
+        <div class="pw-row"><span class="pw-lbl">Desire: </span><span class="pw-val" id="gDesire"></span></div>
+      </div>
+      <div class="cap-row">
+        <span id="pCaps">You: —</span>
+        <span id="oCaps">Them: —</span>
+      </div>
+      <div class="adv-wrap">
+        <div class="adv-lbl">BOARD ADVANTAGE</div>
+        <div class="adv-bg">
+          <div class="adv-bar ply" id="advPly" style="width:0%"></div>
+          <div class="adv-bar opp" id="advOpp" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="retort-wrap" id="retortWrap" style="display:none">
+        <div class="retort-lbl">YOUR MOVE — SAY SOMETHING</div>
+        <button class="retort-btn" id="retortBtn0" onclick="doRetort(0)"></button>
+        <button class="retort-btn" id="retortBtn1" onclick="doRetort(1)"></button>
+      </div>
+    </div>
+  </div>
+</div>
 
-    // ── Paywall ───────────────────────────────────────────────────────────────
-    const VALID_CODES = new Set([
-      '1TURKEY2CHICKEN3',
-      '1CHUNKY2CHICKEN3',
-      '1FUNKY2MONKEY3',
-      '1JAZZY2PICKLE3',
-      '1LUCKY2NOODLE3',
-      '1ROCKY2TACO3',
-    ]);
-    const GUMROAD_URL = 'https://gum.co/v2chess';
-    const isUnlocked = () => { try { return localStorage.getItem('v2chess_unlocked') === 'true'; } catch(e) { return false; } };
-    const unlockGame = () => { try { localStorage.setItem('v2chess_unlocked', 'true'); } catch(e) {} };
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SCREEN 5 — CHAMPION                                   ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<div id="champScreen" class="screen">
+  <div class="champ-card">
+    <div class="champ-trophy">🏆</div>
+    <div class="champ-title">CHAMPION</div>
+    <div class="champ-name"  id="cName"></div>
+    <div class="champ-arch"  id="cArch"></div>
+    <hr class="champ-div">
+    <div class="champ-ver"   id="cVer"></div>
+    <div class="champ-line"  id="cLine"></div>
+    <div class="arc-stage-row">
+      <span style="color:var(--frac)">FRACTURE</span>
+      <span style="color:var(--pres)">PRESSURE</span>
+      <span style="color:var(--shft)">SHIFT</span>
+    </div>
+    <div class="arc-grid" id="arcGrid"></div>
+    <button class="replay-btn" onclick="restartAll()">PLAY AGAIN</button>
+  </div>
+</div>
 
-    const App = () => {
-      const [screen, setScreen] = useState('menu');
-      const [step,   setStep]   = useState(0);
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  PAYWALL — free: character + intro  |  locked: tournament+  ║
+// ╚══════════════════════════════════════════════════════════════╝
+const VALID_CODES = new Set([
+  '1TURKEY2CHICKEN3','1CHUNKY2CHICKEN3','1FUNKY2MONKEY3',
+  '1JAZZY2PICKLE3','1LUCKY2NOODLE3','1ROCKY2TACO3',
+]);
+function isUnlocked(){ try{ return localStorage.getItem('v2chess_unlocked')==='true'; }catch(e){ return false; } }
+function unlockGame(){ try{ localStorage.setItem('v2chess_unlocked','true'); }catch(e){} }
+function openGate(){ document.getElementById('gateOverlay').style.display='flex'; }
+function closeGate(){ document.getElementById('gateOverlay').style.display='none'; }
+function tryGateCode(){
+  var code = (document.getElementById('gateCodeInput').value||'').trim().toUpperCase().replace(/\s+/g,'');
+  if(VALID_CODES.has(code)){
+    unlockGame();
+    var fab=document.getElementById('lockFab'); if(fab) fab.classList.add('unlocked');
+    closeGate();
+    document.getElementById('gateCodeInput').value='';
+    document.getElementById('gateError').textContent='';
+    if(window._pendingBegin){ window._pendingBegin=false; beginChallenge(); }
+  } else {
+    document.getElementById('gateError').textContent='Invalid code. Try again or grab a key below ↓';
+  }
+}
 
-      // ── Chess engine (stable mutable instance) ──────────────────────────────
-      const [game]    = useState(() => new Chess());
-      const [gameKey, setGameKey] = useState(0);
-      const forceUpdate = () => setGameKey(k => k + 1);
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  NESTED THIRDS — CHARACTER ENGINE                          ║
+// ╚══════════════════════════════════════════════════════════════╝
 
-      // ── Board interaction state ─────────────────────────────────────────────
-      const [selected,   setSelected]   = useState(null);
-      const [lastMove,   setLastMove]   = useState(null);
-      const [moveCount,  setMoveCount]  = useState(0);
-      const [validMoves, setValidMoves] = useState([]);
+const ARCHETYPES = {
+  biker:    { em:"🏍️", label:"The Biker",     wound:"Confuses loyalty with losing herself.",                         desire:"To ride toward something instead of away from it.",       fear:"That if she slows down long enough to think, she won't like what she finds.",        history:"Grew up around bikes and people who lived by their own rules. Freedom was the religion. Consequences were someone else's problem." },
+  nurse:    { em:"🩺",  label:"The Nurse",     wound:"Believes her own pain is never the priority.",                  desire:"To be taken care of for once.",                            fear:"That needing something makes her weak.",                                             history:"Spent years keeping other people alive. Good at crisis. Bad at asking for help herself." },
+  runaway:  { em:"🌅",  label:"The Runaway",   wound:"Doesn't know how to stay.",                                     desire:"A place that feels like home.",                             fear:"That she left the good thing behind and didn't know it at the time.",               history:"Left before anyone could push her out. Has been moving since she was old enough to pack a bag." },
+  artist:   { em:"🎨",  label:"The Artist",    wound:"Ties her worth entirely to whether the work is good.",          desire:"To make something that outlasts her.",                     fear:"That she's already made her best thing.",                                            history:"Made things since she could hold a pencil. Was told it wasn't practical. Did it anyway." },
+  mother:   { em:"🌿",  label:"The Mother",    wound:"Gave herself away in pieces and doesn't know how to ask for them back.", desire:"To be seen as a person, not just a role.",       fear:"That wanting something for herself makes her a bad mother.",                        history:"Became someone's whole world before she finished becoming her own person." },
+  soldier:  { em:"🎖️", label:"The Soldier",   wound:"Doesn't trust peace. Keeps waiting for the thing that breaks it.", desire:"To stop being on guard.",                            fear:"That she's only good at the version of herself that survives things.",               history:"Trained to follow orders, hold the line, and not feel it until later. Later came." },
+  addict:   { em:"🌊",  label:"The Addict",    wound:"Believes she is too far gone to be worth saving.",              desire:"One day that doesn't feel like fighting herself.",          fear:"That she'll get clean and still be empty.",                                          history:"Found the thing that made everything quiet. Held onto it past the point it helped." },
+  heiress:  { em:"💎",  label:"The Heiress",   wound:"Doesn't know if she's loved or useful.",                        desire:"To earn something.",                                        fear:"That without the money she's nobody.",                                               history:"Had everything handed to her. Spent years not knowing if any of it was real." },
+  teacher:  { em:"📖",  label:"The Teacher",   wound:"Believes her job is to disappear into other people's growth.",  desire:"To be a student again. To not know something yet.",        fear:"That it's too late to start over.",                                                  history:"Poured herself into other people's potential. Quietly shelved her own." },
+  orphan:   { em:"🌑",  label:"The Orphan",    wound:"Pushes people away before they can go on their own.",           desire:"A family she chose and that chose her back.",              fear:"That she's too damaged to be someone's person.",                                     history:"Learned early that people leave. Built walls accordingly." },
+  criminal: { em:"⚡",  label:"The Criminal",  wound:"Believes the system was never built for her, so she built her own.", desire:"To stop looking over her shoulder.",              fear:"That going straight means admitting everything she did was wrong.",                   history:"Learned to take what she needed because asking didn't work." },
+  immigrant:{ em:"🧭",  label:"The Immigrant", wound:"Belongs fully to neither place.",                                desire:"To stop translating herself for other people.",            fear:"That she sacrificed too much of where she came from.",                               history:"Left one world to build another. Carries both everywhere she goes." }
+};
 
-      // ── AI / learning state ─────────────────────────────────────────────────
-      const [versionStates, setVersionStates] = useState(initVersionStates);
-      const [winnerVersion, setWinnerVersion] = useState(null);
-      const [redLine,  setRedLine]  = useState(28);
-      const [wipers,   setWipers]   = useState(50);
-      const [patterns, setPatterns] = useState({
-        center:  { name: 'Center Control',  conf: 0.58, icon: '🎯' },
-        dev:     { name: 'Development',     conf: 0.52, icon: '🏃' },
-        king:    { name: 'King Safety',     conf: 0.65, icon: '👑' },
-        tactics: { name: 'Tactical Vision', conf: 0.40, icon: '⚔️' },
-        end:     { name: 'Endgame',         conf: 0.45, icon: '🏁' }
+function generateVersions(key) {
+  var a = ARCHETYPES[key];
+  var d = a.desire.toLowerCase();
+  return [
+    { num:1, name:"THE ADVENTURER",   path:"You stop waiting for permission.",
+      summary:"Something cracks open. You take the first risk nobody expected. It works. You take another. The old self stops fitting.",
+      finalLine:"You wanted "+d+" — and you stopped asking if you deserved it." },
+    { num:2, name:"THE REBUILT",       path:"You become someone you actually respect.",
+      summary:"The wound stops making decisions for you. It costs you some things you used to hold onto. What's left is stronger.",
+      finalLine:"You wanted "+d+" — and you built the person capable of holding it." },
+    { num:3, name:"THE FRACTURE LINE", path:"You go down. Not all the way. But far enough to leave a mark.",
+      summary:"Something quiets the wound. It costs you. You see yourself from outside and don't look away. The climb back is slow and unglamorous.",
+      finalLine:"You wanted "+d+" — and you had to lose yourself first to understand why." },
+    { num:4, name:"THE GHOST",         path:"You disappear into the game. Then find your way back.",
+      summary:"You forget who you are somewhere in the middle. What you rebuild is stranger — and actually yours.",
+      finalLine:"You wanted "+d+" — and you had to stop playing someone else to find out." },
+    { num:5, name:"THE LONG GAME",     path:"You become formidable so quietly nobody sees it happening.",
+      summary:"The wound taught you how to wait, how to read a room, how to survive. You stop seeing that as damage. You start seeing it as data.",
+      finalLine:"You wanted "+d+" — and you became the person the board had to eventually deal with." }
+  ];
+}
+
+// Round narrative beats — Windshield Wiper principle
+const ROUND_BEATS = [
+  "",
+  "Something cracked open.",
+  "The wound is visible now. You're still playing.",
+  "The real test starts here.",
+  "You're in it now. No easy moves from here.",
+  "Two more. You can feel the change coming.",
+  "One more. Then the thing you came here for.",
+  ""
+];
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  OPPONENT PERSONALITIES                                     ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const PERSONALITIES = {
+  timmy: {
+    wound:"Doesn't believe he deserves to win.", desire:"To finish something he started.", fear:"That everyone already knew he'd lose.",
+    states: {
+      baseline:         ["H-here we go! I've been practicing all week!","Okay okay okay. I can do this. I can definitely do this.","Don't be nervous. Don't be nervous. Be... not nervous.","Is it bad that I have a lucky rabbit's foot in my pocket?","I practiced this opening for two weeks. I am absolutely ready. I think."],
+      fracture:         ["Wait, that wasn't— I didn't see that coming.","Okay. Okay that's fine. I have a plan. I definitely have a plan.","Is it hot in here? It feels hot in here.","I DEFINITELY had a plan. I just need to remember what it was.","Stop looking at me like that. I'm fine. I'm completely fine."],
+      pressure:         ["I'm okay. I'm totally okay. This is part of my strategy.","You know what, I think I just need to... think for a second.","My hands are shaking a little. Is that normal?","I've been here before. In a dream. I lost in the dream too.","One move at a time. One move at a time. One move at a time."],
+      shift:            ["...You know what? Even if I lose, I actually played today. That's something.","I don't know how you did that. But I'm not mad. I'm just... I came here.","Okay. Yeah. Good game. I mean it.","I'm coming back smarter. I need you to know that.","I actually showed up and played. That's not nothing. That used to be everything."],
+      on_player_capture:["No no no wait—","Oh. Oh no.","That was my piece. That was definitely my piece.","I saw that coming. I just... didn't stop it.","Okay. Okay. I can still do this."],
+      on_ai_capture:    ["YES! Okay! I see you! I see what I'm doing!","Did you see that? I did a thing!","OKAY. OKAY. We're doing this.","I take it back! The rabbit's foot is working!","THAT was the plan. THAT was always the plan."]
+    },
+    player_retorts: ["Still nervous? Good.","Keep your head. I'll wait."],
+    retort_comebacks: ["W-well. Okay. But I'm still here.","That's... that's fair actually.","I know. But I'm not done yet."]
+  },
+  betty: {
+    wound:"Always puts everyone else first. Never herself.", desire:"To be taken seriously at this table.", fear:"That being warm means being weak.",
+    states: {
+      baseline:         ["Oh wonderful, a new challenger! Don't you dare go easy on me.","People underestimate me. It never ends well for them.","I've played this game longer than you've been alive, dear.","I've been sitting at this table since before your parents thought to have you. Sit down.","You look surprised I'm here. That's your first mistake."],
+      fracture:         ["Oh my. That was quite a move.","Goodness. I may have misjudged you slightly.","That's alright. That's alright. I adjust.","Well. You're not what I expected. I mean that as a compliment.","I've adjusted to harder things than you, dear. Give me a moment."],
+      pressure:         ["People always assume I'm not paying attention. I always am.","I raised three children who thought they were smarter than me.","They weren't.","My late husband said I had ice water in my veins. He wasn't wrong.","You think I got to my age by being rattled? Try again, sweetheart."],
+      shift:            ["Alright. You've earned this one. But don't you dare go easy on the next person.","Well played. I want you to remember this when you think someone isn't dangerous.","Come back sometime. I'll have something stronger than tea.","This is exactly the kind of game I come here for.","You're going to be something someday. Not today. But someday."],
+      on_player_capture:["Oh! Well. That's inconvenient.","Hm. I see what you're doing.","That's fine. I have contingencies.","Bold. I'll give you that.","Mm. That one stings a little."],
+      on_ai_capture:    ["There we are. Nice and tidy.","See? I'm not just here for pleasantries.","Mm. Good.","That's better. That's how we do it.","I've still got it, dear. Don't look so surprised."]
+    },
+    player_retorts: ["I don't underestimate anyone, dear.","Your contingencies don't cover me."],
+    retort_comebacks: ["Is that right.","Bold words from someone still sitting across from me.","We'll see about that, dear."]
+  },
+  pete: {
+    wound:"The world moved on without asking him.", desire:"One more moment of being the best.", fear:"That his best days are behind him.",
+    states: {
+      baseline:         ["Back in '89 I beat four grandmasters in a single weekend. Sit down.","You remind me of someone I played in Minsk. He lost too.","I've forgotten more chess than you've ever learned, son.","I've beaten men who would eat you for breakfast. Try to keep up.","Young players always come in here like the game changed. It didn't."],
+      fracture:         ["Hmph. Haven't seen that in a while.","...'89. I made a similar mistake in '89. Took me two years to forgive myself.","You've been studying. I can tell. Someone taught you well.","In '94 I played someone with your instincts. I still beat him, but I remembered him.","That's an interesting choice. Risky. But interesting."],
+      pressure:         ["Don't rush me. I'm thinking.","I'm still in this. Don't you dare write me off.","The old dog has a few moves left. You'll see.","I can feel the rust coming off. Don't think that's good news for you.","You're making me work. Nobody makes me work anymore."],
+      shift:            ["...You know, I don't say this often. But that was good chess.","In forty years, I can count on one hand the players who made me work like that.","Go on. You earned it. But don't forget the old man who made you earn it.","I don't say this to young players. But you might be the real thing.","Forty years at this table and you still managed to surprise me. That's something."],
+      on_player_capture:["Hmph.","Bold. In '89 that move would've cost you.","...I'll remember that.","Careful. I've seen that trap spring both ways.","You got lucky. Don't let it go to your head."],
+      on_ai_capture:    ["That's more like it.","Back in the game.","There it is. That old feeling.","Still got the touch.","I've been waiting for that all game."]
+    },
+    player_retorts: ["The board doesn't care what year it is.","Tell me when you're playing today."],
+    retort_comebacks: ["Hmph. You've got nerve, I'll give you that.","Watch yourself, kid.","...Fair enough. Now play."]
+  },
+  carlos: {
+    wound:"Can't slow down long enough to feel anything.", desire:"The rush of winning fast.", fear:"Going quiet. Being still.",
+    states: {
+      baseline:         ["LETSGOLETSGOLETSGO triple espresso LET'S PLAY","Already saw your next six moves bro LET'S MOVE","Four shots, two hours sleep, PEAK PERFORMANCE, LET'S GO","I solved your opening in 0.3 seconds LET'S GOOOO","No hesitation, no mercy, PURE CHESS VELOCITY, COME ON"],
+      fracture:         ["WAIT no no no hang on HANG ON—","Okay that was fast. That was REALLY fast. RESPOND.","Did NOT see that okay RECALCULATING","WAIT WAIT WAIT that wasn't in my simulation—","did I just miscalculate? That NEVER happens. RECALIBRATING."],
+      pressure:         ["...okay. okay okay okay. slowing... down.","when did I last eat. NOT RELEVANT. FOCUS.","I can feel the crash coming and I refuse to let it win before you do.","I can hear my heartbeat. That's... new.","okay. OKAY. waaaaay down. think. actually think."],
+      shift:            ["...huh.","That's the first time I've been quiet all day.","You beat the coffee. I didn't think that was possible. Respect.","you beat the noise. I didn't think that was possible.","...okay. I'm gonna sit with this one."],
+      on_player_capture:["NO—okay—okay—OKAY—","WAS THAT LEGAL? It was legal. I know it was legal.","FINE. FINE. ADAPTING.","NO NO NO—okay—ADAPTING—","that was MY piece and I am FINE about it—"],
+      on_ai_capture:    ["YESYESYES LET'S GO","COFFEE POWERED CHESS BABY","I AM INEVITABLE","TAKE THAT, TAKE THAT, LET'S GO—","SPEED AND PRECISION BABY WE'RE BACK—"]
+    },
+    player_retorts: ["You're burning out. I'm just getting warm.","All that noise — and I can still think."],
+    retort_comebacks: ["OKAY OKAY I HEAR YOU—MOVING ON—","That's COLD. I respect it. RESPONDING.","...noted. I said NOTED. Let's GO."]
+  },
+  sasha: {
+    wound:"Mistakes feel like character flaws.", desire:"Perfect execution. Every time.", fear:"Being seen improvising.",
+    states: {
+      baseline:         ["I have calculated your defeat. This is not cruelty. It is mathematics.","You have seventeen viable responses to my opening. Fourteen lose immediately.","I don't enjoy winning. I simply cannot tolerate the alternative.","I have played this game 4,200 times. Your pattern is not new to me.","Emotion is a liability at this table. I have none."],
+      fracture:         ["That was not in the primary model.","Interesting. You've deviated from expected play.","I am adjusting. This is not concern. This is recalibration.","You have introduced a variable I had not weighted properly.","I am running a secondary analysis. Do not mistake that for uncertainty."],
+      pressure:         ["Stop.","You are making this significantly more complicated than it needs to be.","This is not how this game was supposed to go.","You are not playing chess. You are playing something else. I am working to identify what.","This is inefficient. I do not like inefficiency."],
+      shift:            ["Who taught you to play like this.","I had six contingencies. You found the seventh path.","I don't know what I'm feeling right now. I find that... unacceptable.","I have introduced a new category for you. I am still naming it.","I do not know what I am feeling. I cannot make it stop."],
+      on_player_capture:["Suboptimal.","I have accounted for this.","...Noted.","This falls within acceptable deviation.","I have seventeen responses to this. Selecting."],
+      on_ai_capture:    ["Correct.","As calculated.","Proceeding.","Within parameters.","This is the only logical outcome."]
+    },
+    player_retorts: ["I'm the variable you didn't calculate.","Your model had a blind spot."],
+    retort_comebacks: ["Irrelevant.","That statement contains no actionable data.","...Noted. Recalibrating."]
+  },
+  chen: {
+    wound:"Ties his worth entirely to the quality of his play.", desire:"A game worthy of remembering.", fear:"Losing to someone who doesn't understand what they've done.",
+    states: {
+      baseline:         ["The board is a mirror. Show me who you are.","A thousand games have brought me here. What has brought you?","I don't play to win. I play to find the game inside the game.","Every piece you touch tells me something. I am listening carefully.","The board is honest. Players rarely are. Let us see which you are."],
+      fracture:         ["...You see something I didn't expect you to see.","The dragon pauses. This is rare.","Tell me — did you calculate that, or did you feel it?","You play with intention. That is rarer than you know.","The game I prepared for is not the game that is happening. I am grateful."],
+      pressure:         ["This game is becoming something. I don't know what yet.","I have not played someone like you in a long time.","Every move you make — I ask myself what you're building toward.","I think you understand something about loss that informs how you play.","The board between us is becoming a conversation. I am listening."],
+      shift:            ["This is the game I came here for.","Win or lose — this will stay with me.","You don't know what you've done today. But you've done something real.","I came here for a worthy opponent. I found something rarer.","I will remember this game. That does not happen often anymore."],
+      on_player_capture:["The river changes course. So must I.","An interesting sacrifice.","...Yes. I see it now.","You are not afraid to give something up. That tells me everything.","The game shifts. Good."],
+      on_ai_capture:    ["The dragon moves forward.","Balance shifts, for a moment.","The board breathes.","This is how the pattern continues.","Each piece finds its place."]
+    },
+    player_retorts: ["I felt it too.","I'm building toward something you haven't seen yet."],
+    retort_comebacks: ["...Yes. I think that's true.","The board heard you.","Then show me."]
+  },
+  magnus: {
+    wound:"Has beaten everyone. Wonders if anyone is left worth beating.", desire:"To be surprised.", fear:"That chess has nothing left to teach him.",
+    states: {
+      baseline:         ["So you made it here. Seven opponents. You must be something.","I've been waiting a long time to be interested. Convince me.","I don't lose. But I've forgotten what it feels like to almost lose.","I stopped being nervous about games seven years ago. I miss it. Show me why I should miss it.","You made it through six opponents. Prove it means something more than endurance."],
+      fracture:         ["...","That's new.","I've played ten thousand games. That is new.","I need to look at that again.","When was the last time I said that?"],
+      pressure:         ["You have my full attention. That's not nothing.","I'm actually thinking. Do you understand how long it's been?","Don't stop. Whatever you're doing — don't stop.","Don't hold back. Whatever you have — use it now.","You've been building to something. I can feel it. Don't stop now."],
+      shift:            ["There it is.","I came here wondering if this would mean anything. It means something.","I don't know if you win this. But you woke me up. And that hasn't happened in years.","This is what I came here for. I forgot it existed.","I don't know what happens next. That hasn't happened in a long time."],
+      on_player_capture:["Interesting.","...I didn't expect that move.","You made me react. That's rare.","I haven't had to lean forward in years.","...Go on."],
+      on_ai_capture:    ["Force of habit.","I've done this ten thousand times.","Don't take it personally.","This is what I do.","Reflex. Nothing more."]
+    },
+    player_retorts: ["Here's your surprise.","I'm not done. Stay with me."],
+    retort_comebacks: ["...Good.","Now we're talking.","Alright. Show me."]
+  }
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  OPPONENTS                                                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const OPPONENTS = [
+  { id:"timmy",  name:"Timmy Tumbles",      circuit:"bronze", av:"🤷", elo:400,  agg:0.30, depth:0 },
+  { id:"betty",  name:"Betty Blunder",      circuit:"bronze", av:"😅", elo:500,  agg:0.35, depth:0 },
+  { id:"pete",   name:"Old Pete",           circuit:"bronze", av:"👴", elo:700,  agg:0.42, depth:0 },
+  { id:"carlos", name:"Carlos Triple Shot", circuit:"silver", av:"☕", elo:950,  agg:0.52, depth:1 },
+  { id:"sasha",  name:"Sasha Stratanova",   circuit:"silver", av:"🧊", elo:1150, agg:0.60, depth:1 },
+  { id:"chen",   name:"Master Chen Wei",    circuit:"gold",   av:"🐉", elo:1550, agg:0.68, depth:2 },
+  { id:"magnus", name:"Marcus The Mind",    circuit:"champ",  av:"🧠", elo:2100, agg:0.78, depth:2 }
+];
+
+const WIPER = { bronze:3, silver:5, gold:7, champ:7 };
+
+// Piece values
+const PV = { p:1, n:3, b:3, r:5, q:9, k:0 };
+// Unicode pieces
+const PE = { K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟" };
+const AVS = ["⚔️","👑","🧙","🎭","🌟","⚡","🔮","🏆"];
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  GAME STATE                                                 ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+let gs = {
+  archKey:null, archData:null, version:null,
+  player:null, wins:[], arcPeaks:{},          // arcPeaks: track real peak state per opponent
+  opp:null, board:[], sel:null,
+  lmf:null, lmt:null, pCaps:[], oCaps:[],
+  adv:0, moves:0, aiOn:false, lastOppLine:"",
+  // Castling rights: wK=white king moved, bK=black king moved, wRQ/wRK/bRQ/bRK=rooks
+  castle:{ wK:true, bK:true, wRQ:true, wRK:true, bRQ:true, bRK:true },
+  enPassant:null,                              // [row,col] of en passant target square
+  pState:"baseline", shiftDone:false,
+  lastLines:{}, typInt:null, wiperN:0,
+  inCheck:false
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  LOCALSTORAGE SAVE / RESTORE                               ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const SAVE_KEY = "cc_v6_save";
+
+function saveProgress() {
+  if (!gs.player) return;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      archKey:  gs.archKey,
+      version:  gs.version,
+      player:   gs.player,
+      wins:     gs.wins,
+      arcPeaks: gs.arcPeaks
+    }));
+  } catch(e) {}
+}
+
+function loadProgress() {
+  try {
+    var raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    var save = JSON.parse(raw);
+    if (!save || !save.player) return false;
+    gs.archKey  = save.archKey  || null;
+    gs.archData = save.archKey ? ARCHETYPES[save.archKey] : null;
+    gs.version  = save.version  || null;
+    gs.player   = save.player;
+    gs.wins     = save.wins     || [];
+    gs.arcPeaks = save.arcPeaks || {};
+    return true;
+  } catch(e) { return false; }
+}
+
+function clearSave() {
+  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  CHARACTER ENGINE UI                                        ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+var selArch = null;
+
+function buildArchGrid() {
+  var g = document.getElementById("archGrid");
+  g.innerHTML = "";
+  Object.keys(ARCHETYPES).forEach(function(k) {
+    var a = ARCHETYPES[k];
+    var c = document.createElement("div");
+    c.className = "arch-card"; c.id = "ac-"+k;
+    c.innerHTML = '<div class="arch-em">'+a.em+'</div><div class="arch-lbl">'+a.label+'</div>';
+    c.onclick = function(){ selectArch(k); };
+    g.appendChild(c);
+  });
+}
+
+function selectArch(k) {
+  selArch = k;
+  var a = ARCHETYPES[k];
+  document.querySelectorAll(".arch-card").forEach(function(c){ c.classList.remove("sel"); });
+  document.getElementById("ac-"+k).classList.add("sel");
+  document.getElementById("wpTitle").textContent  = a.em+"  "+a.label;
+  document.getElementById("wpWound").textContent  = a.wound;
+  document.getElementById("wpDesire").textContent = a.desire;
+  document.getElementById("wpFear").textContent   = a.fear;
+  var p = document.getElementById("woundPanel");
+  p.classList.add("vis");
+  p.scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+
+function showVersionStep() {
+  if (!selArch) return;
+  gs.archKey  = selArch;
+  gs.archData = ARCHETYPES[selArch];
+  var a = gs.archData;
+  var vers = generateVersions(selArch);
+
+  document.getElementById("verSubtitle").textContent = a.em+" "+a.label+" — "+a.wound;
+
+  var list = document.getElementById("verList");
+  list.innerHTML = "";
+  vers.forEach(function(v) {
+    var c = document.createElement("div");
+    c.className = "ver-card";
+    c.innerHTML =
+      '<div class="ver-num">'+v.num+'</div>'+
+      '<div><div class="ver-name">'+v.name+'</div>'+
+      '<div class="ver-path">"'+v.path+'" — '+v.summary+'</div></div>'+
+      '<div class="ver-arr">→</div>';
+    c.onclick = function(){ pickVersion(v); };
+    list.appendChild(c);
+  });
+
+  document.getElementById("archetypeStep").style.display = "none";
+  document.getElementById("versionStep").style.display   = "block";
+}
+
+function goBackToArchetypes() {
+  document.getElementById("versionStep").style.display   = "none";
+  document.getElementById("archetypeStep").style.display = "block";
+}
+
+function pickVersion(v) {
+  gs.version = v;
+  updateIntroText();
+  show("introScreen");
+}
+
+// Skip character creation — enter as unknown challenger
+function skipCharacter() {
+  gs.archKey  = null;
+  gs.archData = null;
+  gs.version  = null;
+  // Reset intro to default text
+  document.getElementById("introStory").innerHTML =
+    '<p>I don\'t know why you\'re here.</p>'+
+    '<p>We took one look at you and thought... <span class="hl">maybe.</span></p>'+
+    '<p>Seven opponents stand between you and the championship. Seven players who have crushed everyone before them.</p>'+
+    '<p>The weakest first. <span class="hl">Beat them.</span></p>'+
+    '<p>But can you really do this? <span class="hl">Do you have what it takes?</span></p>'+
+    '<p style="margin-top:26px;color:var(--gold2)">Only one way to find out.</p>';
+  show("introScreen");
+}
+
+function updateIntroText() {
+  if (!gs.archData) return;
+  var a = gs.archData, v = gs.version;
+  document.getElementById("introStory").innerHTML =
+    '<p>So. <span class="hl">'+a.label+'</span>. We know the type.</p>'+
+    '<p>'+a.history+'</p>'+
+    '<p>You carry a wound: <span class="hl">'+a.wound+'</span></p>'+
+    '<p>Seven opponents stand between you and the championship. Seven players who have crushed everyone before them.</p>'+
+    (v ? '<p>You chose your path: <em>'+v.name+'</em> — "'+v.path+'"</p>' : '')+
+    '<p>Show us. <span class="hl">Do you have what it takes?</span></p>'+
+    '<p style="margin-top:24px;color:var(--gold2)">Only one way to find out.</p>';
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  INTRO → TOURNAMENT                                         ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+function beginChallenge() {
+  if(!isUnlocked()){ window._pendingBegin=true; openGate(); return; }
+  var name = document.getElementById("playerName").value.trim();
+  if (!name) { alert("Enter your name, challenger!"); return; }
+  gs.player = { name:name, av:AVS[Math.floor(Math.random()*AVS.length)] };
+  gs.wins = [];
+  gs.arcPeaks = {};
+  saveProgress();
+  show("tournScreen");
+  drawTournament();
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  TOURNAMENT                                                 ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+function drawTournament() {
+  document.getElementById("pAv").textContent   = gs.player.av;
+  document.getElementById("pName").textContent = gs.player.name;
+
+  if (gs.archData) {
+    var a = gs.archData, v = gs.version;
+    document.getElementById("pArch").textContent  = a.em+"  "+a.label+(v?"  ·  "+v.name:"");
+    document.getElementById("pWound").textContent = "Wound: "+a.wound;
+  } else {
+    document.getElementById("pArch").textContent  = "Unknown Challenger";
+    document.getElementById("pWound").textContent = "";
+  }
+
+  var beat = ROUND_BEATS[gs.wins.length] || "";
+  var bEl  = document.getElementById("roundBeat");
+  if (beat) { bEl.textContent = beat; bEl.classList.add("vis"); }
+  else       { bEl.classList.remove("vis"); }
+
+  // Show save notice when progress exists
+  if (gs.wins.length > 0) {
+    document.getElementById("saveNotice").classList.add("vis");
+  }
+
+  var list = document.getElementById("oppList");
+  list.innerHTML = "";
+  OPPONENTS.forEach(function(o, i) {
+    var won    = gs.wins.includes(o.id);
+    var locked = i > 0 && !gs.wins.includes(OPPONENTS[i-1].id) && !won;
+    var c = document.createElement("div");
+    c.className = "opp-card "+o.circuit+(locked?" locked":"");
+
+    // Show real peak state badge for defeated opponents
+    var peakBadge = "";
+    if (won && gs.arcPeaks[o.id]) {
+      var pk = gs.arcPeaks[o.id];
+      var pkLabel = { baseline:"BASELINE", fracture:"FRACTURE", pressure:"PRESSURE", shift:"SHIFT" }[pk] || pk.toUpperCase();
+      var pkColor = { baseline:"var(--dim)", fracture:"var(--frac)", pressure:"var(--pres)", shift:"var(--shft)" }[pk] || "var(--dim)";
+      peakBadge = ' <span style="font-size:.7em;color:'+pkColor+'">· '+pkLabel+'</span>';
+    }
+
+    var st = won
+      ? '<div class="opp-st"><span class="s-won">✓ DEFEATED'+peakBadge+'</span></div>'
+      : locked
+      ? '<div class="opp-st"><span class="s-lock">🔒 LOCKED</span></div>'
+      : '<div class="opp-st"><span class="s-avail">CHALLENGE →</span></div>';
+
+    c.innerHTML =
+      '<span class="opp-av">'+o.av+'</span>'+
+      '<div class="opp-info">'+
+        '<div class="opp-nm">'+o.name+'</div>'+
+        '<div class="opp-ci">'+o.circuit.toUpperCase()+' · ELO '+o.elo+(o.depth>0?' · '+['','1-ply','2-ply'][o.depth]+' AI':'')+'</div>'+
+      '</div>'+st;
+
+    if (!locked) c.onclick = (function(opp){ return function(){ startGame(opp); }; })(o);
+    list.appendChild(c);
+  });
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  GAME INIT                                                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+function startGame(opp) {
+  gs.opp=opp; gs.moves=0; gs.adv=0;
+  gs.pState="baseline"; gs.shiftDone=false;
+  gs.pCaps=[]; gs.oCaps=[];
+  gs.sel=null; gs.lmf=null; gs.lmt=null;
+  gs.aiOn=false; gs.lastLines={};
+  gs.castle={ wK:true, bK:true, wRQ:true, wRK:true, bRQ:true, bRK:true };
+  gs.enPassant=null;
+  gs.inCheck=false;
+  if(gs.typInt){ clearInterval(gs.typInt); gs.typInt=null; }
+
+  show("gameScreen");
+
+  document.getElementById("pDisp").textContent = gs.player.av+" "+gs.player.name;
+  document.getElementById("oDisp").textContent = opp.av+" "+opp.name;
+  document.getElementById("gAv").textContent   = opp.av;
+  document.getElementById("gNm").textContent   = opp.name;
+  document.getElementById("psLabel").textContent = "Studying You";
+  document.getElementById("psLabel").className  = "ps-label ps-base";
+  document.getElementById("dlg").className      = "dlg";
+  document.getElementById("moveInd").textContent= "Click a piece to begin";
+
+  // Populate and show retort buttons
+  var per = PERSONALITIES[opp.id];
+  if(per && per.player_retorts){
+    document.getElementById("retortBtn0").textContent = per.player_retorts[0];
+    document.getElementById("retortBtn1").textContent = per.player_retorts[1];
+    document.getElementById("retortBtn0").disabled = false;
+    document.getElementById("retortBtn1").disabled = false;
+    document.getElementById("retortWrap").style.display = "flex";
+  } else {
+    document.getElementById("retortWrap").style.display = "none";
+  }
+
+  buildWiper(opp.circuit);
+
+  if (gs.archData) {
+    var a = gs.archData;
+    document.getElementById("stripEm").textContent = a.em;
+    document.getElementById("stripNm").textContent = gs.player.name+" · "+a.label;
+    document.getElementById("stripWd").textContent = a.wound;
+    document.getElementById("gWound").textContent  = a.wound;
+    document.getElementById("gDesire").textContent = a.desire;
+  } else {
+    document.getElementById("stripEm").textContent = gs.player.av;
+    document.getElementById("stripNm").textContent = gs.player.name;
+    document.getElementById("stripWd").textContent = "";
+    document.getElementById("gWound").textContent  = "—";
+    document.getElementById("gDesire").textContent = "—";
+  }
+
+  initBoard(); updateCaps(); updateAdv();
+  setTimeout(function(){ dlgShow(getLine("baseline"),"baseline"); }, 700);
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  WINDSHIELD WIPER                                           ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+function buildWiper(circuit) {
+  var n = WIPER[circuit] || 3;
+  gs.wiperN = n;
+  var bar = document.getElementById("wiperBar");
+  bar.innerHTML = "";
+  for(var i=0;i<n;i++){
+    var d=document.createElement("div");
+    d.className="wdot"; d.id="wd"+i;
+    bar.appendChild(d);
+  }
+  setWiper(0);
+}
+
+function setWiper(active) {
+  for(var i=0;i<gs.wiperN;i++){
+    var d=document.getElementById("wd"+i);
+    if(d) d.classList.toggle("on", i<active);
+  }
+}
+
+function wiperForState(s) {
+  var map = { baseline:1, fracture:Math.ceil(gs.wiperN*0.42), pressure:Math.ceil(gs.wiperN*0.72), shift:gs.wiperN };
+  return map[s]||1;
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  CHESS BOARD                                                ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+function initBoard() {
+  gs.board=[
+    ["r","n","b","q","k","b","n","r"],
+    ["p","p","p","p","p","p","p","p"],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    ["P","P","P","P","P","P","P","P"],
+    ["R","N","B","Q","K","B","N","R"]
+  ];
+  drawBoard();
+}
+
+// Find king position for a side (isWhite=true/false)
+function findKing(board, isWhite) {
+  var king = isWhite ? "K" : "k";
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++)
+    if(board[r][c]===king) return {r:r,c:c};
+  return null;
+}
+
+// Is a square attacked by a given side?
+function isAttacked(board, row, col, byWhite) {
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    var pc=board[r][c]; if(!pc) continue;
+    var pw = pc===pc.toUpperCase() && pc!==pc.toLowerCase();
+    if(pw!==byWhite) continue;
+    var mvs = rawMoves(board, r, c, null, null);
+    for(var i=0;i<mvs.length;i++)
+      if(mvs[i].r===row && mvs[i].c===col) return true;
+  }
+  return false;
+}
+
+function isInCheck(board, isWhite) {
+  var k = findKing(board, isWhite);
+  if(!k) return false;
+  return isAttacked(board, k.r, k.c, !isWhite);
+}
+
+function drawBoard() {
+  var el=document.getElementById("board"); el.innerHTML="";
+  // Find white king for check highlight
+  var wk = findKing(gs.board, true);
+  gs.inCheck = isInCheck(gs.board, true);
+
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    var sq=document.createElement("div");
+    sq.className="sq "+((r+c)%2===0?"lt":"dk");
+
+    if(gs.sel && gs.sel.r===r && gs.sel.c===c)       sq.classList.add("sel");
+    if(gs.lmf && gs.lmf.r===r && gs.lmf.c===c)       sq.classList.add("lmf");
+    if(gs.lmt && gs.lmt.r===r && gs.lmt.c===c)       sq.classList.add("lmt");
+    // Highlight king in check
+    if(gs.inCheck && wk && wk.r===r && wk.c===c)     sq.classList.add("chk");
+
+    if(gs.sel){
+      var mv=validMoves(gs.sel.r,gs.sel.c);
+      for(var m=0;m<mv.length;m++){
+        if(mv[m].r===r && mv[m].c===c)
+          sq.classList.add(gs.board[r][c]?"vc":"vm");
+      }
+    }
+
+    var p=gs.board[r][c];
+    if(p) sq.textContent=PE[p]||"";
+
+    (function(rr,cc){ sq.onclick=function(){ clickSq(rr,cc); }; })(r,c);
+    el.appendChild(sq);
+  }
+
+  // Update check indicator
+  if(gs.inCheck){
+    document.getElementById("moveInd").textContent = "⚠ Your king is in check!";
+  }
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  MOVE GENERATION                                            ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+function isP(p)  { return p && p===p.toUpperCase() && p!==p.toLowerCase(); }
+function isA(p)  { return p && p===p.toLowerCase() && p!==p.toUpperCase(); }
+
+// Raw moves — no check-validation (used for attack detection)
+function rawMoves(board, r, c, castle, ep) {
+  var mv=[]; var pc=board[r][c]; if(!pc) return mv;
+  var pp=isP(pc); var t=pc.toLowerCase();
+
+  if(t==="p"){
+    var dir=pp?-1:1, st=pp?6:1, nr=r+dir;
+    if(nr>=0&&nr<8){
+      if(!board[nr][c]){
+        mv.push({r:nr,c:c});
+        if(r===st&&!board[r+2*dir][c]) mv.push({r:r+2*dir,c:c});
+      }
+      [-1,1].forEach(function(dc){
+        var nc=c+dc;
+        if(nc>=0&&nc<8){
+          var tg=board[nr][nc];
+          if(tg && ((pp&&isA(tg))||(!pp&&isP(tg)))) mv.push({r:nr,c:nc});
+          // En passant
+          if(ep && nr===ep[0] && nc===ep[1]) mv.push({r:nr,c:nc,ep:true});
+        }
       });
-      const [speaking,   setSpeaking]   = useState('mentor');
-      const [agentMsgs,  setAgentMsgs]  = useState({
-        professor: 'Control the center.',
-        critic:    'Watching carefully...',
-        mentor:    'Welcome! Make your first move.',
-        spark:     "Let's find tactics! 🔥",
-        data:      'Ready to track patterns.'
-      });
-      const [log, setLog] = useState([{
-        type: 'success', time: 'Start',
-        content: 'Game started! You play White.',
-        lesson: 'Tip: Develop pieces, control center, castle early!'
-      }]);
+    }
+  } else if(t==="n"){
+    [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(function(d){
+      var nr=r+d[0],nc=c+d[1];
+      if(nr>=0&&nr<8&&nc>=0&&nc<8){
+        var tg=board[nr][nc];
+        if(!tg||(pp&&isA(tg))||(!pp&&isP(tg))) mv.push({r:nr,c:nc});
+      }
+    });
+  } else if(t==="k"){
+    [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(function(d){
+      var nr=r+d[0],nc=c+d[1];
+      if(nr>=0&&nr<8&&nc>=0&&nc<8){
+        var tg=board[nr][nc];
+        if(!tg||(pp&&isA(tg))||(!pp&&isP(tg))) mv.push({r:nr,c:nc});
+      }
+    });
+    // Castling (only in validMoves context, not rawMoves for attack detection)
+    if(castle){
+      if(pp){ // White castling
+        if(castle.wK && castle.wRK && !board[7][5] && !board[7][6]
+           && !isAttacked(board,7,4,false) && !isAttacked(board,7,5,false) && !isAttacked(board,7,6,false))
+          mv.push({r:7,c:6,castle:"wK"});
+        if(castle.wK && castle.wRQ && !board[7][3] && !board[7][2] && !board[7][1]
+           && !isAttacked(board,7,4,false) && !isAttacked(board,7,3,false) && !isAttacked(board,7,2,false))
+          mv.push({r:7,c:2,castle:"wQ"});
+      } else { // Black castling
+        if(castle.bK && castle.bRK && !board[0][5] && !board[0][6]
+           && !isAttacked(board,0,4,true) && !isAttacked(board,0,5,true) && !isAttacked(board,0,6,true))
+          mv.push({r:0,c:6,castle:"bK"});
+        if(castle.bK && castle.bRQ && !board[0][3] && !board[0][2] && !board[0][1]
+           && !isAttacked(board,0,4,true) && !isAttacked(board,0,3,true) && !isAttacked(board,0,2,true))
+          mv.push({r:0,c:2,castle:"bQ"});
+      }
+    }
+  } else {
+    var dirs = t==="b"?[[-1,-1],[-1,1],[1,-1],[1,1]]
+             : t==="r"?[[-1,0],[1,0],[0,-1],[0,1]]
+             :          [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+    dirs.forEach(function(d){
+      for(var s=1;s<8;s++){
+        var nr=r+d[0]*s,nc=c+d[1]*s;
+        if(nr<0||nr>=8||nc<0||nc>=8) break;
+        var tg=board[nr][nc];
+        if(!tg){ mv.push({r:nr,c:nc}); }
+        else { if((pp&&isA(tg))||(!pp&&isP(tg))) mv.push({r:nr,c:nc}); break; }
+      }
+    });
+  }
+  return mv;
+}
 
-      // ── Paywall state ────────────────────────────────────────────────────────
-      const [unlocked,        setUnlocked]        = useState(isUnlocked);
-      const [showGateOverlay, setShowGateOverlay] = useState(false);
-      const [codeInput,       setCodeInput]       = useState('');
-      const [codeError,       setCodeError]       = useState('');
+// Legal moves — filters out moves that leave own king in check
+function validMoves(r,c) {
+  var pc=gs.board[r][c]; if(!pc) return [];
+  var pp=isP(pc);
+  var raw=rawMoves(gs.board,r,c,gs.castle,gs.enPassant);
+  return raw.filter(function(m){
+    var b=applyMove(gs.board,r,c,m.r,m.c,m);
+    return !isInCheck(b,pp);
+  });
+}
 
-      const tryCode = () => {
-        const code = codeInput.trim().toUpperCase().replace(/\s+/g, '');
-        if (VALID_CODES.has(code)) {
-          unlockGame();
-          setUnlocked(true);
-          setShowGateOverlay(false);
-          setCodeInput('');
-          setCodeError('');
-        } else {
-          setCodeError('Invalid code. Try again or grab a key below ↓');
-        }
-      };
+// Apply a move to a board clone — returns new board
+function applyMove(board, fr, fc, tr, tc, meta) {
+  var b=board.map(function(row){ return row.slice(); });
+  var pc=b[fr][fc];
+  var pp=isP(pc);
 
-      const requireUnlock = (fn) => () => { if (unlocked) { fn(); } else { setShowGateOverlay(true); } };
+  b[tr][tc]=pc; b[fr][fc]=null;
 
-      const files = ['a','b','c','d','e','f','g','h'];
-      const ranks = ['8','7','6','5','4','3','2','1'];
+  // En passant capture
+  if(meta && meta.ep){
+    var capRow = pp ? tr+1 : tr-1;
+    b[capRow][tc]=null;
+  }
 
-      // Convert board row/col → algebraic square string (e.g. 'e2')
-      const toSAN = (r, c) => files[c] + ranks[r];
+  // Pawn promotion (auto-queen)
+  if(pc==="P" && tr===0) b[tr][tc]="Q";
+  if(pc==="p" && tr===7) b[tr][tc]="q";
 
-      // ── Reset / new game ────────────────────────────────────────────────────
-      const resetGame = () => {
-        game.reset();
-        setMoveCount(0);
-        setSelected(null);
-        setLastMove(null);
-        setValidMoves([]);
-        setRedLine(28);
-        setWipers(50);
-        setVersionStates(initVersionStates());
-        setWinnerVersion(null);
-        setAgentMsgs({
-          professor: 'Control the center.',
-          critic:    'Watching carefully...',
-          mentor:    'Welcome! Make your first move.',
-          spark:     "Let's find tactics! 🔥",
-          data:      'Ready to track patterns.'
-        });
-        setSpeaking('mentor');
-        setLog([{ type: 'success', time: 'Start', content: 'New game! You play White.', lesson: 'Develop pieces, control center, castle!' }]);
-        forceUpdate();
-      };
+  // Castling — move rook
+  if(meta && meta.castle){
+    if(meta.castle==="wK"){ b[7][5]="R"; b[7][7]=null; }
+    if(meta.castle==="wQ"){ b[7][3]="R"; b[7][0]=null; }
+    if(meta.castle==="bK"){ b[0][5]="r"; b[0][7]=null; }
+    if(meta.castle==="bQ"){ b[0][3]="r"; b[0][0]=null; }
+  }
+  return b;
+}
 
-      const startGame  = () => { setStep(0); setScreen('onboarding'); };
-      const skipToGame = () => { game.reset(); setScreen('game'); resetGame(); };
-      const newGame    = resetGame;
+function clickSq(r,c) {
+  if(gs.aiOn) return;
+  var pc=gs.board[r][c];
+  if(!gs.sel){
+    if(isP(pc)){ gs.sel={r:r,c:c}; drawBoard(); }
+    return;
+  }
+  if(gs.sel.r===r && gs.sel.c===c){ gs.sel=null; drawBoard(); return; }
+  if(isP(pc)){ gs.sel={r:r,c:c}; drawBoard(); return; }
 
-      // ── Undo (removes player move + AI response) ────────────────────────────
-      const undoMove = () => {
-        const m2 = game.undo(); // AI's last move
-        const m1 = game.undo(); // Player's last move
-        if (m1) {
-          setMoveCount(mc => Math.max(0, mc - 1));
-          setSelected(null);
-          setLastMove(null);
-          setValidMoves([]);
-          setLog(prev => prev.slice(1));
-          forceUpdate();
-        }
-      };
+  var mv=validMoves(gs.sel.r,gs.sel.c);
+  var hit=null;
+  for(var i=0;i<mv.length;i++) if(mv[i].r===r&&mv[i].c===c){ hit=mv[i]; break; }
+  if(!hit){ gs.sel=null; drawBoard(); return; }
+  doPlayerMove(gs.sel.r,gs.sel.c,r,c,hit);
+}
 
-      // ── Dynamic AI / learning update ────────────────────────────────────────
-      const updateAIState = (legalSANMoves) => {
-        // Version scores
-        setVersionStates(prev => {
-          const updated = {};
-          let bestId = null, maxScore = -1;
-          Object.keys(prev).forEach(id => {
-            const delta = Math.floor(Math.random() * 9) - 4; // –4 to +4
-            const score = Math.max(10, Math.min(95, prev[id].score + delta));
-            const thinking = THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)];
-            const pool = legalSANMoves && legalSANMoves.length > 0 ? legalSANMoves : ['--'];
-            const suggestedMove = pool[Math.floor(Math.random() * Math.min(10, pool.length))];
-            updated[id] = { ...prev[id], score, thinking, suggestedMove, active: false };
-            if (score > maxScore) { maxScore = score; bestId = id; }
-          });
-          if (bestId) {
-            updated[bestId].active = true;
-            setWinnerVersion(bestId);
-          }
-          return updated;
-        });
+function doPlayerMove(fr,fc,tr,tc,meta) {
+  var cap=gs.board[tr][tc];
+  // En passant — captured pawn is not on destination square
+  if(meta && meta.ep){
+    var epCapRow = isP(gs.board[fr][fc]) ? tr+1 : tr-1;
+    cap = gs.board[epCapRow][tc];
+  }
 
-        // Metrics
-        setRedLine(rl => Math.max(0,  Math.min(100, rl + Math.floor(Math.random() * 7) - 3)));
-        setWipers(w  => Math.max(0,  Math.min(100, w  + Math.floor(Math.random() * 11) - 5)));
+  gs.lmf={r:fr,c:fc}; gs.lmt={r:tr,c:tc};
 
-        // Pattern confidence
-        setPatterns(prev => {
-          const updated = { ...prev };
-          Object.keys(updated).forEach(k => {
-            const delta = (Math.random() - 0.45) * 0.06;
-            updated[k] = { ...updated[k], conf: Math.max(0.05, Math.min(0.98, updated[k].conf + delta)) };
-          });
-          return updated;
-        });
+  // Update castling rights
+  updateCastleRights(fr,fc,tr,tc);
 
-        // Agent messages
-        const agentKeys = Object.keys(AGENTS);
-        setSpeaking(agentKeys[Math.floor(Math.random() * agentKeys.length)]);
-        setAgentMsgs(() => {
-          const updated = {};
-          Object.keys(AGENT_MESSAGES).forEach(agent => {
-            const msgs = AGENT_MESSAGES[agent];
-            updated[agent] = msgs[Math.floor(Math.random() * msgs.length)];
-          });
-          return updated;
-        });
-      };
+  // En passant target for next move
+  var pc=gs.board[fr][fc];
+  if((pc==="P"||pc==="p") && Math.abs(tr-fr)===2){
+    gs.enPassant=[(fr+tr)/2, fc];
+  } else {
+    gs.enPassant=null;
+  }
 
-      // ── Move tip based on move flags / piece ────────────────────────────────
-      const getMoveTip = (move) => {
-        if (!move) return 'Every move should have a purpose.';
-        if (move.flags.includes('e')) return 'En passant! A special pawn capture — well spotted!';
-        if (move.flags.includes('c')) return 'Captured! Material advantage is key to winning.';
-        if (move.flags.includes('k')) return 'Kingside castle — your king is now safely tucked away!';
-        if (move.flags.includes('q')) return 'Queenside castle — aggressive king placement!';
-        if (move.flags.includes('p')) return 'Pawn promoted! Aim for a queen unless tactics demand otherwise.';
-        const tips = {
-          p: move.from[1] === '2' && move.to[1] === '4' ? 'Strong central pawn push!' : 'Pawn moves shape the whole structure.',
-          n: 'Knights love central squares. Look for outposts!',
-          b: 'Bishops thrive on open diagonals.',
-          r: 'Rooks belong on open files and the 7th rank.',
-          q: 'The queen is powerful — but watch out for attacks on her.',
-          k: 'King move without castling — make sure it\'s safe!'
-        };
-        return tips[move.piece] || 'Solid move. Keep building your position.';
-      };
+  gs.board=applyMove(gs.board,fr,fc,tr,tc,meta);
+  gs.sel=null; gs.moves++;
 
-      // ── Click handler (real chess.js move validation) ───────────────────────
-      const click = (r, c) => {
-        if (game.game_over() || game.turn() !== 'w') return;
+  if(cap){
+    gs.pCaps.push(cap);
+    gs.adv += PV[cap.toLowerCase()]||1;
+    updateCaps(); updateAdv();
+    setTimeout(function(){ dlgShow(getLine("on_player_capture"),gs.pState,true); },300);
+  }
+  tickPersonality(); drawBoard();
+  if(checkGameEnd(true)) return;
 
-        const square = toSAN(r, c);
+  if(!cap && gs.moves>0 && gs.moves%4===0)
+    setTimeout(function(){ dlgShow(getLine(gs.pState),gs.pState); },400);
 
-        if (selected) {
-          const from = toSAN(selected.row, selected.col);
+  document.getElementById("moveInd").textContent=gs.player.name+" moved · Opponent thinking...";
+  gs.aiOn=true;
+  setTimeout(aiTurn, 820+Math.random()*680);
+}
 
-          // Attempt the move
-          const move = game.move({ from, to: square, promotion: 'q' });
+function updateCastleRights(fr,fc,tr,tc){
+  // King moved
+  if(fr===7&&fc===4) gs.castle.wK=false;
+  if(fr===0&&fc===4) gs.castle.bK=false;
+  // Rook moved or captured
+  if(fr===7&&fc===7||tr===7&&tc===7) gs.castle.wRK=false;
+  if(fr===7&&fc===0||tr===7&&tc===0) gs.castle.wRQ=false;
+  if(fr===0&&fc===7||tr===0&&tc===7) gs.castle.bRK=false;
+  if(fr===0&&fc===0||tr===0&&tc===0) gs.castle.bRQ=false;
+}
 
-          if (move === null) {
-            // Not valid — maybe clicking a different own piece
-            const piece = game.get(square);
-            if (piece && piece.color === 'w') {
-              setSelected({ row: r, col: c });
-              const legal = game.moves({ square, verbose: true });
-              setValidMoves(legal.map(m => ({ row: ranks.indexOf(m.to[1]), col: files.indexOf(m.to[0]) })));
-            } else {
-              setSelected(null);
-              setValidMoves([]);
-            }
-            return;
-          }
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  AI ENGINE — TIERED BY OPPONENT DEPTH                      ║
+// ╚══════════════════════════════════════════════════════════════╝
 
-          // ✓ Player move succeeded
-          const nowMove = moveCount + 1;
-          setLastMove({ from: selected, to: { row: r, col: c } });
-          setSelected(null);
-          setValidMoves([]);
-          setMoveCount(nowMove);
-          forceUpdate();
+// Board evaluation for minimax (positive = good for black/AI)
+function evalBoard(board) {
+  var score=0;
+  var centerBonus = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,1,1,1,1,0,0],[0,0,1,2,2,1,0,0],[0,0,1,2,2,1,0,0],[0,0,1,1,1,1,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]];
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    var p=board[r][c]; if(!p) continue;
+    var v=(PV[p.toLowerCase()]||0) + centerBonus[r][c]*0.1;
+    score += isA(p) ? v : -v;
+  }
+  return score;
+}
 
-          // Game over check (player's move caused it)
-          if (game.game_over()) {
-            const msg = game.in_checkmate()
-              ? '🏆 Checkmate! You win!'
-              : game.in_draw() ? '½ Draw — well played!'
-              : 'Game Over!';
-            setLog(prev => [{ type: 'success', time: `Move ${nowMove}`, content: msg, lesson: 'Analyze this game to improve!' }, ...prev.slice(0, 9)]);
-            forceUpdate();
-            return;
-          }
+function getAllAIMoves(board) {
+  var all=[],caps=[];
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    if(!isA(board[r][c])) continue;
+    var mvs=rawMoves(board,r,c,null,null);
+    mvs.forEach(function(m){
+      // Basic legality: don't move into check
+      var nb=applyMove(board,r,c,m.r,m.c,m);
+      if(isInCheck(nb,false)) return;
+      var e={fr:r,fc:c,tr:m.r,tc:m.c,meta:m};
+      all.push(e);
+      if(isP(board[m.r][m.c])) caps.push(e);
+    });
+  }
+  return {all:all, caps:caps};
+}
 
-          // Get AI's legal responses for version display
-          const aiLegal = game.moves();
-          updateAIState(aiLegal);
+// Minimax — depth 1 or 2 for stronger opponents
+function minimax(board, depth, isMaximizing) {
+  if(depth===0) return evalBoard(board);
+  var moves=[];
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    var pp2= board[r][c] && board[r][c]===board[r][c].toUpperCase() && board[r][c]!==board[r][c].toLowerCase();
+    if(isMaximizing && !isA(board[r][c])) continue;
+    if(!isMaximizing && !pp2) continue;
+    var mvs=rawMoves(board,r,c,null,null);
+    mvs.forEach(function(m){ moves.push({fr:r,fc:c,tr:m.r,tc:m.c,meta:m}); });
+  }
+  if(!moves.length) return isMaximizing ? -100 : 100;
 
-          // Log the move
-          const tip = getMoveTip(move);
-          setLog(prev => [{
-            type: 'success',
-            time: `Move ${nowMove}`,
-            content: `You played: ${move.san}`,
-            lesson: tip
-          }, ...prev.slice(0, 9)]);
+  var best = isMaximizing ? -Infinity : Infinity;
+  for(var i=0;i<moves.length;i++){
+    var mv=moves[i];
+    var nb=applyMove(board,mv.fr,mv.fc,mv.tr,mv.tc,mv.meta);
+    var score=minimax(nb,depth-1,!isMaximizing);
+    best = isMaximizing ? Math.max(best,score) : Math.min(best,score);
+  }
+  return best;
+}
 
-          // AI response (600ms delay for natural feel)
-          setTimeout(() => {
-            if (game.game_over() || game.turn() !== 'b') return;
-            const aiMoves = game.moves({ verbose: true });
-            if (aiMoves.length === 0) return;
+function aiTurn() {
+  var depth = gs.opp.depth || 0;
+  var res=getAllAIMoves(gs.board);
+  var all=res.all, caps=res.caps;
 
-            const aiMoveObj = aiMoves[Math.floor(Math.random() * aiMoves.length)];
-            const aiResult  = game.move(aiMoveObj);
+  if(!all.length){
+    gs.aiOn=false;
+    // AI has no moves — check for checkmate or stalemate
+    if(isInCheck(gs.board, false)){
+      document.getElementById("moveInd").textContent = "CHECKMATE — you win!";
+      winMatch();
+    } else {
+      document.getElementById("moveInd").textContent = "Stalemate — the game is drawn.";
+      setTimeout(function(){ show("tournScreen"); drawTournament(); }, 2500);
+    }
+    return;
+  }
 
-            if (aiResult) {
-              const fromCoords = { row: ranks.indexOf(aiMoveObj.from[1]), col: files.indexOf(aiMoveObj.from[0]) };
-              const toCoords   = { row: ranks.indexOf(aiMoveObj.to[1]),   col: files.indexOf(aiMoveObj.to[0]) };
-              setLastMove({ from: fromCoords, to: toCoords });
-              forceUpdate();
+  var pick;
+  var ch = gs.opp.agg||0.4;
 
-              if (game.game_over()) {
-                const endMsg = game.in_checkmate() ? `AI played ${aiResult.san} — Checkmate! 💀` : '½ Draw!';
-                setLog(prev => [{ type: 'mistake', time: 'AI', content: endMsg, lesson: "Don't give up — analyze and learn!" }, ...prev.slice(0, 9)]);
-              } else if (game.in_check()) {
-                setLog(prev => [{ type: 'mistake', time: 'AI', content: `AI played ${aiResult.san} — You're in CHECK! ⚠️`, lesson: 'Protect your king first!' }, ...prev.slice(0, 9)]);
-              }
-            }
-          }, 600);
+  if(depth===0){
+    // Bronze: random with capture preference
+    pick = (caps.length && Math.random()<ch) ? caps[Math.floor(Math.random()*caps.length)] : all[Math.floor(Math.random()*all.length)];
+  } else {
+    // Silver (depth=1) / Gold+Champ (depth=2): minimax
+    var bestScore=-Infinity, bestMoves=[];
+    for(var i=0;i<all.length;i++){
+      var mv=all[i];
+      var nb=applyMove(gs.board,mv.fr,mv.fc,mv.tr,mv.tc,mv.meta);
+      var score=minimax(nb,depth-1,false);
+      if(score>bestScore){ bestScore=score; bestMoves=[mv]; }
+      else if(score===bestScore){ bestMoves.push(mv); }
+    }
+    pick=bestMoves[Math.floor(Math.random()*bestMoves.length)];
+  }
 
-        } else {
-          // No piece selected — try to select a white piece
-          const piece = game.get(square);
-          if (piece && piece.color === 'w') {
-            setSelected({ row: r, col: c });
-            const legal = game.moves({ square, verbose: true });
-            setValidMoves(legal.map(m => ({ row: ranks.indexOf(m.to[1]), col: files.indexOf(m.to[0]) })));
-          }
-        }
-      };
+  var cap=gs.board[pick.tr][pick.tc];
+  gs.lmf={r:pick.fr,c:pick.fc}; gs.lmt={r:pick.tr,c:pick.tc};
 
-      // ── Utilities ───────────────────────────────────────────────────────────
-      const getColor = (val, type = 'rl') => {
-        if (type === 'rl') return val <= 33 ? '#22C55E' : val <= 66 ? '#FFD700' : '#FF5252';
-        return val >= 0.7 ? '#22C55E' : val >= 0.4 ? '#FFD700' : '#FF5252';
-      };
+  updateCastleRights(pick.fr,pick.fc,pick.tr,pick.tc);
+  gs.enPassant=null;
+  var apc=gs.board[pick.fr][pick.fc];
+  if((apc==="p"||apc==="P") && Math.abs(pick.tr-pick.fr)===2){
+    gs.enPassant=[(pick.fr+pick.tr)/2, pick.fc];
+  }
 
-      const isValid    = (r, c) => validMoves.some(m => m.row === r && m.col === c);
-      const isLast     = (r, c) => lastMove && lastMove.to.row === r && lastMove.to.col === c;
-      const isOccupied = (r, c) => !!game.get(toSAN(r, c));
+  gs.board=applyMove(gs.board,pick.fr,pick.fc,pick.tr,pick.tc,pick.meta);
 
-      // Turn status label
-      const turnLabel = () => {
-        if (game.game_over()) {
-          if (game.in_checkmate()) return game.turn() === 'b' ? '🏆 You win by Checkmate!' : '💀 AI wins by Checkmate!';
-          return '½ Draw!';
-        }
-        if (game.in_check()) return game.turn() === 'w' ? '⚠️ CHECK — protect your king!' : '⚠️ AI is in check';
-        return game.turn() === 'w' ? '⬜ Your turn (White)' : '⬛ AI thinking... (Black)';
-      };
+  if(cap){
+    gs.oCaps.push(cap);
+    gs.adv -= PV[cap.toLowerCase()]||1;
+    updateCaps(); updateAdv();
+    setTimeout(function(){ dlgShow(getLine("on_ai_capture"),gs.pState,true); },300);
+  }
+  tickPersonality(); drawBoard();
+  gs.aiOn=false;
+  if(checkGameEnd(false)) return;
+  if(!gs.inCheck)
+    document.getElementById("moveInd").textContent="Your turn";
+}
 
-      const turnClass = () => {
-        if (game.game_over()) return 'game-over';
-        if (game.in_check() && game.turn() === 'w') return 'mistake';
-        return game.turn() === 'w' ? 'your-turn' : 'ai-turn';
-      };
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  PERSONALITY STATE MACHINE — Red Line (one-way door)       ║
+// ╚══════════════════════════════════════════════════════════════╝
 
-      // ── Tutorial content ────────────────────────────────────────────────────
-      const cur  = STEPS[step];
-      const next = () => { if (step < STEPS.length - 1) setStep(step + 1); else skipToGame(); };
-      const prev = () => { if (step > 0) setStep(step - 1); };
+const STATE_ORDER = ["baseline","fracture","pressure","shift"];
 
-      const renderStepContent = () => {
-        switch (cur.id) {
-          case 'welcome':
-            return (<div><p><strong>V2 Chess Academy</strong> is an AI-powered learning system that teaches you chess through parallel version analysis and real-time coaching.</p><p style={{ marginTop: 16 }}>Unlike traditional chess apps, V2 doesn't just play against you — it <strong>learns WITH you</strong>. Every move you make is analyzed by 5 different AI versions simultaneously.</p><p style={{ marginTop: 16 }}>Powered by chess.js — all chess rules are fully enforced.</p></div>);
-          case 'versions':
-            return (<div><p>V2 runs <strong>5 parallel AI versions</strong> that all analyze your game simultaneously:</p><div className="tut-grid">{Object.entries(VERSIONS).map(([id, v]) => (<div key={id} className="tut-box"><div className="tut-box-title" style={{ color: v.color }}>{v.icon} V{id}: {v.name}</div><div className="tut-box-content">{v.approach}</div></div>))}</div><p style={{ marginTop: 16 }}>After each move, all 5 versions suggest a response. The highest-scoring version leads that turn.</p></div>);
-          case 'redline':
-            return (<div><p>The <strong>Red Line</strong> tracks how well you stay "on track" with good chess principles:</p><ul><li><strong>0–33%:</strong> <span style={{ color: '#22C55E' }}>✓ Excellent!</span> Strong moves</li><li><strong>34–66%:</strong> <span style={{ color: '#FFD700' }}>⚠ Drifting</span> Some questionable choices</li><li><strong>67–100%:</strong> <span style={{ color: '#FF5252' }}>✗ Off track</span> Review fundamentals</li></ul><p style={{ marginTop: 16 }}>The <strong>Windshield Wipers</strong> control AI intensity (25%, 50%, 100%) based on position complexity.</p></div>);
-          case 'agents':
-            return (<div><p>5 AI agents coach you with different personalities:</p><div className="tut-grid">{Object.entries(AGENTS).map(([id, a]) => (<div key={id} className="tut-box"><div className="tut-box-title" style={{ color: a.color }}>{a.avatar} {a.name}</div><div className="tut-box-content">{a.role}</div></div>))}</div><p style={{ marginTop: 16 }}>The glowing agent is currently speaking. Watch for tips after every move.</p></div>);
-          case 'board':
-            return (<div><p><strong>You play as WHITE</strong> (bottom). <strong>AI plays as BLACK</strong> (top).</p><p style={{ marginTop: 12 }}>Click a piece to select it — valid moves appear as <span style={{ color: '#00E676' }}>green dots</span>. Click a dot to move.</p><p style={{ marginTop: 12 }}>All standard rules are enforced: castling, en passant, pawn promotion, check, and checkmate.</p></div>);
-          case 'patterns':
-            return (<div><p>V2 tracks 5 key chess patterns as you play:</p><div className="tut-grid">{Object.entries(patterns).slice(0, 4).map(([k, p]) => (<div key={k} className="tut-box"><div className="tut-box-title">{p.icon} {p.name}</div><div className="tut-box-content">{Math.round(p.conf * 100)}% confidence</div></div>))}</div><p style={{ marginTop: 16 }}>Confidence grows as you consistently apply each concept.</p></div>);
-          case 'ready':
-            return (<div><p><strong>You're all set!</strong> Remember:</p><ul><li>Make your best move — 5 versions analyze instantly</li><li>Keep the Red Line below 40%</li><li>Listen to the AI coaches for tips</li><li>Use Undo if you make a mistake</li></ul><p style={{ marginTop: 16 }}>Click <strong>Start Playing</strong> to begin!</p></div>);
-          default: return null;
-        }
-      };
+function tickPersonality() {
+  if(gs.shiftDone) return;
+  var newState = gs.adv>=9?"shift":gs.adv>=4?"pressure":gs.adv>=2?"fracture":"baseline";
 
-      // ── Board array from engine ─────────────────────────────────────────────
-      const boardArray = game.board();
+  // Red Line — never go backward
+  var curIdx = STATE_ORDER.indexOf(gs.pState);
+  var newIdx = STATE_ORDER.indexOf(newState);
+  if(newIdx <= curIdx) return;
 
-      // ── Render ──────────────────────────────────────────────────────────────
-      return (
-        <>
-          {screen === 'menu' && (
-            <div className="menu-screen">
-              <div className="particles">{[1,2,3,4,5].map(i => <div key={i} className="particle"></div>)}</div>
-              <div className="menu-title">
-                <h1><span className="crown">👑</span><span className="title-text">V2 Chess Academy</span></h1>
-              </div>
-              <div className="menu-subtitle">AI-Powered Learning System</div>
-              <div className="menu-free">{unlocked ? '✅ Full Access Unlocked — All Features Active' : '🎓 Tutorial Free • Unlock Everything for $14.99 • No Subscription'}</div>
-              <div className="v3-badge">🚀 V3 FEATURES — chess.js ENGINE</div>
-              <div className="menu-grid">
-                <button className="menu-btn btn-vs-ai locked-btn" onClick={requireUnlock(startGame)}>🤖 Play vs AI{!unlocked && ' 🔒'}</button>
-                <button className="menu-btn btn-2player    locked-btn" onClick={requireUnlock(skipToGame)}>👥 2 Players{!unlocked && ' 🔒'}</button>
-                <button className="menu-btn btn-lessons    locked-btn" onClick={requireUnlock(startGame)}>📖 Lessons{!unlocked && ' 🔒'}</button>
-                <button className="menu-btn btn-puzzles    locked-btn" onClick={requireUnlock(startGame)}>🧩 Puzzles{!unlocked && ' 🔒'}</button>
-                <button className="menu-btn btn-openings   locked-btn" onClick={requireUnlock(startGame)}>📚 Openings{!unlocked && ' 🔒'}</button>
-                <button className="menu-btn btn-videos     locked-btn" onClick={requireUnlock(startGame)}>🎥 Videos{!unlocked && ' 🔒'}</button>
-                <button className="menu-btn btn-selflearn  locked-btn" onClick={requireUnlock(startGame)}>🧠 Self-Learn{!unlocked && ' 🔒'}</button>
-                <button className="menu-btn btn-online     locked-btn" onClick={requireUnlock(startGame)}>🌐 Online{!unlocked && ' 🔒'}</button>
-              </div>
-              <div style={{ marginTop: 40, textAlign: 'center' }}>
-                <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>✨ V3 Experimental Features</div>
-                <div className="menu-grid">
-                  <button className="menu-btn locked-btn" style={{ background: 'linear-gradient(135deg,#FF6B35,#F7931E)' }} onClick={requireUnlock(startGame)}>👤 Shadow Player{!unlocked && ' 🔒'}</button>
-                  <button className="menu-btn locked-btn" style={{ background: 'linear-gradient(135deg,#00BCD4,#006064)' }} onClick={requireUnlock(startGame)}>❄️ Freeze Board{!unlocked && ' 🔒'}</button>
-                  <button className="menu-btn locked-btn" style={{ background: 'linear-gradient(135deg,#4CAF50,#2E7D32)' }} onClick={requireUnlock(startGame)}>🌱 Focus Mode{!unlocked && ' 🔒'}</button>
-                  <button className="menu-btn locked-btn" style={{ background: 'linear-gradient(135deg,#FFD700,#FF8F00)' }} onClick={requireUnlock(startGame)}>🎯 Learn Promise{!unlocked && ' 🔒'}</button>
-                </div>
-              </div>
-            </div>
-          )}
+  gs.pState=newState;
+  // Track real peak state for this opponent
+  gs.arcPeaks[gs.opp.id] = newState;
 
-          <div className={`onboarding ${screen === 'onboarding' ? 'visible' : ''}`}>
-            <div className="onboarding-header">
-              <div className="onboarding-title">🎓 First Time Tutorial</div>
-              <div className="onboarding-sub">Learn how the AI learning system works</div>
-              <div className="onboarding-mode">🤖 vs V2 AI Mode</div>
-            </div>
-            <div className="progress">
-              {STEPS.map((_, i) => <div key={i} className={`progress-step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}></div>)}
-            </div>
-            <div className="tut-container">
-              <div className="tut-card visible">
-                <div className="tut-header">
-                  <div className="tut-icon" style={{ background: cur.bg }}>{cur.icon}</div>
-                  <div><div className="tut-title">{cur.title}</div><div className="tut-subtitle">{cur.sub}</div></div>
-                </div>
-                <div className="tut-content">{renderStepContent()}</div>
-                <div className="tut-nav">
-                  <button className="nav-btn skip" onClick={skipToGame}>Skip Tutorial →</button>
-                  <div className="step-ind">Step <strong>{step + 1}</strong> of {STEPS.length}</div>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    {step > 0 && <button className="nav-btn secondary" onClick={prev}>← Back</button>}
-                    <button className="nav-btn primary" onClick={next}>{step === STEPS.length - 1 ? '🎮 Start Playing' : 'Next →'}</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+  if(newState==="shift") gs.shiftDone=true;
 
-          <div className={`game ${screen === 'game' ? 'visible' : ''}`}>
-            <header className="header">
-              <div className="logo" onClick={() => setScreen('menu')}>
-                <div className="logo-icon">👑</div>
-                <div><h1>V2 Chess Academy</h1><div className="logo-sub">5-Version AI • chess.js Engine</div></div>
-              </div>
-              <div className="header-btns">
-                {game.in_check() && !game.game_over() && (
-                  <span className="check-alert">⚠️ CHECK!</span>
-                )}
-                <button className="h-btn" onClick={() => { setStep(0); setScreen('onboarding'); }}>❓ Tutorial</button>
-                <button className="h-btn back" onClick={() => setScreen('menu')}>← Menu</button>
-              </div>
-            </header>
+  var lab=document.getElementById("psLabel");
+  var dlg=document.getElementById("dlg");
+  var names={baseline:"Studying You",fracture:"FRACTURE",pressure:"UNDER PRESSURE",shift:"SOMETHING HAS CHANGED"};
+  var cls  ={baseline:"ps-base",     fracture:"ps-frac",  pressure:"ps-pres",       shift:"ps-shft"};
+  var dc   ={baseline:"",            fracture:"f",         pressure:"p",              shift:"s"};
 
-            <div className="main">
-              {/* LEFT PANEL — 5 Versions */}
-              <div className="panel left">
-                <div className="section">
-                  <div className="section-head"><div className="section-title" style={{ color: '#E040FB' }}>🔀 5 PARALLEL VERSIONS</div></div>
-                  <div className="section-body">
-                    {Object.entries(VERSIONS).map(([id, v]) => (
-                      <div key={id} className={`v-card ${versionStates[id]?.active ? 'active' : ''}`}>
-                        <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: v.color, borderRadius: '4px 0 0 4px' }}></div>
-                        <div className="v-header">
-                          <div className="v-avatar" style={{ background: v.color }}>{v.icon}</div>
-                          <div className="v-info">
-                            <div className="v-name">V{id}: {v.name}</div>
-                            <div className="v-approach">{v.approach}</div>
-                          </div>
-                          <div className="v-score" style={{ color: v.color }}>{versionStates[id]?.score}</div>
-                        </div>
-                        <div className="v-thinking">
-                          <div className="think-label">
-                            <div className="think-dot" style={{ background: versionStates[id]?.active ? '#FFD700' : v.color }}></div>
-                            {versionStates[id]?.active ? 'LEADING ★' : 'Analysis'}
-                          </div>
-                          <div className="think-text">"{versionStates[id]?.thinking}"</div>
-                        </div>
-                        <div className="v-move">
-                          <span style={{ color: '#7A7189' }}>Suggests:</span>
-                          <span className="move-val" style={{ color: v.color }}>{versionStates[id]?.suggestedMove}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+  lab.textContent=names[newState]; lab.className="ps-label "+cls[newState];
+  dlg.className="dlg "+(dc[newState]);
+  setWiper(wiperForState(newState));
 
-              {/* CENTER — Board */}
-              <div className="panel center">
-                <div className="game-head">
-                  <div className="game-title">♟️ Play & Learn</div>
-                  <div className={`game-sub ${turnClass()}`}>{turnLabel()}</div>
-                </div>
+  // Re-enable retort buttons on each state transition
+  var rb0=document.getElementById("retortBtn0"), rb1=document.getElementById("retortBtn1");
+  if(rb0) rb0.disabled=false;
+  if(rb1) rb1.disabled=false;
 
-                <div className="player-bar">
-                  <div className="player">
-                    <div className="p-avatar human">♔</div>
-                    <div><div className="p-name">You</div><div className="p-label">White</div></div>
-                  </div>
-                  <div className="vs">VS</div>
-                  <div className="player">
-                    <div style={{ textAlign: 'right' }}><div className="p-name">V2 AI</div><div className="p-label">Black</div></div>
-                    <div className="p-avatar ai">🤖</div>
-                  </div>
-                </div>
+  setTimeout(function(){ dlgShow(getLine(newState),newState); },500);
+}
 
-                <div className="board-wrap">
-                  <div className="board-labels top">{files.map(f => <div key={f} className="b-label">{f}</div>)}</div>
-                  <div className="board-main">
-                    <div className="b-ranks">{ranks.map(r => <div key={r} className="r-label">{r}</div>)}</div>
-                    <div className="chess-board">
-                      {boardArray.map((row, r) => row.map((cell, c) => {
-                        const pieceChar = cell ? PIECE_MAP[cell.color + cell.type] : null;
-                        const occupied  = isValid(r, c) && isOccupied(r, c);
-                        return (
-                          <div
-                            key={`${r}-${c}`}
-                            className={[
-                              'cell',
-                              (r+c)%2===0 ? 'light' : 'dark',
-                              selected?.row===r && selected?.col===c ? 'selected' : '',
-                              isValid(r,c) ? 'valid' : '',
-                              occupied ? 'occupied' : '',
-                              isLast(r,c) ? 'last' : ''
-                            ].filter(Boolean).join(' ')}
-                            onClick={() => click(r, c)}
-                          >
-                            {pieceChar && (
-                              <span className={`piece ${cell.color === 'w' ? 'white' : 'black'}`}>
-                                {pieceChar}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      }))}
-                    </div>
-                    <div className="b-ranks">{ranks.map(r => <div key={r} className="r-label">{r}</div>)}</div>
-                  </div>
-                  <div className="board-labels bottom">{files.map(f => <div key={f} className="b-label">{f}</div>)}</div>
-                </div>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  DIALOGUE ENGINE                                            ║
+// ╚══════════════════════════════════════════════════════════════╝
 
-                <div className="info-bar">
-                  <div className="info-item">
-                    <div className="info-val" style={{ color: '#FFD700' }}>{moveCount}</div>
-                    <div className="info-lbl">Move</div>
-                  </div>
-                  <div className="info-item">
-                    <div className="info-val" style={{ color: getColor(redLine) }}>{redLine}%</div>
-                    <div className="info-lbl">Red Line</div>
-                  </div>
-                  <div className="info-item">
-                    <div className="info-val" style={{ color: winnerVersion ? VERSIONS[winnerVersion].color : '#7A7189' }}>
-                      {winnerVersion ? `V${winnerVersion}` : '--'}
-                    </div>
-                    <div className="info-lbl">Leading</div>
-                  </div>
-                  <div className="info-item">
-                    <div className="info-val" style={{ color: '#00E5FF' }}>{wipers}%</div>
-                    <div className="info-lbl">Wipers</div>
-                  </div>
-                </div>
+function getLine(state) {
+  var per=PERSONALITIES[gs.opp.id]; if(!per) return "...";
+  var pool=per.states[state]; if(!pool||!pool.length) return "...";
+  var last=gs.lastLines[state];
+  var opts=pool.filter(function(l){ return l!==last; });
+  if(!opts.length) opts=pool;
+  var line=opts[Math.floor(Math.random()*opts.length)];
+  gs.lastLines[state]=line;
+  return line;
+}
 
-                <div className="game-btns">
-                  <button className="g-btn primary"   onClick={newGame}>🔄 New</button>
-                  <button className="g-btn purple"    onClick={() => { setStep(0); setScreen('onboarding'); }}>❓ Help</button>
-                  <button className="g-btn secondary" onClick={undoMove}>↩️ Undo</button>
-                </div>
-              </div>
+function dlgShow(text,state,intr) {
+  if(gs.typInt) clearInterval(gs.typInt);
+  gs.lastOppLine = text;
+  // Restore opponent border style (may have been changed by retort)
+  var dc={baseline:"",fracture:"f",pressure:"p",shift:"s"};
+  document.getElementById("dlg").className="dlg"+(dc[state]?" "+dc[state]:"");
+  document.getElementById("dlgSp").textContent = gs.opp?gs.opp.name:"";
+  var tx=document.getElementById("dlgTx"); tx.textContent="";
+  var i=0;
+  gs.typInt=setInterval(function(){
+    if(i<text.length){ tx.textContent+=text[i]; i++; }
+    else { clearInterval(gs.typInt); gs.typInt=null; }
+  },21);
+}
 
-              {/* RIGHT PANEL */}
-              <div className="panel right">
-                {/* Red Line & Wipers */}
-                <div className="section">
-                  <div className="section-head"><div className="section-title" style={{ color: '#FF5252' }}>🎯 Red Line & Wipers</div></div>
-                  <div className="section-body">
-                    <div className="metrics">
-                      <div className="metric">
-                        <div className="m-head">
-                          <div className="m-title">🎯 Red Line</div>
-                          <div className="m-val" style={{ color: getColor(redLine) }}>{redLine}%</div>
-                        </div>
-                        <div className="m-bar"><div className="m-fill" style={{ width: `${redLine}%`, background: getColor(redLine) }}></div></div>
-                        <div className="m-status">{redLine <= 33 ? '✓ Excellent!' : redLine <= 66 ? '⚠ Drifting' : '✗ Off track'}</div>
-                      </div>
-                      <div className="metric">
-                        <div className="m-head">
-                          <div className="m-title">🌧️ Wipers</div>
-                          <div className="m-val" style={{ color: '#FFD700' }}>{wipers}%</div>
-                        </div>
-                        <div className="m-bar"><div className="m-fill" style={{ width: `${wipers}%`, background: '#FFD700' }}></div></div>
-                        <div className="m-status">{wipers <= 33 ? '25% — Light' : wipers <= 66 ? '50% — Moderate' : '100% — Heavy'}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  UI HELPERS                                                 ║
+// ╚══════════════════════════════════════════════════════════════╝
 
-                {/* AI Coaches */}
-                <div className="section">
-                  <div className="section-head"><div className="section-title" style={{ color: '#8B5CF6' }}>🤖 AI Coaches</div></div>
-                  <div className="section-body">
-                    {Object.entries(AGENTS).map(([id, a]) => (
-                      <div key={id} className={`agent ${speaking === id ? 'speaking' : ''}`}>
-                        <div className="a-avatar" style={{ background: a.color }}>{a.avatar}</div>
-                        <div className="a-content">
-                          <div className="a-name">{a.name}</div>
-                          <div className="a-role">{a.role}</div>
-                          <div className="a-msg" style={{ borderColor: a.color }}>{agentMsgs[id]}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+function updateCaps() {
+  document.getElementById("pCaps").textContent="You: "+(gs.pCaps.map(function(p){ return PE[p]||p; }).join("")||"—");
+  document.getElementById("oCaps").textContent="Them: "+(gs.oCaps.map(function(p){ return PE[p]||p; }).join("")||"—");
+}
 
-                {/* Move Log */}
-                <div className="section">
-                  <div className="section-head"><div className="section-title" style={{ color: '#00E5FF' }}>📜 Move Log</div></div>
-                  <div className="section-body">
-                    {log.map((e, i) => (
-                      <div key={i} className={`log-entry ${e.type}`}>
-                        <div className="log-head">
-                          <span className={`log-type ${e.type}`}>{e.type === 'mistake' ? '❌' : '✓'}</span>
-                          <span className="log-time">{e.time}</span>
-                        </div>
-                        <div className="log-content">{e.content}</div>
-                        <div className="log-lesson">💡 {e.lesson}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+function updateAdv() {
+  var max=15, pct=Math.min(Math.abs(gs.adv)/max*50,50);
+  var pb=document.getElementById("advPly"), ob=document.getElementById("advOpp");
+  if(gs.adv>0){ pb.style.width=pct+"%"; ob.style.width="0%"; }
+  else if(gs.adv<0){ pb.style.width="0%"; ob.style.width=pct+"%"; }
+  else { pb.style.width="0%"; ob.style.width="0%"; }
+}
 
-                {/* Patterns */}
-                <div className="section">
-                  <div className="section-head"><div className="section-title" style={{ color: '#22C55E' }}>📚 Patterns</div></div>
-                  <div className="section-body">
-                    {Object.entries(patterns).map(([k, p]) => (
-                      <div key={k} className="pattern">
-                        <div className="pat-icon">{p.icon}</div>
-                        <div className="pat-info">
-                          <div className="pat-name">{p.name}</div>
-                          <div className="pat-bar"><div className="pat-fill" style={{ width: `${p.conf*100}%`, background: getColor(p.conf, 'pat') }}></div></div>
-                        </div>
-                        <div className="pat-val" style={{ color: getColor(p.conf, 'pat') }}>{Math.round(p.conf*100)}%</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+function show(id) {
+  document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+  document.getElementById(id).classList.add("active");
+}
 
-          {/* ── Gate overlay ─────────────────────────────────────────────── */}
-          {showGateOverlay && (
-            <div className="gate-overlay" onClick={(e) => { if (e.target.className === 'gate-overlay') setShowGateOverlay(false); }}>
-              <div className="gate-box">
-                <div className="gate-crown">👑</div>
-                <div className="gate-title">Unlock Full Access</div>
-                <div className="gate-sub">This feature requires full access.</div>
-                <div className="gate-preview">✅ Tutorial always free · 🔒 Everything else unlocks with one purchase</div>
-                <div className="gate-price">$14.99</div>
-                <div className="gate-once">One-time purchase · Lifetime access · No subscription</div>
-                <a className="gate-buy" href={GUMROAD_URL} target="_blank" rel="noopener">🛒 Buy on Gumroad — $14.99</a>
-                <div className="gate-divider"><span>OR enter friend code</span></div>
-                <div className="gate-code-row">
-                  <input
-                    className="gate-input"
-                    value={codeInput}
-                    onChange={e => { setCodeInput(e.target.value); setCodeError(''); }}
-                    onKeyDown={e => e.key === 'Enter' && tryCode()}
-                    placeholder="e.g. 1TURKEY2CHICKEN3"
-                    maxLength={20}
-                  />
-                  <button className="gate-unlock-btn" onClick={tryCode}>Unlock</button>
-                </div>
-                <div className="gate-error">{codeError}</div>
-                <div className="gate-free-note">Got a code from a friend? Enter it above for free access.</div>
-              </div>
-            </div>
-          )}
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  PLAYER RETORT                                              ║
+// ╚══════════════════════════════════════════════════════════════╝
 
-          {/* ── Floating lock FAB ────────────────────────────────────────── */}
-          <button className={`lock-fab ${unlocked ? 'unlocked' : ''}`} onClick={() => setShowGateOverlay(true)} title={unlocked ? 'Full Access' : 'Unlock Full Game'}>
-            <span className="lock-fab-tip">{unlocked ? '✅ Unlocked' : '🔒 Unlock $14.99'}</span>
-            {unlocked ? '✅' : '🔒'}
-          </button>
+function doRetort(idx) {
+  var per = PERSONALITIES[gs.opp.id];
+  if(!per || !per.player_retorts) return;
+  var line = per.player_retorts[idx];
+  if(!line) return;
 
-        </>
-      );
-        };
+  // Disable both buttons — re-enabled on next state change
+  document.getElementById("retortBtn0").disabled = true;
+  document.getElementById("retortBtn1").disabled = true;
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-  </script>
+  // Show player's line with gold border
+  var savedClass = document.getElementById("dlg").className;
+  if(gs.typInt) clearInterval(gs.typInt);
+  document.getElementById("dlg").className = "dlg plr";
+  document.getElementById("dlgSp").textContent = gs.player ? gs.player.name : "You";
+  var tx = document.getElementById("dlgTx"); tx.textContent = "";
+  var i = 0, txt = "\u201C"+line+"\u201D";
+  gs.typInt = setInterval(function(){
+    if(i < txt.length){ tx.textContent += txt[i]; i++; }
+    else { clearInterval(gs.typInt); gs.typInt = null; }
+  }, 21);
+
+  // After player line settles, opponent fires a comeback
+  setTimeout(function(){
+    document.getElementById("dlg").className = savedClass;
+    var comebacks = per.retort_comebacks;
+    if(comebacks && comebacks.length){
+      var cb = comebacks[Math.floor(Math.random() * comebacks.length)];
+      dlgShow(cb, gs.pState);
+    } else {
+      dlgShow(gs.lastOppLine || getLine(gs.pState), gs.pState);
+    }
+  }, 2800);
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  CHECKMATE / STALEMATE DETECTION                            ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// Returns true if the game ended (and handles transition)
+function checkGameEnd(afterPlayerMove) {
+  if(afterPlayerMove){
+    // Check if AI (black) has any legal moves
+    var res = getAllAIMoves(gs.board);
+    if(res.all.length === 0){
+      if(isInCheck(gs.board, false)){
+        // Checkmate — player wins
+        document.getElementById("moveInd").textContent = "CHECKMATE — you win!";
+        winMatch();
+      } else {
+        // Stalemate
+        document.getElementById("moveInd").textContent = "Stalemate — the game is drawn.";
+        setTimeout(function(){ show("tournScreen"); drawTournament(); }, 2500);
+      }
+      return true;
+    }
+  } else {
+    // Check if player (white) has any legal moves
+    var hasWhiteMoves = false;
+    outer: for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+      if(!isP(gs.board[r][c])) continue;
+      if(validMoves(r,c).length > 0){ hasWhiteMoves = true; break outer; }
+    }
+    if(!hasWhiteMoves){
+      if(isInCheck(gs.board, true)){
+        document.getElementById("moveInd").textContent = "Checkmate — you lose.";
+      } else {
+        document.getElementById("moveInd").textContent = "Stalemate — the game is drawn.";
+      }
+      setTimeout(function(){ show("tournScreen"); drawTournament(); }, 2500);
+      return true;
+    }
+  }
+  return false;
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  WIN / CHAMPION                                             ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+function winMatch() {
+  // Record peak state if not yet shifted
+  if(!gs.arcPeaks[gs.opp.id]) gs.arcPeaks[gs.opp.id] = gs.pState;
+
+  dlgShow(getLine("shift"),"shift");
+
+  setTimeout(function(){
+    gs.wins.push(gs.opp.id);
+    saveProgress();
+    if(gs.wins.length===7){
+      clearSave(); // Tournament complete — clear save
+      setTimeout(showChampion,400);
+    } else {
+      show("tournScreen");
+      drawTournament();
+    }
+  }, 2200);
+}
+
+function showChampion() {
+  show("champScreen");
+
+  var name = gs.player?gs.player.name:"Champion";
+  document.getElementById("cName").textContent = name;
+
+  if(gs.archData){
+    var a=gs.archData, v=gs.version;
+    document.getElementById("cArch").textContent = a.em+"  "+a.label+(v?"  ·  "+v.name:"");
+    document.getElementById("cVer").textContent  = v?v.name:"CHAMPION";
+    document.getElementById("cLine").textContent = '"'+(v?v.finalLine:"You came here. You stayed. You won.")+'"';
+  } else {
+    document.getElementById("cArch").textContent = "Unknown Challenger";
+    document.getElementById("cVer").textContent  = "CHAMPION";
+    document.getElementById("cLine").textContent = '"You came here. You stayed. You won."';
+  }
+
+  // Arc visualizer — real peak states per opponent
+  var arc=document.getElementById("arcGrid"); arc.innerHTML="";
+  OPPONENTS.forEach(function(o,i){
+    var peak = gs.arcPeaks[o.id] || "baseline";
+    var cls  = { baseline:"", fracture:"f", pressure:"p", shift:"s" }[peak] || "";
+    var lbl  = { baseline:"B", fracture:"F", pressure:"P", shift:"S" }[peak] || "B";
+    var div=document.createElement("div");
+    div.className="arc-beat"+(cls?" "+cls:"");
+    div.title=o.name+" — "+peak.toUpperCase();
+    div.innerHTML=o.av+'<br><span style="font-size:.75em;opacity:.8">'+lbl+'</span>';
+    arc.appendChild(div);
+  });
+}
+
+function restartAll() {
+  selArch=null;
+  gs.archKey=null; gs.archData=null; gs.version=null;
+  gs.player=null; gs.wins=[]; gs.arcPeaks={};
+  clearSave();
+  document.getElementById("playerName").value="";
+  document.getElementById("woundPanel").classList.remove("vis");
+  document.querySelectorAll(".arch-card").forEach(function(c){ c.classList.remove("sel"); });
+  document.getElementById("archetypeStep").style.display="block";
+  document.getElementById("versionStep").style.display="none";
+  buildArchGrid();
+(function(){ if(isUnlocked()){ var f=document.getElementById('lockFab'); if(f) f.classList.add('unlocked'); } })();
+  show("charScreen");
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  INIT — check for saved progress on load                   ║
+// ╚══════════════════════════════════════════════════════════════╝
+buildArchGrid();
+
+// If a saved run exists, offer to resume
+(function(){
+  if(loadProgress() && gs.player && gs.wins.length > 0){
+    var resume = confirm(
+      'Welcome back, '+gs.player.name+'!\n'+
+      'You\'ve defeated '+gs.wins.length+' of 7 opponents.\n\n'+
+      'Continue your run?'
+    );
+    if(resume){
+      updateIntroText();
+      show("tournScreen");
+      drawTournament();
+    } else {
+      clearSave();
+      gs.player=null; gs.wins=[]; gs.arcPeaks={};
+      gs.archKey=null; gs.archData=null; gs.version=null;
+    }
+  }
+})();
+</script>
+
+<div id="gateOverlay" style="display:none" class="gate-overlay" onclick="if(event.target===this)closeGate()">
+  <div class="gate-box">
+    <div class="gate-crown">&#x1F451;</div>
+    <div class="gate-title">Unlock the Tournament</div>
+    <div class="gate-sub">Your archetype is chosen. Your name is entered.<br>Now unlock the gauntlet.</div>
+    <div class="gate-preview">&#x2705; Character selection &amp; intro always free</div>
+    <div class="gate-price">$14.99</div>
+    <div class="gate-once">One-time purchase &middot; Lifetime access &middot; No subscription</div>
+    <a class="gate-buy" href="https://gum.co/v2chess" target="_blank" rel="noopener">&#x1F6D2; Buy on Gumroad &mdash; $14.99</a>
+    <div class="gate-divider"><span>OR enter friend code</span></div>
+    <div class="gate-code-row">
+      <input class="gate-input" id="gateCodeInput" placeholder="e.g. 1TURKEY2CHICKEN3" maxlength="20"
+             onkeydown="if(event.key==='Enter')tryGateCode()">
+      <button class="gate-unlock-btn" onclick="tryGateCode()">Unlock</button>
+    </div>
+    <div class="gate-error" id="gateError"></div>
+    <div class="gate-free-note">Got a code from a friend? Enter it above for free access.</div>
+  </div>
+</div>
+<button class="lock-fab" id="lockFab" onclick="openGate()" title="Unlock Full Game">
+  <span class="lock-fab-tip">&#x1F512; Unlock $14.99</span>
+  &#x1F512;
+</button>
 </body>
 </html>
-                                                                                                     
