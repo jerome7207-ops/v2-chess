@@ -370,7 +370,6 @@
       '1ROCKY2TACO3',
     ]);
     const GUMROAD_URL = 'https://gum.co/v2chess';
-    const FREE_MOVE_LIMIT = 5;
     const isUnlocked = () => { try { return localStorage.getItem('v2chess_unlocked') === 'true'; } catch(e) { return false; } };
     const unlockGame = () => { try { localStorage.setItem('v2chess_unlocked', 'true'); } catch(e) {} };
 
@@ -554,7 +553,6 @@
       // ── Click handler (real chess.js move validation) ───────────────────────
       const click = (r, c) => {
         if (game.game_over() || game.turn() !== 'w') return;
-        if (!unlocked && moveCount >= FREE_MOVE_LIMIT) { setShowGateOverlay(true); return; }
 
         const square = toSAN(r, c);
 
@@ -709,10 +707,10 @@
                 <h1><span className="crown">👑</span><span className="title-text">V2 Chess Academy</span></h1>
               </div>
               <div className="menu-subtitle">AI-Powered Learning System</div>
-              <div className="menu-free">{unlocked ? '✅ Full Access Unlocked — All Features Active' : '🎓 Free Preview • First 5 Moves vs AI • Try Before You Buy'}</div>
+              <div className="menu-free">{unlocked ? '✅ Full Access Unlocked — All Features Active' : '🎓 Tutorial Free • Unlock Everything for $14.99 • No Subscription'}</div>
               <div className="v3-badge">🚀 V3 FEATURES — chess.js ENGINE</div>
               <div className="menu-grid">
-                <button className="menu-btn btn-vs-ai"     onClick={startGame}>🤖 Play vs AI<span className="free-badge">FREE</span></button>
+                <button className="menu-btn btn-vs-ai locked-btn" onClick={requireUnlock(startGame)}>🤖 Play vs AI{!unlocked && ' 🔒'}</button>
                 <button className="menu-btn btn-2player    locked-btn" onClick={requireUnlock(skipToGame)}>👥 2 Players{!unlocked && ' 🔒'}</button>
                 <button className="menu-btn btn-lessons    locked-btn" onClick={requireUnlock(startGame)}>📖 Lessons{!unlocked && ' 🔒'}</button>
                 <button className="menu-btn btn-puzzles    locked-btn" onClick={requireUnlock(startGame)}>🧩 Puzzles{!unlocked && ' 🔒'}</button>
@@ -979,8 +977,8 @@
               <div className="gate-box">
                 <div className="gate-crown">👑</div>
                 <div className="gate-title">Unlock Full Access</div>
-                <div className="gate-sub">You've used your 5 free moves.</div>
-                <div className="gate-preview">✅ Tutorial &amp; Menu always free · ✅ First 5 moves vs AI free</div>
+                <div className="gate-sub">This feature requires full access.</div>
+                <div className="gate-preview">✅ Tutorial always free · 🔒 Everything else unlocks with one purchase</div>
                 <div className="gate-price">$14.99</div>
                 <div className="gate-once">One-time purchase · Lifetime access · No subscription</div>
                 <a className="gate-buy" href={GUMROAD_URL} target="_blank" rel="noopener">🛒 Buy on Gumroad — $14.99</a>
@@ -1004,7 +1002,7 @@
 
           {/* ── Floating lock FAB ────────────────────────────────────────── */}
           <button className={`lock-fab ${unlocked ? 'unlocked' : ''}`} onClick={() => setShowGateOverlay(true)} title={unlocked ? 'Full Access' : 'Unlock Full Game'}>
-            <span className="lock-fab-tip">{unlocked ? '✅ Unlocked' : '🔒 5 moves free'}</span>
+            <span className="lock-fab-tip">{unlocked ? '✅ Unlocked' : '🔒 Unlock $14.99'}</span>
             {unlocked ? '✅' : '🔒'}
           </button>
 
@@ -1016,3 +1014,4 @@
   </script>
 </body>
 </html>
+                                                                                                     
