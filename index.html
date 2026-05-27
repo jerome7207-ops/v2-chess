@@ -182,6 +182,38 @@
     .piece.white { color: #FFFFFF; filter: drop-shadow(0 1px 4px rgba(0,0,0,0.9)) drop-shadow(0 0 8px rgba(0,0,0,0.5)); }
     .piece.black { color: #111111; filter: drop-shadow(0 1px 3px rgba(255,255,255,0.5)) drop-shadow(0 0 6px rgba(0,0,0,0.4)); }
 
+    /* ── PAYWALL ─────────────────────────────────────────────────────── */
+    .gate-overlay { position: fixed; inset: 0; background: rgba(10,5,20,0.92); backdrop-filter: blur(12px); z-index: 9000; display: flex; align-items: center; justify-content: center; }
+    .gate-box { background: linear-gradient(135deg,#1a1030,#231540); border: 2px solid #FFD700; border-radius: 24px; padding: 40px 36px; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 0 60px rgba(255,215,0,0.25); }
+    .gate-crown { font-size: 52px; margin-bottom: 12px; animation: bounce 2s ease-in-out infinite; }
+    .gate-title { font-size: 26px; font-weight: 900; background: linear-gradient(135deg,#FFD700,#FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+    .gate-sub { color: #B8B0C8; font-size: 14px; margin-bottom: 6px; }
+    .gate-preview { color: #00E676; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
+    .gate-price { font-size: 42px; font-weight: 900; color: #FFD700; margin-bottom: 6px; }
+    .gate-once { color: #7A7189; font-size: 12px; margin-bottom: 20px; }
+    .gate-buy { display: block; padding: 16px; background: linear-gradient(135deg,#FF6B35,#F7931E); border: none; border-radius: 14px; font-size: 18px; font-weight: 800; color: white; cursor: pointer; width: 100%; margin-bottom: 20px; transition: all 0.3s; text-decoration: none; }
+    .gate-buy:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,107,53,0.4); }
+    .gate-divider { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .gate-divider::before,.gate-divider::after { content: ''; flex: 1; height: 1px; background: #3d2d55; }
+    .gate-divider span { color: #7A7189; font-size: 12px; }
+    .gate-code-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .gate-input { flex: 1; padding: 12px 14px; background: #0f0a1a; border: 2px solid #3d2d55; border-radius: 10px; color: #fff; font-size: 14px; font-family: 'Inter',sans-serif; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+    .gate-input:focus { outline: none; border-color: #FFD700; }
+    .gate-input::placeholder { text-transform: none; letter-spacing: 0; color: #7A7189; font-weight: 400; }
+    .gate-unlock-btn { padding: 12px 18px; background: linear-gradient(135deg,#9C27B0,#7B1FA2); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer; font-size: 14px; white-space: nowrap; transition: all 0.2s; }
+    .gate-unlock-btn:hover { background: linear-gradient(135deg,#AB47BC,#8E24AA); }
+    .gate-error { color: #FF5252; font-size: 12px; margin-bottom: 8px; min-height: 18px; }
+    .gate-free-note { color: #7A7189; font-size: 11px; }
+
+    /* floating lock button */
+    .lock-fab { position: fixed; bottom: 18px; right: 18px; z-index: 8000; width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg,#FFD700,#FFA500); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 16px rgba(255,215,0,0.4); transition: all 0.3s; }
+    .lock-fab:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(255,215,0,0.6); }
+    .lock-fab.unlocked { background: linear-gradient(135deg,#00E676,#00C853); box-shadow: 0 4px 16px rgba(0,230,118,0.4); }
+    .lock-fab-tip { position: absolute; bottom: 52px; right: 0; background: #1a1225; border: 1px solid #3d2d55; border-radius: 8px; padding: 4px 10px; font-size: 11px; color: #B8B0C8; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+    .lock-fab:hover .lock-fab-tip { opacity: 1; }
+    .free-badge { display: inline-block; background: #00E676; color: #0f0a1a; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
+    .locked-btn { opacity: 0.7; position: relative; }
+
     .info-bar { display: flex; gap: 14px; margin-top: 20px; padding: 14px 20px; background: var(--bg-card); border-radius: 12px; }
     .info-item { text-align: center; min-width: 70px; }
     .info-val { font-size: 24px; font-weight: 900; }
@@ -328,6 +360,20 @@
         score: 50, thinking: 'Awaiting first move...', suggestedMove: '--', active: false, winner: false
       }]));
 
+    // ── Paywall ───────────────────────────────────────────────────────────────
+    const VALID_CODES = new Set([
+      '1TURKEY2CHICKEN3',
+      '1CHUNKY2CHICKEN3',
+      '1FUNKY2MONKEY3',
+      '1JAZZY2PICKLE3',
+      '1LUCKY2NOODLE3',
+      '1ROCKY2TACO3',
+    ]);
+    const GUMROAD_URL = 'https://gum.co/v2chess';
+    const FREE_MOVE_LIMIT = 5;
+    const isUnlocked = () => { try { return localStorage.getItem('v2chess_unlocked') === 'true'; } catch(e) { return false; } };
+    const unlockGame = () => { try { localStorage.setItem('v2chess_unlocked', 'true'); } catch(e) {} };
+
     const App = () => {
       const [screen, setScreen] = useState('menu');
       const [step,   setStep]   = useState(0);
@@ -368,6 +414,27 @@
         content: 'Game started! You play White.',
         lesson: 'Tip: Develop pieces, control center, castle early!'
       }]);
+
+      // ── Paywall state ────────────────────────────────────────────────────────
+      const [unlocked,        setUnlocked]        = useState(isUnlocked);
+      const [showGateOverlay, setShowGateOverlay] = useState(false);
+      const [codeInput,       setCodeInput]       = useState('');
+      const [codeError,       setCodeError]       = useState('');
+
+      const tryCode = () => {
+        const code = codeInput.trim().toUpperCase().replace(/\s+/g, '');
+        if (VALID_CODES.has(code)) {
+          unlockGame();
+          setUnlocked(true);
+          setShowGateOverlay(false);
+          setCodeInput('');
+          setCodeError('');
+        } else {
+          setCodeError('Invalid code. Try again or grab a key below ↓');
+        }
+      };
+
+      const requireUnlock = (fn) => () => { if (unlocked) { fn(); } else { setShowGateOverlay(true); } };
 
       const files = ['a','b','c','d','e','f','g','h'];
       const ranks = ['8','7','6','5','4','3','2','1'];
@@ -487,6 +554,7 @@
       // ── Click handler (real chess.js move validation) ───────────────────────
       const click = (r, c) => {
         if (game.game_over() || game.turn() !== 'w') return;
+        if (!unlocked && moveCount >= FREE_MOVE_LIMIT) { setShowGateOverlay(true); return; }
 
         const square = toSAN(r, c);
 
@@ -641,25 +709,25 @@
                 <h1><span className="crown">👑</span><span className="title-text">V2 Chess Academy</span></h1>
               </div>
               <div className="menu-subtitle">AI-Powered Learning System</div>
-              <div className="menu-free">🎓 100% Free • No Ads • Learn & Play</div>
+              <div className="menu-free">{unlocked ? '✅ Full Access Unlocked — All Features Active' : '🎓 Free Preview • First 5 Moves vs AI • Try Before You Buy'}</div>
               <div className="v3-badge">🚀 V3 FEATURES — chess.js ENGINE</div>
               <div className="menu-grid">
-                <button className="menu-btn btn-vs-ai"      onClick={startGame}>🤖 Play vs AI</button>
-                <button className="menu-btn btn-2player"    onClick={skipToGame}>👥 2 Players</button>
-                <button className="menu-btn btn-lessons"    onClick={startGame}>📖 Lessons</button>
-                <button className="menu-btn btn-puzzles"    onClick={startGame}>🧩 Puzzles</button>
-                <button className="menu-btn btn-openings"   onClick={startGame}>📚 Openings</button>
-                <button className="menu-btn btn-videos"     onClick={startGame}>🎥 Videos</button>
-                <button className="menu-btn btn-selflearn"  onClick={startGame}>🧠 Self-Learn</button>
-                <button className="menu-btn btn-online"     onClick={startGame}>🌐 Online</button>
+                <button className="menu-btn btn-vs-ai"     onClick={startGame}>🤖 Play vs AI<span className="free-badge">FREE</span></button>
+                <button className="menu-btn btn-2player    locked-btn" onClick={requireUnlock(skipToGame)}>👥 2 Players{!unlocked && ' 🔒'}</button>
+                <button className="menu-btn btn-lessons    locked-btn" onClick={requireUnlock(startGame)}>📖 Lessons{!unlocked && ' 🔒'}</button>
+                <button className="menu-btn btn-puzzles    locked-btn" onClick={requireUnlock(startGame)}>🧩 Puzzles{!unlocked && ' 🔒'}</button>
+                <button className="menu-btn btn-openings   locked-btn" onClick={requireUnlock(startGame)}>📚 Openings{!unlocked && ' 🔒'}</button>
+                <button className="menu-btn btn-videos     locked-btn" onClick={requireUnlock(startGame)}>🎥 Videos{!unlocked && ' 🔒'}</button>
+                <button className="menu-btn btn-selflearn  locked-btn" onClick={requireUnlock(startGame)}>🧠 Self-Learn{!unlocked && ' 🔒'}</button>
+                <button className="menu-btn btn-online     locked-btn" onClick={requireUnlock(startGame)}>🌐 Online{!unlocked && ' 🔒'}</button>
               </div>
               <div style={{ marginTop: 40, textAlign: 'center' }}>
                 <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>✨ V3 Experimental Features</div>
                 <div className="menu-grid">
-                  <button className="menu-btn" style={{ background: 'linear-gradient(135deg,#FF6B35,#F7931E)' }} onClick={startGame}>👤 Shadow Player</button>
-                  <button className="menu-btn" style={{ background: 'linear-gradient(135deg,#00BCD4,#006064)' }} onClick={startGame}>❄️ Freeze Board</button>
-                  <button className="menu-btn" style={{ background: 'linear-gradient(135deg,#4CAF50,#2E7D32)' }} onClick={startGame}>🌱 Focus Mode</button>
-                  <button className="menu-btn" style={{ background: 'linear-gradient(135deg,#FFD700,#FF8F00)' }} onClick={startGame}>🎯 Learn Promise</button>
+                  <button className="menu-btn locked-btn" style={{ background: 'linear-gradient(135deg,#FF6B35,#F7931E)' }} onClick={requireUnlock(startGame)}>👤 Shadow Player{!unlocked && ' 🔒'}</button>
+                  <button className="menu-btn locked-btn" style={{ background: 'linear-gradient(135deg,#00BCD4,#006064)' }} onClick={requireUnlock(startGame)}>❄️ Freeze Board{!unlocked && ' 🔒'}</button>
+                  <button className="menu-btn locked-btn" style={{ background: 'linear-gradient(135deg,#4CAF50,#2E7D32)' }} onClick={requireUnlock(startGame)}>🌱 Focus Mode{!unlocked && ' 🔒'}</button>
+                  <button className="menu-btn locked-btn" style={{ background: 'linear-gradient(135deg,#FFD700,#FF8F00)' }} onClick={requireUnlock(startGame)}>🎯 Learn Promise{!unlocked && ' 🔒'}</button>
                 </div>
               </div>
             </div>
@@ -787,123 +855,4 @@
                                 {pieceChar}
                               </span>
                             )}
-                          </div>
-                        );
-                      }))}
-                    </div>
-                    <div className="b-ranks">{ranks.map(r => <div key={r} className="r-label">{r}</div>)}</div>
-                  </div>
-                  <div className="board-labels bottom">{files.map(f => <div key={f} className="b-label">{f}</div>)}</div>
-                </div>
-
-                <div className="info-bar">
-                  <div className="info-item">
-                    <div className="info-val" style={{ color: '#FFD700' }}>{moveCount}</div>
-                    <div className="info-lbl">Move</div>
-                  </div>
-                  <div className="info-item">
-                    <div className="info-val" style={{ color: getColor(redLine) }}>{redLine}%</div>
-                    <div className="info-lbl">Red Line</div>
-                  </div>
-                  <div className="info-item">
-                    <div className="info-val" style={{ color: winnerVersion ? VERSIONS[winnerVersion].color : '#7A7189' }}>
-                      {winnerVersion ? `V${winnerVersion}` : '--'}
-                    </div>
-                    <div className="info-lbl">Leading</div>
-                  </div>
-                  <div className="info-item">
-                    <div className="info-val" style={{ color: '#00E5FF' }}>{wipers}%</div>
-                    <div className="info-lbl">Wipers</div>
-                  </div>
-                </div>
-
-                <div className="game-btns">
-                  <button className="g-btn primary"   onClick={newGame}>🔄 New</button>
-                  <button className="g-btn purple"    onClick={() => { setStep(0); setScreen('onboarding'); }}>❓ Help</button>
-                  <button className="g-btn secondary" onClick={undoMove}>↩️ Undo</button>
-                </div>
-              </div>
-
-              {/* RIGHT PANEL */}
-              <div className="panel right">
-                {/* Red Line & Wipers */}
-                <div className="section">
-                  <div className="section-head"><div className="section-title" style={{ color: '#FF5252' }}>🎯 Red Line & Wipers</div></div>
-                  <div className="section-body">
-                    <div className="metrics">
-                      <div className="metric">
-                        <div className="m-head">
-                          <div className="m-title">🎯 Red Line</div>
-                          <div className="m-val" style={{ color: getColor(redLine) }}>{redLine}%</div>
-                        </div>
-                        <div className="m-bar"><div className="m-fill" style={{ width: `${redLine}%`, background: getColor(redLine) }}></div></div>
-                        <div className="m-status">{redLine <= 33 ? '✓ Excellent!' : redLine <= 66 ? '⚠ Drifting' : '✗ Off track'}</div>
-                      </div>
-                      <div className="metric">
-                        <div className="m-head">
-                          <div className="m-title">🌧️ Wipers</div>
-                          <div className="m-val" style={{ color: '#FFD700' }}>{wipers}%</div>
-                        </div>
-                        <div className="m-bar"><div className="m-fill" style={{ width: `${wipers}%`, background: '#FFD700' }}></div></div>
-                        <div className="m-status">{wipers <= 33 ? '25% — Light' : wipers <= 66 ? '50% — Moderate' : '100% — Heavy'}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* AI Coaches */}
-                <div className="section">
-                  <div className="section-head"><div className="section-title" style={{ color: '#8B5CF6' }}>🤖 AI Coaches</div></div>
-                  <div className="section-body">
-                    {Object.entries(AGENTS).map(([id, a]) => (
-                      <div key={id} className={`agent ${speaking === id ? 'speaking' : ''}`}>
-                        <div className="a-avatar" style={{ background: a.color }}>{a.avatar}</div>
-                        <div className="a-content">
-                          <div className="a-name">{a.name}</div>
-                          <div className="a-role">{a.role}</div>
-                          <div className="a-msg" style={{ borderColor: a.color }}>{agentMsgs[id]}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Move Log */}
-                <div className="section">
-                  <div className="section-head"><div className="section-title" style={{ color: '#00E5FF' }}>📜 Move Log</div></div>
-                  <div className="section-body">
-                    {log.map((e, i) => (
-                      <div key={i} className={`log-entry ${e.type}`}>
-                        <div className="log-head">
-                          <span className={`log-type ${e.type}`}>{e.type === 'mistake' ? '❌' : '✓'}</span>
-                          <span className="log-time">{e.time}</span>
-                        </div>
-                        <div className="log-content">{e.content}</div>
-                        <div className="log-lesson">💡 {e.lesson}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Patterns */}
-                <div className="section">
-                  <div className="section-head"><div className="section-title" style={{ color: '#22C55E' }}>📚 Patterns</div></div>
-                  <div className="section-body">
-                    {Object.entries(patterns).map(([k, p]) => (
-                      <div key={k} className="pattern">
-                        <div className="pat-icon">{p.icon}</div>
-                        <div className="pat-info">
-                          <div className="pat-name">{p.name}</div>
-                          <div className="pat-bar"><div className="pat-fill" style={{ width: `${p.conf*100}%`, background: getColor(p.conf, 'pat') }}></div></div>
-                        </div>
-                        <div className="pat-val" style={{ color: getColor(p.conf, 'pat') }}>{Math.round(p.conf*100)}%</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      );
-    
+                    
