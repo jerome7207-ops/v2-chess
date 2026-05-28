@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Championship Gauntlet Dominoes V1.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a28;--surface3:#22223a;
+  --accent:#c9a84c;--accent2:#e8c97a;--accent3:#f5d98a;
+  --text:#e8e8f0;--text2:#9090b0;--text3:#6060880;
+  --danger:#e05555;--success:#50c878;--warning:#f0a030;
+  --border:#2a2a3a;--border2:#3a3a5a;
+  --tile-bg:#f5f0e8;--tile-border:#8a7a5a;--tile-dot:#1a1020;
+}
+body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;min-height:100vh;overflow-x:hidden;user-select:none;}
+.screen{display:none;min-height:100vh;flex-direction:column;align-items:center;}
+.screen.active{display:flex;}
+
+/* ===== PAYWALL ===== */
+#paywall-screen{background:linear-gradient(160deg,#0a0a0f 0%,#141420 50%,#0e0e18 100%);justify-content:center;padding:20px;}
+.pw-inner{max-width:480px;width:100%;text-align:center;}
+.pw-logo{font-size:56px;margin-bottom:8px;filter:drop-shadow(0 0 20px #c9a84c88);}
+.pw-title{font-size:28px;font-weight:bold;color:var(--accent2);letter-spacing:2px;margin-bottom:4px;}
+.pw-subtitle{font-size:13px;color:var(--text2);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px;}
+.pw-divider{height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:16px 0;}
+.pw-free-badge{display:inline-block;background:#1a2a1a;border:1px solid var(--success);color:var(--success);padding:6px 18px;border-radius:20px;font-size:12px;letter-spacing:2px;margin-bottom:16px;}
+.pw-features{text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;}
+.pw-feature{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px;color:var(--text2);border-bottom:1px solid var(--border);}
+.pw-feature:last-child{border-bottom:none;}
+.pw-feature .icon{font-size:18px;width:28px;text-align:center;}
+.pw-feature .locked{color:var(--danger);font-size:11px;margin-left:auto;}
+.pw-feature .free{color:var(--success);font-size:11px;margin-left:auto;}
+.pw-price{font-size:36px;font-weight:bold;color:var(--accent2);margin:12px 0 4px;}
+.pw-price-sub{font-size:12px;color:var(--text2);margin-bottom:16px;letter-spacing:1px;}
+.btn-buy{display:block;width:100%;padding:16px;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#0a0a0f;font-size:16px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;letter-spacing:2px;margin-bottom:12px;transition:all 0.2s;}
+.btn-buy:hover{transform:translateY(-2px);box-shadow:0 8px 24px #c9a84c44;}
+.pw-or{color:var(--text2);font-size:12px;margin:8px 0;letter-spacing:2px;}
+.pw-code-row{display:flex;gap:8px;margin-bottom:8px;}
+.pw-code-input{flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:14px;font-family:monospace;}
+.pw-code-input::placeholder{color:var(--text2);}
+.btn-code{padding:12px 20px;background:var(--surface3);border:1px solid var(--border2);color:var(--accent);border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.2s;}
+.btn-code:hover{border-color:var(--accent);}
+.pw-msg{font-size:12px;min-height:16px;margin-bottom:8px;}
+.pw-msg.error{color:var(--danger);}
+.pw-msg.success{color:var(--success);}
+.btn-play-free{display:block;width:100%;padding:12px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:10px;cursor:pointer;font-size:13px;letter-spacing:1px;transition:all 0.2s;margin-top:4px;}
+.btn-play-free:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ===== CHARACTER SELECT ===== */
+#char-screen{padding:20px;justify-content:flex-start;padding-top:40px;}
+.char-title{font-size:24px;color:var(--accent2);letter-spacing:3px;margin-bottom:4px;text-align:center;}
+.char-sub{font-size:12px;color:var(--text2);letter-spacing:2px;text-align:center;margin-bottom:30px;}
+.char-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:480px;width:100%;margin:0 auto 30px;}
+.char-card{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;transition:all 0.25s;}
+.char-card:hover{border-color:var(--accent);transform:translateY(-3px);}
+.char-card.selected{border-color:var(--accent2);background:var(--surface2);box-shadow:0 0 20px #c9a84c33;}
+.char-avatar{font-size:44px;margin-bottom:8px;}
+.char-name{font-size:13px;color:var(--text);font-weight:bold;margin-bottom:2px;}
+.char-tag{font-size:10px;color:var(--text2);letter-spacing:1px;}
+.btn-continue{padding:14px 48px;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#0a0a0f;border:none;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;letter-spacing:2px;transition:all 0.2s;display:block;margin:0 auto;}
+.btn-continue:disabled{opacity:0.3;cursor:not-allowed;}
+.btn-continue:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 20px #c9a84c44;}
+
+/* ===== GAUNTLET MAP ===== */
+#gauntlet-screen{padding:20px;padding-top:30px;}
+.gauntlet-title{font-size:22px;color:var(--accent2);letter-spacing:3px;margin-bottom:4px;text-align:center;}
+.gauntlet-sub{font-size:11px;color:var(--text2);letter-spacing:2px;text-align:center;margin-bottom:6px;}
+.gauntlet-progress{font-size:13px;color:var(--accent);text-align:center;margin-bottom:20px;}
+.opponent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:500px;width:100%;margin:0 auto;}
+.opp-card{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all 0.25s;position:relative;}
+.opp-card.available{border-color:var(--border2);}
+.opp-card.available:hover{border-color:var(--accent);transform:translateY(-2px);}
+.opp-card.beaten{border-color:var(--success);background:#0a1a0a;}
+.opp-card.locked{opacity:0.4;cursor:not-allowed;}
+.opp-card.current{border-color:var(--accent2);box-shadow:0 0 16px #c9a84c44;}
+.opp-avatar{font-size:32px;margin-bottom:6px;}
+.opp-name{font-size:11px;color:var(--text);font-weight:bold;margin-bottom:2px;line-height:1.2;}
+.opp-tier{font-size:9px;color:var(--text2);letter-spacing:1px;}
+.opp-badge{position:absolute;top:6px;right:6px;font-size:12px;}
+.opp-free{position:absolute;top:6px;left:6px;background:#0a2a0a;border:1px solid var(--success);color:var(--success);font-size:8px;padding:1px 5px;border-radius:8px;letter-spacing:1px;}
+
+/* ===== GAME SCREEN ===== */
+#game-screen{padding:0;background:var(--bg);overflow:hidden;position:relative;}
+.game-header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);}
+.game-header-left{display:flex;align-items:center;gap:8px;}
+.game-title{font-size:12px;color:var(--accent);letter-spacing:2px;}
+.game-round{font-size:11px;color:var(--text2);}
+.game-scores{display:flex;gap:12px;}
+.score-item{text-align:center;}
+.score-name{font-size:9px;color:var(--text2);letter-spacing:1px;}
+.score-val{font-size:14px;color:var(--text);font-weight:bold;}
+.score-val.winning{color:var(--accent2);}
+.score-val.danger{color:var(--danger);}
+
+/* AI players area */
+.ai-area{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px 12px;background:var(--surface2);}
+.ai-pod{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center;position:relative;transition:all 0.3s;}
+.ai-pod.active-turn{border-color:var(--accent);box-shadow:0 0 12px #c9a84c44;}
+.ai-pod.thinking::after{content:'...';position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);color:var(--accent);font-size:16px;animation:pulse 0.6s infinite;}
+.ai-avatar{font-size:28px;margin-bottom:2px;}
+.ai-name{font-size:9px;color:var(--text2);letter-spacing:1px;margin-bottom:2px;}
+.ai-hand-count{font-size:11px;color:var(--text);font-weight:bold;}
+.ai-state{font-size:9px;margin-top:2px;}
+.ai-state.baseline{color:var(--text2);}
+.ai-state.fracture{color:var(--warning);}
+.ai-state.pressure{color:var(--danger);}
+.ai-state.shift{color:#aa44ff;}
+.dialogue-bubble{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--surface3);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;font-size:10px;color:var(--text);white-space:nowrap;max-width:160px;white-space:normal;text-align:center;z-index:10;opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.dialogue-bubble::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border2);}
+.dialogue-bubble.visible{opacity:1;}
+
+/* Train/board area */
+.board-area{flex:1;overflow:hidden;position:relative;background:radial-gradient(ellipse at center,#151520 0%,#0a0a0f 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:8px;min-height:180px;}
+.board-inner{width:100%;overflow-x:auto;overflow-y:hidden;padding:10px 0;}
+.train{display:flex;align-items:center;gap:2px;min-width:min-content;padding:0 10px;}
+.board-info{position:absolute;bottom:8px;right:12px;font-size:11px;color:var(--text2);}
+.ends-display{font-size:12px;color:var(--accent);text-align:center;margin-bottom:4px;}
+.boneyard-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;transition:all 0.2s;}
+.boneyard-btn:hover:not(:disabled){border-color:var(--accent);}
+.boneyard-btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* Domino tiles */
+.domino{display:inline-flex;flex-direction:column;background:var(--tile-bg);border:2px solid var(--tile-border);border-radius:5px;cursor:default;transition:all 0.2s;position:relative;box-shadow:1px 2px 4px rgba(0,0,0,0.5);}
+.domino.horizontal{flex-direction:row;}
+.domino.playable{cursor:pointer;border-color:var(--accent);}
+.domino.playable:hover{transform:translateY(-4px);box-shadow:0 6px 16px #c9a84c66;border-color:var(--accent2);}
+.domino.selected{border-color:var(--accent2);transform:translateY(-6px);box-shadow:0 8px 20px #c9a84c88;}
+.domino.in-hand{width:40px;height:78px;}
+.domino.on-board{width:28px;height:56px;}
+.domino.on-board.horizontal{width:56px;height:28px;}
+.domino.on-board.is-double{width:28px;height:56px;}
+.domino-half{flex:1;display:grid;place-items:center;position:relative;}
+.domino-half:first-child{border-bottom:1.5px solid var(--tile-border);}
+.domino.horizontal .domino-half:first-child{border-bottom:none;border-right:1.5px solid var(--tile-border);}
+.pip-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:1px;width:100%;height:100%;padding:3px;}
+.pip{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+.pip::after{content:'';width:55%;height:55%;background:var(--tile-dot);border-radius:50%;display:none;}
+.pip.filled::after{display:block;}
+
+/* Player hand */
+.player-area{background:var(--surface);border-top:1px solid var(--border);padding:10px 8px 14px;}
+.player-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 4px;}
+.player-name-display{display:flex;align-items:center;gap:8px;}
+.player-avatar-sm{font-size:22px;}
+.player-name-txt{font-size:12px;color:var(--accent);letter-spacing:1px;}
+.player-hand{display:flex;gap:5px;overflow-x:auto;padding:4px 2px;min-height:85px;align-items:flex-start;}
+.turn-indicator{font-size:11px;padding:4px 12px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);}
+.turn-indicator.your-turn{background:#1a1a0a;border-color:var(--accent);color:var(--accent);}
+.pass-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:5px 14px;border-radius:8px;cursor:pointer;font-size:11px;transition:all 0.2s;}
+.pass-btn:hover{border-color:var(--warning);color:var(--warning);}
+
+/* ===== RESULT SCREEN ===== */
+#result-screen{justify-content:center;align-items:center;padding:30px 20px;}
+.result-inner{max-width:400px;width:100%;text-align:center;}
+.result-icon{font-size:72px;margin-bottom:12px;animation:bounceIn 0.5s ease;}
+.result-title{font-size:28px;font-weight:bold;margin-bottom:8px;}
+.result-title.win{color:var(--accent2);}
+.result-title.lose{color:var(--danger);}
+.result-opp{font-size:14px;color:var(--text2);margin-bottom:20px;}
+.result-scores{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;}
+.result-score-row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;border-bottom:1px solid var(--border);}
+.result-score-row:last-child{border-bottom:none;}
+.result-btns{display:flex;gap:12px;justify-content:center;}
+.btn-next{padding:14px 32px;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#0a0a0f;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;letter-spacing:2px;transition:all 0.2s;}
+.btn-next:hover{transform:translateY(-2px);}
+.btn-retry{padding:14px 24px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:10px;font-size:14px;cursor:pointer;transition:all 0.2s;}
+.btn-retry:hover{border-color:var(--accent);}
+
+/* ===== GAUNTLET COMPLETE ===== */
+#complete-screen{justify-content:center;align-items:center;padding:30px 20px;background:radial-gradient(ellipse at center,#1a1500 0%,#0a0a0f 70%);}
+.complete-inner{max-width:420px;width:100%;text-align:center;}
+.complete-crown{font-size:80px;animation:float 2s ease-in-out infinite;}
+.complete-title{font-size:32px;color:var(--accent2);font-weight:bold;margin:12px 0 6px;letter-spacing:3px;}
+.complete-sub{font-size:14px;color:var(--text2);margin-bottom:24px;}
+.complete-trophies{font-size:36px;letter-spacing:8px;margin-bottom:20px;}
+.btn-restart{padding:14px 40px;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#0a0a0f;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;letter-spacing:2px;transition:all 0.2s;margin-top:8px;}
+.btn-restart:hover{transform:translateY(-2px);box-shadow:0 8px 24px #c9a84c44;}
+
+/* ===== MODAL ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:#00000088;z-index:100;justify-content:center;align-items:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:360px;width:90%;text-align:center;}
+.modal-icon{font-size:48px;margin-bottom:12px;}
+.modal-title{font-size:20px;color:var(--accent2);margin-bottom:8px;}
+.modal-text{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6;}
+.modal-btns{display:flex;gap:10px;justify-content:center;}
+.modal-btn{padding:10px 24px;border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.2s;}
+.modal-btn.primary{background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#0a0a0f;border:none;font-weight:bold;}
+.modal-btn.secondary{background:var(--surface2);border:1px solid var(--border2);color:var(--text);}
+
+/* Animations */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes bounceIn{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.animate-in{animation:slideUp 0.3s ease both;}
+
+/* Scrollbar */
+::-webkit-scrollbar{height:4px;width:4px;}
+::-webkit-scrollbar-track{background:var(--surface);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- ===== PAYWALL SCREEN ===== -->
+<div id="paywall-screen" class="screen">
+  <div class="pw-inner animate-in">
+    <div class="pw-logo">🎲</div>
+    <div class="pw-title">GAUNTLET DOMINOES</div>
+    <div class="pw-subtitle">Championship Series</div>
+    <div class="pw-divider"></div>
+    <div class="pw-free-badge">✓ FIRST 2 OPPONENTS FREE</div>
+    <div class="pw-features">
+      <div class="pw-feature"><span class="icon">🎭</span> Character Select (M/F) <span class="free">FREE</span></div>
+      <div class="pw-feature"><span class="icon">🎲</span> 2 Intro Opponents <span class="free">FREE</span></div>
+      <div class="pw-feature"><span class="icon">🏆</span> Full 12-Opponent Gauntlet <span class="locked">LOCKED</span></div>
+      <div class="pw-feature"><span class="icon">🧠</span> Nested Thirds AI Engine <span class="locked">LOCKED</span></div>
+      <div class="pw-feature"><span class="icon">👑</span> Face The King — Final Boss <span class="locked">LOCKED</span></div>
+    </div>
+    <div class="pw-price">$14.99</div>
+    <div class="pw-price-sub">ONE-TIME · NO SUBSCRIPTION · UNLOCK BOTH GAMES</div>
+    <button class="btn-buy" onclick="openGumroad()">🔓 UNLOCK FULL GAUNTLET</button>
+    <div class="pw-or">— OR ENTER FRIEND CODE —</div>
+    <div class="pw-code-row">
+      <input class="pw-code-input" id="codeInput" type="text" placeholder="ENTER CODE" maxlength="20">
+      <button class="btn-code" onclick="submitCode()">APPLY</button>
+    </div>
+    <div class="pw-msg" id="codeMsg"></div>
+    <button class="btn-play-free" onclick="startFree()">▶ PLAY FREE (2 OPPONENTS)</button>
+  </div>
+</div>
+
+<!-- ===== CHARACTER SELECT SCREEN ===== -->
+<div id="char-screen" class="screen">
+  <div class="char-title">CHOOSE YOUR PLAYER</div>
+  <div class="char-sub">SELECT YOUR STREET IDENTITY</div>
+  <div class="char-grid" id="charGrid"></div>
+  <button class="btn-continue" id="charContinueBtn" disabled onclick="goToGauntlet()">ENTER THE GAUNTLET →</button>
+</div>
+
+<!-- ===== GAUNTLET MAP SCREEN ===== -->
+<div id="gauntlet-screen" class="screen">
+  <div class="gauntlet-title">THE GAUNTLET</div>
+  <div class="gauntlet-sub">DOMINO STREET CHAMPIONSHIP</div>
+  <div class="gauntlet-progress" id="gauntletProgress">0 / 12 DEFEATED</div>
+  <div class="opponent-grid" id="opponentGrid"></div>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div id="game-screen" class="screen">
+  <!-- Header -->
+  <div class="game-header">
+    <div class="game-header-left">
+      <div>
+        <div class="game-title">GAUNTLET DOMINOES</div>
+        <div class="game-round" id="roundDisplay">ROUND 1</div>
+      </div>
+    </div>
+    <div class="game-scores" id="scoreDisplay"></div>
+  </div>
+  <!-- AI Pods -->
+  <div class="ai-area" id="aiArea"></div>
+  <!-- Board -->
+  <div class="board-area">
+    <div class="ends-display" id="endsDisplay">Place your first tile to begin</div>
+    <div class="board-inner">
+      <div class="train" id="trainDisplay"></div>
+    </div>
+    <div class="board-info">
+      <button class="boneyard-btn" id="boneyardBtn" onclick="playerDraw()">🎲 Draw (<span id="boneyardCount">0</span>)</button>
+    </div>
+  </div>
+  <!-- Player Hand -->
+  <div class="player-area">
+    <div class="player-info">
+      <div class="player-name-display">
+        <span class="player-avatar-sm" id="playerAvatarSm"></span>
+        <span class="player-name-txt" id="playerNameDisplay"></span>
+      </div>
+      <div id="turnIndicator" class="turn-indicator">WAITING...</div>
+    </div>
+    <div class="player-hand" id="playerHand"></div>
+  </div>
+</div>
+
+<!-- ===== RESULT SCREEN ===== -->
+<div id="result-screen" class="screen">
+  <div class="result-inner animate-in">
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-opp" id="resultOpp"></div>
+    <div class="result-scores" id="resultScores"></div>
+    <div class="result-btns" id="resultBtns"></div>
+  </div>
+</div>
+
+<!-- ===== GAUNTLET COMPLETE ===== -->
+<div id="complete-screen" class="screen">
+  <div class="complete-inner animate-in">
+    <div class="complete-crown">👑</div>
+    <div class="complete-title">CHAMPION!</div>
+    <div class="complete-sub">You've defeated all 12 opponents.<br>The streets belong to you.</div>
+    <div class="complete-trophies">🏆🎲🏆</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Gauntlet complete. You are the undisputed<br>Domino Street Champion.</p>
+    <button class="btn-restart" onclick="restartGauntlet()">⚡ PLAY AGAIN</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-icon" id="modalIcon">🎲</div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-text" id="modalText"></div>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONSTANTS & DATA
+// ============================================================
+const VALID_CODES = new Set(['1TURKEY2CHICKEN3','1CHUNKY2CHICKEN3','1FUNKY2MONKEY3','1JAZZY2PICKLE3','1LUCKY2NOODLE3','1ROCKY2TACO3']);
+const GUMROAD_URL = 'https://gum.co/v2chess';
+const WINNING_SCORE = 150;
+const TILES_PER_PLAYER = 7;
+const AI_THINK_MIN = 800;
+const AI_THINK_MAX = 1600;
+
+function isUnlocked(){try{return localStorage.getItem('v2chess_unlocked')==='true';}catch(e){return false;}}
+function unlockGame(){try{localStorage.setItem('v2chess_unlocked','true');}catch(e){}}
+function openGumroad(){window.open(GUMROAD_URL,'_blank');}
+
+const CHARACTERS = [
+  {id:'malik',name:'Malik',avatar:'🕶️',tag:'THE COOL ONE',gender:'male'},
+  {id:'darius',name:'Darius',avatar:'🎩',tag:'THE VETERAN',gender:'male'},
+  {id:'rico',name:'Rico',avatar:'🔥',tag:'THE WILDCARD',gender:'male'},
+  {id:'jade',name:'Jade',avatar:'💅',tag:'THE QUEEN',gender:'female'},
+  {id:'rosa',name:'Rosa',avatar:'🌹',tag:'THE SHARP ONE',gender:'female'},
+  {id:'kezia',name:'Kezia',avatar:'⚡',tag:'THE ELECTRIC',gender:'female'},
+];
+
+const OPPONENTS = [
+  {
+    id:1,name:'"Smooth" Sal',avatar:'🎩',tier:1,free:true,
+    dialogue:{
+      baseline:["Nice play... for a beginner.","Let me show you how it's done.","I've been running this block for years.","You got lucky. It won't happen twice."],
+      fracture:["Hmph. Lucky draw.","That was... acceptable.","Don't get used to it.","Okay okay, I see you."],
+      pressure:["The bones are turning on me...","Can't catch a break tonight.","This is temporary, trust me.","I'm just warming up."],
+      shift:["Alright. You got me this time.","Don't get comfortable.","Rematch. Name the time.","...Respect. Barely."]
+    }
+  },
+  {
+    id:2,name:'Rookie Rosa',avatar:'📋',tier:1,free:true,
+    dialogue:{
+      baseline:["Statistically, that was suboptimal.","My calculations say you'll lose.","I've studied every pattern here.","By the numbers, this is mine."],
+      fracture:["An... unexpected variable.","That defied probability.","Hmm. Recalculating.","That shouldn't have worked."],
+      pressure:["The model is breaking down...","I need to re-run my analysis.","This isn't in the data.","You're playing outside the pattern."],
+      shift:["I... underestimated you.","The data was wrong. YOU were the variable.","Impressive. Illogical, but impressive.","Back to the drawing board."]
+    }
+  },
+  {
+    id:3,name:'Fast-Fingers Frankie',avatar:'⚡',tier:1,
+    dialogue:{
+      baseline:["C'mon! Play the bone already!","We ain't got all day!","MOVE. MOVE. MOVE!","Stop thinking, just PLAY!"],
+      fracture:["Wait—how did you—fine, whatever.","Ugh! Just hurry UP!","Lucky. Now PLAY!","That was FAST. Good. Now me."],
+      pressure:["Slow down... I need a second.","Not so fast, not so fast...","Come on bones, COOPERATE!","...this ain't looking good."],
+      shift:["You played me at MY speed. Well done.","Fast AND smart. Dangerous combo.","Can't argue with the results.","Next time I'm going TWICE as fast."]
+    }
+  },
+  {
+    id:4,name:'"Pops"',avatar:'🧓',tier:1,
+    dialogue:{
+      baseline:["Well look at you, sharp as a tack.","Reminds me of myself, back in my prime.","Sonny/honey, I invented this game.","Sit down, let Pops teach you something."],
+      fracture:["Heh. You got some fire in you.","Not bad. Not bad at all.","My old knees are feeling that one.","You're keeping it interesting."],
+      pressure:["You know, the young ones always surprise me.","Back in my day, we played for KEEPS.","These old bones... they failing me.","I taught too many people this game."],
+      shift:["Ha! You beat the old man fair and square.","Go on. You earned it, youngster.","That's how you play DOMINOES, folks.","I'll be back. Pops always comes back."]
+    }
+  },
+  {
+    id:5,name:'Domino Debbie',avatar:'😊',tier:2,
+    dialogue:{
+      baseline:["Ooh, this is going to be FUN!","I just LOVE this game, don't you?","Every tile tells a story!","Smile! It's just dominoes!"],
+      fracture:["Oh! You had that the WHOLE time?","Oopsie, that was sneaky of you!","Haha, nice! But watch THIS.","Ooh, you got me! That's SO good!"],
+      pressure:["Okay okay, you're REALLY good...","I can't find my tiles tonight, haha!","This is stressing me out but I'm smiling!","You're making this SO hard!"],
+      shift:["Okay I'll admit it — you CRUSHED me!","That was amazing! Teach me?","I'm not even mad, that was brilliant!","Best match I've had all week!"]
+    }
+  },
+  {
+    id:6,name:'The Count',avatar:'🔢',tier:2,
+    dialogue:{
+      baseline:["Current projected win probability: 73%.","That play nets you 10 points. Suboptimal.","I am tracking every tile in the boneyard.","Every move is a calculation. Every. Move."],
+      fracture:["Probability revised. 61%.","That was a 15-point deviation from expected.","Interesting. I did not model for that.","Recalibrating."],
+      pressure:["Win probability now at 42%. Concerning.","You have exceeded my model parameters.","I am playing below theoretical maximum.","The numbers... are not friendly."],
+      shift:["Final probability: 12%. I lost.","You played optimally in 7 of 9 key turns.","I will incorporate this into the next model.","Statistically improbable win. Well executed."]
+    }
+  },
+  {
+    id:7,name:'Isabelle',avatar:'🖤',tier:2,
+    dialogue:{
+      baseline:["...","...Play.","...I've been waiting.","...Your move."],
+      fracture:["...Lucky.","...Interesting.","...I see.","...Unexpected."],
+      pressure:["...You're good.","...I respect that.","...This is real now.","...I didn't expect this from you."],
+      shift:["...Well played.","...You earned it.","...I won't forget this.","...Next time will be different."]
+    }
+  },
+  {
+    id:8,name:'"Joker" Jay',avatar:'🃏',tier:2,
+    dialogue:{
+      baseline:["AHAHA! You have NO idea what's coming!","Maybe I want you to win! Or DO I?","The Joker always has a trick up his sleeve!","You can't read me because I DON'T MAKE SENSE!"],
+      fracture:["AHAHA! You fell right in! Or did I?!","Was that YOUR plan or MINE?! WHO KNOWS!","Oh GOOD move! Or is it? Wait...","HAHAHA I love this game SO much!"],
+      pressure:["Hmm. This is getting... real.","Maybe I played myself? CLASSIC JOKER MOVE!","Okay okay this one's on me. MAYBE.","The trick is... there is no trick. Or IS there?"],
+      shift:["You played my game better than ME! RESPECT!","The student becomes the CHAOS MASTER!","AHAHA! A loss is just a win in disguise!","I'll be laughing about this one for WEEKS!"]
+    }
+  },
+  {
+    id:9,name:'Madame Z',avatar:'🔮',tier:2,
+    dialogue:{
+      baseline:["The bones have spoken. They do not favor you.","I felt this game's outcome before it began.","Destiny has already written your defeat.","The spirits guided me to this tile."],
+      fracture:["...A ripple in the current.","The bones surprise even me sometimes.","An unexpected thread in the weave.","The universe tests us all."],
+      pressure:["The spirits are... quiet tonight.","I sense... a shift. An unwelcome one.","Even the stars have their storms.","You carry powerful energy. I feel it."],
+      shift:["The bones chose well. I accept their verdict.","Destiny favored you today. Tomorrow is another matter.","I see great power in your hands. Use it wisely.","You have bested fate. For now."]
+    }
+  },
+  {
+    id:10,name:'The Architect',avatar:'📐',tier:3,
+    dialogue:{
+      baseline:["Your move was a statistical inevitability.","I have modeled 47 outcomes. None favor you.","I don't play tiles. I play futures.","You see a domino. I see a closed end."],
+      fracture:["You deviated from the predicted sequence.","That play collapses 3 of my planned routes.","I did not account for that level of instinct.","...Revising the blueprint."],
+      pressure:["You've disrupted the architecture.","The structure is bending. I must adapt.","You play with intuition. I hate intuition.","This requires a new design entirely."],
+      shift:["You dismantled the blueprint entirely.","I have never lost control of a game this completely.","Your instincts surpassed my models.","A flawed system beats a perfect plan. Today."]
+    }
+  },
+  {
+    id:11,name:'Queenie',avatar:'👸',tier:3,
+    dialogue:{
+      baseline:["A peasant's move. Truly.","Do you even comprehend this game?","I've beaten harder players in my sleep.","The court bows to my hand."],
+      fracture:["How... unbecoming of me to miss that.","A lucky subject. Nothing more.","I shall not make that error twice.","The throne is never truly threatened."],
+      pressure:["You dare challenge the Queen?!","This crown is heavier tonight.","I will not be dethroned. NOT TODAY.","You are... more formidable than expected."],
+      shift:["You have earned... a grudging respect.","The Queen has fallen. For today.","The court is stunned. As am I.","This changes nothing about who I am."]
+    }
+  },
+  {
+    id:12,name:'King',avatar:'👑',tier:3,
+    dialogue:{
+      baseline:["That was your last move. You just don't know it yet.","No one leaves this table a winner.","Every tile you play, I've already planned for.","The King does not lose."],
+      fracture:["...Noted.","...You're different.","...I see you.","...Continue."],
+      pressure:["For the first time in a long time... I'm being tested.","You play like someone with nothing to lose.","Don't mistake silence for weakness.","This is where it gets real."],
+      shift:["...You deserve this.","The King has been defeated. By someone worthy.","I've been waiting years for a match like this.","You are Champion. The street is yours."]
+    }
+  }
+];
+
+// ============================================================
+// GAME STATE
+// ============================================================
+const GS = {
+  unlocked: false,
+  freeOpponents: 2,
+  player: null,
+  progress: 0, // opponents beaten
+  currentOpponentIdx: 0,
+
+  // Match state
+  matchActive: false,
+  matchScores: {player:0,ai1:0,ai2:0,ai3:0},
+  roundNumber: 0,
+
+  // Round state
+  hands: {player:[],ai1:[],ai2:[],ai3:[]},
+  boneyard: [],
+  train: [],     // [{high, low, flipped, isDouble, orientation}]
+  trainLeft: null,  // playable left end value
+  trainRight: null, // playable right end value
+  currentTurn: 'player',
+  turnOrder: ['player','ai1','ai2','ai3'],
+  passCount: 0, // consecutive passes
+
+  // Current match opponents
+  ai1Opp: null,
+  ai2Opp: null,
+  ai3Opp: null,
+
+  // Nested Thirds - psychology per AI seat
+  psychology: {
+    ai1: {state:'baseline', pressureScore:0},
+    ai2: {state:'baseline', pressureScore:0},
+    ai3: {state:'baseline', pressureScore:0}
+  },
+
+  selectedTile: null,
+  isProcessing: false,
+  playerCanPlay: false,
+  playerMustPass: false
+};
+
+// ============================================================
+// DOMINO LOGIC
+// ============================================================
+function generateAllTiles(){
+  const tiles=[];
+  for(let h=0;h<=6;h++) for(let l=0;l<=h;l++) tiles.push({high:h,low:l,id:`${h}-${l}`});
+  return tiles;
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function dealGame(){
+  const all=shuffle(generateAllTiles());
+  GS.hands.player=all.slice(0,7);
+  GS.hands.ai1=all.slice(7,14);
+  GS.hands.ai2=all.slice(14,21);
+  GS.hands.ai3=all.slice(21,28);
+  GS.boneyard=all.slice(28);
+  GS.train=[];
+  GS.trainLeft=null;
+  GS.trainRight=null;
+  GS.passCount=0;
+  GS.selectedTile=null;
+  GS.psychology={
+    ai1:{state:'baseline',pressureScore:0},
+    ai2:{state:'baseline',pressureScore:0},
+    ai3:{state:'baseline',pressureScore:0}
+  };
+  // Find who has highest double (or highest tile) to start
+  findFirstTurn();
+}
+
+function findFirstTurn(){
+  // Check for double-six, then double-5, etc.
+  for(let d=6;d>=0;d--){
+    const tile={high:d,low:d};
+    for(const seat of ['player','ai1','ai2','ai3']){
+      const found=GS.hands[seat].find(t=>t.high===d&&t.low===d);
+      if(found){GS.currentTurn=seat;return;}
+    }
+  }
+  GS.currentTurn='player';
+}
+
+function canPlayTile(tile, left, right){
+  if(left===null) return true; // first tile
+  return tile.high===left||tile.low===left||tile.high===right||tile.low===right;
+}
+
+function getPlayableTiles(hand, left, right){
+  return hand.filter(t=>canPlayTile(t,left,right));
+}
+
+function placeTile(seat, tile, side){
+  // Remove from hand
+  const hand=GS.hands[seat];
+  const idx=hand.findIndex(t=>t.id===tile.id);
+  if(idx===-1) return false;
+  hand.splice(idx,1);
+
+  const isDouble=tile.high===tile.low;
+  let tileObj={...tile,isDouble,orientation:'horizontal'};
+
+  if(GS.train.length===0){
+    // First tile
+    GS.trainLeft=tile.low;
+    GS.trainRight=tile.high;
+    tileObj.flipped=false;
+    if(isDouble) tileObj.orientation='vertical';
+  } else {
+    if(side==='left'){
+      if(tile.high===GS.trainLeft){
+        tileObj.flipped=true;
+        GS.trainLeft=tile.low;
+      } else {
+        tileObj.flipped=false;
+        GS.trainLeft=tile.high;
+      }
+      GS.train.unshift(tileObj);
+      updateScores(seat, tile);
+      checkWinRound(seat);
+      return true;
+    } else {
+      if(tile.low===GS.trainRight){
+        tileObj.flipped=false;
+        GS.trainRight=tile.high;
+      } else {
+        tileObj.flipped=true;
+        GS.trainRight=tile.low;
+      }
+    }
+  }
+  GS.train.push(tileObj);
+  updateScores(seat, tile);
+  checkWinRound(seat);
+  return true;
+}
+
+function calcHandScore(hand){
+  return hand.reduce((s,t)=>s+t.high+t.low,0);
+}
+
+function updateScores(seat, playedTile){
+  // Award points when multiples of 5 on board ends
+  const total=GS.trainLeft+GS.trainRight;
+  // Simple scoring: track when board ends sum to multiple of 5
+  // (Optional enhancement — for now we score at round end)
+}
+
+function checkWinRound(seat){
+  if(GS.hands[seat].length===0){
+    setTimeout(()=>endRound(seat),400);
+  }
+}
+
+function drawFromBoneyard(seat){
+  if(GS.boneyard.length===0) return null;
+  const tile=GS.boneyard.pop();
+  GS.hands[seat].push(tile);
+  return tile;
+}
+
+function isBlocked(){
+  // Check if all players are blocked (no valid plays, boneyard empty)
+  if(GS.boneyard.length>0) return false;
+  for(const seat of GS.turnOrder){
+    if(getPlayableTiles(GS.hands[seat],GS.trainLeft,GS.trainRight).length>0) return false;
+  }
+  return true;
+}
+
+// ============================================================
+// NESTED THIRDS ENGINE
+// ============================================================
+function updatePsychology(event, seat){
+  if(!seat||seat==='player') return;
+  const ps=GS.psychology[seat];
+  const opp=getOppForSeat(seat);
+  if(!opp) return;
+
+  switch(event){
+    case 'player_big_score': ps.pressureScore+=20; break;
+    case 'player_blocks_ai': ps.pressureScore+=15; break;
+    case 'player_wins_round': ps.pressureScore+=30; break;
+    case 'player_near_win': ps.pressureScore+=25; break;
+    case 'ai_wins_round': ps.pressureScore=Math.max(0,ps.pressureScore-40); break;
+    case 'ai_good_play': ps.pressureScore=Math.max(0,ps.pressureScore-10); break;
+  }
+
+  const prev=ps.state;
+  if(ps.pressureScore>=80) ps.state='shift';
+  else if(ps.pressureScore>=50) ps.state='pressure';
+  else if(ps.pressureScore>=20) ps.state='fracture';
+  else ps.state='baseline';
+
+  if(ps.state!==prev){
+    triggerDialogue(seat, ps.state);
+  }
+}
+
+function getDialogue(seat, state){
+  const opp=getOppForSeat(seat);
+  if(!opp) return '';
+  const lines=opp.dialogue[state]||opp.dialogue.baseline;
+  return lines[Math.floor(Math.random()*lines.length)];
+}
+
+function triggerDialogue(seat, state){
+  const text=getDialogue(seat,state);
+  showDialogueBubble(seat,text);
+}
+
+function randomDialogue(seat){
+  const state=GS.psychology[seat]?.state||'baseline';
+  const text=getDialogue(seat,state);
+  if(text) showDialogueBubble(seat,text);
+}
+
+// ============================================================
+// AI LOGIC
+// ============================================================
+function getAITier(oppId){
+  const opp=OPPONENTS.find(o=>o.id===oppId);
+  return opp?opp.tier:1;
+}
+
+function getOppForSeat(seat){
+  if(seat==='ai1') return GS.ai1Opp;
+  if(seat==='ai2') return GS.ai2Opp;
+  if(seat==='ai3') return GS.ai3Opp;
+  return null;
+}
+
+function aiChooseTile(seat){
+  const opp=getOppForSeat(seat);
+  const tier=opp?opp.tier:1;
+  const hand=GS.hands[seat];
+  const playable=getPlayableTiles(hand,GS.trainLeft,GS.trainRight);
+  if(playable.length===0) return null;
+
+  if(tier===1) return tier1Choice(playable);
+  if(tier===2) return tier2Choice(playable, hand);
+  return tier3Choice(playable, hand, seat);
+}
+
+function tier1Choice(playable){
+  // Play highest pip count tile
+  return playable.reduce((best,t)=>{
+    const s=t.high+t.low;
+    const bs=best.high+best.low;
+    return s>bs?t:best;
+  },playable[0]);
+}
+
+function tier2Choice(playable, hand){
+  // Prefer doubles first if high value, then highest pip
+  const doubles=playable.filter(t=>t.high===t.low);
+  if(doubles.length>0){
+    const bestDouble=doubles.reduce((b,t)=>t.high>b.high?t:b,doubles[0]);
+    if(bestDouble.high>=4) return bestDouble;
+  }
+  return tier1Choice(playable);
+}
+
+function tier3Choice(playable, hand, seat){
+  // Try to play tiles that create ends the other players can't match
+  // Simplified: prefer tiles that expose lower numbers
+  const tier2pick=tier2Choice(playable,hand);
+  // 30% chance to deviate and pick strategically
+  if(Math.random()>0.3) return tier2pick;
+  // Pick tile that would leave lowest-valued end exposed
+  return playable.reduce((best,t)=>{
+    const exposeVal=t.low; // what would be left exposed
+    const bestExpose=best.low;
+    return exposeVal<bestExpose?t:best;
+  },playable[0]);
+}
+
+function aiChooseSide(seat, tile){
+  // Prefer the side that exposes the most restrictive number
+  if(GS.train.length===0) return 'right';
+  if(tile.high===GS.trainLeft&&tile.low===GS.trainRight) return Math.random()>0.5?'left':'right';
+  if(tile.high===GS.trainLeft||tile.low===GS.trainLeft) return 'left';
+  return 'right';
+}
+
+// ============================================================
+// TURN MANAGEMENT
+// ============================================================
+function nextTurn(){
+  if(GS.isProcessing) return;
+  const idx=GS.turnOrder.indexOf(GS.currentTurn);
+  GS.currentTurn=GS.turnOrder[(idx+1)%4];
+  processCurrentTurn();
+}
+
+function processCurrentTurn(){
+  if(!GS.matchActive) return;
+  renderGame();
+
+  if(isBlocked()){
+    endRound(findBlockedWinner());
+    return;
+  }
+
+  if(GS.currentTurn==='player'){
+    const playable=getPlayableTiles(GS.hands.player,GS.trainLeft,GS.trainRight);
+    GS.playerCanPlay=playable.length>0;
+    GS.playerMustPass=playable.length===0&&GS.boneyard.length===0;
+    renderPlayerHand();
+    updateTurnIndicator(true);
+  } else {
+    GS.playerCanPlay=false;
+    updateTurnIndicator(false);
+    const thinkTime=AI_THINK_MIN+Math.random()*(AI_THINK_MAX-AI_THINK_MIN);
+    GS.isProcessing=true;
+    setAIPodThinking(GS.currentTurn,true);
+    setTimeout(()=>processAITurn(GS.currentTurn), thinkTime);
+  }
+}
+
+function processAITurn(seat){
+  GS.isProcessing=false;
+  setAIPodThinking(seat,false);
+
+  let tile=aiChooseTile(seat);
+
+  if(!tile){
+    // Draw from boneyard
+    if(GS.boneyard.length>0){
+      let drawn=null;
+      let attempts=0;
+      while(GS.boneyard.length>0&&attempts<GS.boneyard.length+1){
+        drawn=drawFromBoneyard(seat);
+        attempts++;
+        if(drawn&&canPlayTile(drawn,GS.trainLeft,GS.trainRight)){
+          tile=drawn;
+          break;
+        }
+        drawn=null;
+      }
+    }
+    if(!tile){
+      // Pass
+      GS.passCount++;
+      randomDialogue(seat);
+      renderGame();
+      setTimeout(()=>nextTurn(),400);
+      return;
+    }
+  }
+
+  GS.passCount=0;
+  const side=aiChooseSide(seat,tile);
+  placeTile(seat,tile,side);
+  updatePsychology('ai_good_play',seat);
+  if(Math.random()<0.3) randomDialogue(seat);
+  renderGame();
+
+  if(GS.matchActive){
+    setTimeout(()=>nextTurn(),300);
+  }
+}
+
+function findBlockedWinner(){
+  // Lowest hand score wins
+  const scores={
+    player:calcHandScore(GS.hands.player),
+    ai1:calcHandScore(GS.hands.ai1),
+    ai2:calcHandScore(GS.hands.ai2),
+    ai3:calcHandScore(GS.hands.ai3)
+  };
+  return Object.keys(scores).reduce((a,b)=>scores[a]<scores[b]?a:b);
+}
+
+// ============================================================
+// ROUND & MATCH MANAGEMENT
+// ============================================================
+function endRound(winner){
+  GS.matchActive=false;
+
+  // Score: sum of all losers' hands goes to winner
+  const hands=GS.hands;
+  let total=0;
+  for(const seat of GS.turnOrder){
+    if(seat!==winner) total+=calcHandScore(hands[seat]);
+  }
+  // Round to nearest 5
+  total=Math.round(total/5)*5;
+  GS.matchScores[winner]+=total;
+
+  // Psychology updates
+  if(winner==='player'){
+    updatePsychology('player_wins_round','ai1');
+    updatePsychology('player_wins_round','ai2');
+    updatePsychology('player_wins_round','ai3');
+  } else {
+    updatePsychology('ai_wins_round',winner);
+  }
+
+  // Check match winner
+  const matchWinner=Object.keys(GS.matchScores).find(s=>GS.matchScores[s]>=WINNING_SCORE);
+  if(matchWinner){
+    setTimeout(()=>endMatch(matchWinner),600);
+  } else {
+    GS.roundNumber++;
+    setTimeout(()=>startRound(),1200);
+  }
+}
+
+function endMatch(winner){
+  GS.matchActive=false;
+  if(winner==='player'){
+    // Beat this opponent
+    GS.progress=Math.max(GS.progress,GS.currentOpponentIdx+1);
+    saveProgress();
+    showResult(true);
+  } else {
+    showResult(false);
+  }
+}
+
+function startMatch(opponentIdx){
+  GS.currentOpponentIdx=opponentIdx;
+  const mainOpp=OPPONENTS[opponentIdx];
+  // Assign opponents to seats
+  GS.ai1Opp=mainOpp;
+  // Pick 2 other opponents as fillers (from beaten or lower-tier)
+  const others=OPPONENTS.filter(o=>o.id!==mainOpp.id&&o.id<=mainOpp.id);
+  const filler1=others[Math.max(0,others.length-1)]||OPPONENTS[0];
+  const filler2=others[Math.max(0,others.length-2)]||OPPONENTS[0];
+  GS.ai2Opp=filler1;
+  GS.ai3Opp=filler2;
+  GS.matchScores={player:0,ai1:0,ai2:0,ai3:0};
+  GS.roundNumber=1;
+  GS.matchActive=true;
+  showScreen('game');
+  startRound();
+}
+
+function startRound(){
+  dealGame();
+  GS.matchActive=true;
+  GS.isProcessing=false;
+  renderGame();
+  updateRoundDisplay();
+  processCurrentTurn();
+}
+
+// ============================================================
+// PLAYER ACTIONS
+// ============================================================
+function selectTile(tileId){
+  if(!GS.playerCanPlay||GS.currentTurn!=='player') return;
+  const tile=GS.hands.player.find(t=>t.id===tileId);
+  if(!tile) return;
+  if(!canPlayTile(tile,GS.trainLeft,GS.trainRight)) return;
+
+  if(GS.selectedTile&&GS.selectedTile.id===tileId){
+    // Deselect
+    GS.selectedTile=null;
+  } else {
+    GS.selectedTile=tile;
+  }
+  renderPlayerHand();
+
+  // Auto-place if no side choice needed
+  if(GS.selectedTile){
+    const canLeft=tile.high===GS.trainLeft||tile.low===GS.trainLeft;
+    const canRight=tile.high===GS.trainRight||tile.low===GS.trainRight;
+
+    if(GS.train.length===0){
+      // First tile - place automatically
+      placeTile('player',tile,'right');
+      GS.selectedTile=null;
+      GS.passCount=0;
+      renderGame();
+      if(GS.matchActive) setTimeout(()=>nextTurn(),300);
+    } else if(canLeft&&canRight&&GS.trainLeft!==GS.trainRight){
+      // Can play both sides - show choice
+      showSideModal(tile);
+    } else {
+      // Only one valid side
+      const side=canLeft?'left':'right';
+      GS.selectedTile=null;
+      placeTile('player',tile,side);
+      GS.passCount=0;
+      checkPlayerScoredBig(tile);
+      renderGame();
+      if(GS.matchActive) setTimeout(()=>nextTurn(),300);
+    }
+  }
+}
+
+function showSideModal(tile){
+  showModal('🎲','Choose a Side',`Play the <strong>${tile.high}-${tile.low}</strong> on which end?`,[
+    {label:`← LEFT (${GS.trainLeft})`, cls:'primary', action:()=>{
+      GS.selectedTile=null;
+      placeTile('player',tile,'left');
+      GS.passCount=0;
+      checkPlayerScoredBig(tile);
+      renderGame();
+      if(GS.matchActive) setTimeout(()=>nextTurn(),300);
+    }},
+    {label:`RIGHT (${GS.trainRight}) →`, cls:'primary', action:()=>{
+      GS.selectedTile=null;
+      placeTile('player',tile,'right');
+      GS.passCount=0;
+      checkPlayerScoredBig(tile);
+      renderGame();
+      if(GS.matchActive) setTimeout(()=>nextTurn(),300);
+    }}
+  ]);
+}
+
+function checkPlayerScoredBig(tile){
+  if(tile.high+tile.low>=9){
+    updatePsychology('player_big_score','ai1');
+    updatePsychology('player_big_score','ai2');
+    updatePsychology('player_big_score','ai3');
+  }
+}
+
+function playerDraw(){
+  if(GS.currentTurn!=='player') return;
+  if(GS.boneyard.length===0) return;
+  const tile=drawFromBoneyard('player');
+  if(tile&&canPlayTile(tile,GS.trainLeft,GS.trainRight)){
+    GS.playerCanPlay=true;
+  }
+  renderGame();
+  renderPlayerHand();
+  updateBoneyardBtn();
+}
+
+function playerPass(){
+  if(GS.currentTurn!=='player'||!GS.playerMustPass) return;
+  GS.passCount++;
+  if(isBlocked()){
+    endRound(findBlockedWinner());
+    return;
+  }
+  nextTurn();
+}
+
+// ============================================================
+// UI RENDERING
+// ============================================================
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(`${name}-screen`);
+  if(el) el.classList.add('active');
+}
+
+function renderPipGrid(n){
+  // Pip positions: [row,col] in 3x3 grid (0-indexed)
+  const positions={
+    0:[],
+    1:[[1,1]],
+    2:[[0,2],[2,0]],
+    3:[[0,2],[1,1],[2,0]],
+    4:[[0,0],[0,2],[2,0],[2,2]],
+    5:[[0,0],[0,2],[1,1],[2,0],[2,2]],
+    6:[[0,0],[0,2],[1,0],[1,2],[2,0],[2,2]]
+  };
+  const cells=Array(9).fill(false);
+  (positions[n]||[]).forEach(([r,c])=>cells[r*3+c]=true);
+  return `<div class="pip-grid">${cells.map(f=>`<div class="pip${f?' filled':''}"></div>`).join('')}</div>`;
+}
+
+function renderDomino(tile, classes='', onClick=''){
+  const isDouble=tile.high===tile.low;
+  const horizontal=classes.includes('on-board')&&!isDouble;
+  return `<div class="domino${horizontal?' horizontal':''} ${classes}" ${onClick?`onclick="${onClick}"`:''} data-id="${tile.id}">
+    <div class="domino-half">${renderPipGrid(tile.flipped?tile.high:tile.low)}</div>
+    <div class="domino-half">${renderPipGrid(tile.flipped?tile.low:tile.high)}</div>
+  </div>`;
+}
+
+function renderGame(){
+  renderTrainDisplay();
+  renderAIPods();
+  renderScoreDisplay();
+  updateBoneyardBtn();
+  updateRoundDisplay();
+  if(GS.currentTurn==='player'){
+    renderPlayerHand();
+  }
+}
+
+function renderTrainDisplay(){
+  const el=document.getElementById('trainDisplay');
+  if(!el) return;
+  if(GS.train.length===0){
+    el.innerHTML='<span style="color:var(--text2);font-size:13px;letter-spacing:2px;">— TABLE IS EMPTY —</span>';
+  } else {
+    el.innerHTML=GS.train.map(t=>renderDomino(t,'on-board')).join('');
+  }
+  const endsEl=document.getElementById('endsDisplay');
+  if(endsEl){
+    if(GS.train.length>0){
+      endsEl.textContent=`Ends: [${GS.trainLeft}] ←→ [${GS.trainRight}]`;
+    } else {
+      endsEl.textContent='Play your first tile to begin';
+    }
+  }
+}
+
+function renderPlayerHand(){
+  const el=document.getElementById('playerHand');
+  if(!el) return;
+  const playable=getPlayableTiles(GS.hands.player,GS.trainLeft,GS.trainRight);
+  const playableIds=new Set(playable.map(t=>t.id));
+
+  el.innerHTML=GS.hands.player.map(tile=>{
+    const isPlayable=GS.playerCanPlay&&GS.currentTurn==='player'&&playableIds.has(tile.id);
+    const isSelected=GS.selectedTile&&GS.selectedTile.id===tile.id;
+    const cls=`in-hand${isPlayable?' playable':''}${isSelected?' selected':''}`;
+    return renderDomino(tile,cls,isPlayable?`selectTile('${tile.id}')`:null);
+  }).join('');
+}
+
+function renderAIPods(){
+  const el=document.getElementById('aiArea');
+  if(!el) return;
+  const seats=['ai1','ai2','ai3'];
+  el.innerHTML=seats.map(seat=>{
+    const opp=getOppForSeat(seat);
+    if(!opp) return '';
+    const isActive=GS.currentTurn===seat;
+    const ps=GS.psychology[seat];
+    const stateLabel={baseline:'Focused',fracture:'Rattled',pressure:'Struggling',shift:'Breaking'}[ps?.state||'baseline'];
+    return `<div class="ai-pod${isActive?' active-turn':''}" id="pod-${seat}">
+      <div class="ai-avatar">${opp.avatar}</div>
+      <div class="ai-name">${opp.name}</div>
+      <div class="ai-hand-count">${GS.hands[seat]?.length||0} tiles</div>
+      <div class="ai-state ${ps?.state||'baseline'}">${stateLabel}</div>
+      <div class="dialogue-bubble" id="bubble-${seat}"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderScoreDisplay(){
+  const el=document.getElementById('scoreDisplay');
+  if(!el) return;
+  const player=GS.player;
+  const entries=[
+    {label:player?.name||'You',score:GS.matchScores.player,seat:'player'},
+    {label:GS.ai1Opp?.name?.replace(/"/g,'')||'AI1',score:GS.matchScores.ai1,seat:'ai1'},
+    {label:'Others',score:Math.max(GS.matchScores.ai2,GS.matchScores.ai3),seat:'ai2'}
+  ];
+  el.innerHTML=entries.map(e=>{
+    const cls=e.score>=WINNING_SCORE*0.8?'danger':e.score>=WINNING_SCORE*0.5?'winning':'';
+    return `<div class="score-item"><div class="score-name">${e.label.substring(0,6).toUpperCase()}</div><div class="score-val ${cls}">${e.score}</div></div>`;
+  }).join('');
+}
+
+function updateRoundDisplay(){
+  const el=document.getElementById('roundDisplay');
+  if(el) el.textContent=`ROUND ${GS.roundNumber} · First to ${WINNING_SCORE}`;
+}
+
+function updateBoneyardBtn(){
+  const btn=document.getElementById('boneyardBtn');
+  const count=document.getElementById('boneyardCount');
+  if(btn){
+    const canDraw=GS.currentTurn==='player'&&!GS.playerCanPlay&&GS.boneyard.length>0;
+    btn.disabled=!canDraw;
+    if(count) count.textContent=GS.boneyard.length;
+  }
+  // Update pass button
+  const passArea=document.getElementById('turnIndicator');
+  if(passArea){
+    const showPass=GS.currentTurn==='player'&&GS.playerMustPass;
+    if(showPass&&!document.getElementById('passBtn')){
+      passArea.innerHTML+=' <button id="passBtn" class="pass-btn" onclick="playerPass()">PASS</button>';
+    }
+  }
+}
+
+function updateTurnIndicator(isPlayerTurn){
+  const el=document.getElementById('turnIndicator');
+  if(!el) return;
+  if(isPlayerTurn){
+    el.textContent=GS.playerCanPlay?'YOUR TURN — TAP A TILE':'NO PLAY — DRAW OR PASS';
+    el.className='turn-indicator your-turn';
+    if(GS.playerMustPass){
+      el.innerHTML='NO PLAY — <button class="pass-btn" onclick="playerPass()">PASS TURN</button>';
+      el.className='turn-indicator your-turn';
+    }
+  } else {
+    const opp=getOppForSeat(GS.currentTurn);
+    el.textContent=`${opp?.name||'AI'} IS PLAYING...`;
+    el.className='turn-indicator';
+  }
+}
+
+function setAIPodThinking(seat, thinking){
+  const pod=document.getElementById(`pod-${seat}`);
+  if(pod){
+    if(thinking) pod.classList.add('thinking');
+    else pod.classList.remove('thinking');
+  }
+}
+
+function showDialogueBubble(seat, text){
+  const el=document.getElementById(`bubble-${seat}`);
+  if(!el) return;
+  el.textContent=text;
+  el.classList.add('visible');
+  setTimeout(()=>el.classList.remove('visible'),3000);
+}
+
+// ===== PLAYER DISPLAY =====
+function updatePlayerDisplay(){
+  const p=GS.player;
+  if(!p) return;
+  const avEl=document.getElementById('playerAvatarSm');
+  const nmEl=document.getElementById('playerNameDisplay');
+  if(avEl) avEl.textContent=p.avatar;
+  if(nmEl) nmEl.textContent=p.name.toUpperCase();
+}
+
+// ===== RESULT SCREEN =====
+function showResult(won){
+  GS.matchActive=false;
+  const opp=GS.ai1Opp;
+  document.getElementById('resultIcon').textContent=won?'🏆':'💀';
+  const title=document.getElementById('resultTitle');
+  title.textContent=won?'VICTORY!':'DEFEATED';
+  title.className=`result-title ${won?'win':'lose'}`;
+  document.getElementById('resultOpp').textContent=won?`You defeated ${opp.name}!`:`${opp.name} beat you. Try again.`;
+
+  const scoresEl=document.getElementById('resultScores');
+  scoresEl.innerHTML=Object.entries(GS.matchScores).map(([seat,score])=>{
+    const name=seat==='player'?GS.player.name:getOppForSeat(seat)?.name||seat;
+    return `<div class="result-score-row"><span>${name}</span><span>${score} pts</span></div>`;
+  }).join('');
+
+  const btns=document.getElementById('resultBtns');
+  if(won){
+    const nextIdx=GS.currentOpponentIdx+1;
+    if(nextIdx>=OPPONENTS.length){
+      btns.innerHTML=`<button class="btn-next" onclick="showScreen('complete')">CHAMPION! →</button>`;
+    } else {
+      btns.innerHTML=`<button class="btn-next" onclick="goToGauntlet()">NEXT OPPONENT →</button>
+        <button class="btn-retry" onclick="startMatch(${GS.currentOpponentIdx})">REMATCH</button>`;
+    }
+  } else {
+    btns.innerHTML=`<button class="btn-next" onclick="startMatch(${GS.currentOpponentIdx})">🔄 TRY AGAIN</button>
+      <button class="btn-retry" onclick="goToGauntlet()">GAUNTLET MAP</button>`;
+  }
+  showScreen('result');
+}
+
+// ===== GAUNTLET MAP =====
+function renderGauntletMap(){
+  const unlocked=GS.unlocked;
+  const progress=GS.progress;
+  document.getElementById('gauntletProgress').textContent=`${progress} / ${OPPONENTS.length} DEFEATED`;
+
+  const grid=document.getElementById('opponentGrid');
+  grid.innerHTML=OPPONENTS.map((opp,i)=>{
+    const beaten=i<progress;
+    const available=(i===progress)||(i<GS.freeOpponents);
+    const locked=!unlocked&&i>=GS.freeOpponents&&i>progress;
+    const isCurrent=i===progress&&!beaten;
+    const cls=beaten?'beaten':locked?'locked':isCurrent?'current available':'available';
+    const badge=beaten?'✅':locked?'🔒':'';
+    const freeBadge=i<GS.freeOpponents&&!beaten?'<span class="opp-free">FREE</span>':'';
+    const onclick=locked?`showLockedModal()`:(beaten||available)?`startMatch(${i})`:'';
+    return `<div class="opp-card ${cls}" onclick="${onclick}">
+      ${freeBadge}
+      <div class="opp-badge">${badge}</div>
+      <div class="opp-avatar">${opp.avatar}</div>
+      <div class="opp-name">${opp.name}</div>
+      <div class="opp-tier">TIER ${opp.tier}</div>
+    </div>`;
+  }).join('');
+}
+
+function showLockedModal(){
+  showModal('🔒','Full Gauntlet Locked',`Unlock all 12 opponents for <strong>$14.99</strong>. One-time payment. No subscription. Unlocks both Chess & Dominoes games!`,[
+    {label:'UNLOCK NOW',cls:'primary',action:()=>openGumroad()},
+    {label:'Cancel',cls:'secondary',action:()=>{}}
+  ]);
+}
+
+// ===== CHARACTER SELECT =====
+function renderCharacterSelect(){
+  const grid=document.getElementById('charGrid');
+  grid.innerHTML=CHARACTERS.map(c=>`
+    <div class="char-card${GS.player?.id===c.id?' selected':''}" onclick="selectChar('${c.id}')">
+      <div class="char-avatar">${c.avatar}</div>
+      <div class="char-name">${c.name}</div>
+      <div class="char-tag">${c.tag}</div>
+    </div>`).join('');
+}
+
+function selectChar(id){
+  GS.player=CHARACTERS.find(c=>c.id===id);
+  renderCharacterSelect();
+  document.getElementById('charContinueBtn').disabled=!GS.player;
+}
+
+// ===== MODAL =====
+function showModal(icon,title,text,btns){
+  document.getElementById('modalIcon').textContent=icon;
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalText').innerHTML=text;
+  const btnsEl=document.getElementById('modalBtns');
+  btnsEl.innerHTML=btns.map((b,i)=>
+    `<button class="modal-btn ${b.cls}" onclick="handleModalBtn(${i})">${b.label}</button>`
+  ).join('');
+  window._modalBtns=btns;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function handleModalBtn(idx){
+  document.getElementById('modalOverlay').classList.remove('open');
+  if(window._modalBtns&&window._modalBtns[idx]) window._modalBtns[idx].action();
+}
+
+// ===== FLOW =====
+function submitCode(){
+  const code=document.getElementById('codeInput').value.trim().toUpperCase();
+  const msg=document.getElementById('codeMsg');
+  if(VALID_CODES.has(code)){
+    unlockGame();
+    GS.unlocked=true;
+    msg.textContent='✓ Code accepted! Full gauntlet unlocked!';
+    msg.className='pw-msg success';
+    setTimeout(()=>goToCharSelect(),1200);
+  } else {
+    msg.textContent='Invalid code. Try again.';
+    msg.className='pw-msg error';
+  }
+}
+
+function openGumroad(){window.open(GUMROAD_URL,'_blank');}
+
+function startFree(){
+  GS.unlocked=false;
+  goToCharSelect();
+}
+
+function goToCharSelect(){
+  renderCharacterSelect();
+  showScreen('char');
+}
+
+function goToGauntlet(){
+  renderGauntletMap();
+  showScreen('gauntlet');
+}
+
+function restartGauntlet(){
+  GS.progress=0;
+  saveProgress();
+  renderGauntletMap();
+  showScreen('gauntlet');
+}
+
+// ===== PERSISTENCE =====
+function saveProgress(){
+  try{localStorage.setItem('dominoes_progress',GS.progress);}catch(e){}
+}
+
+function loadProgress(){
+  try{return parseInt(localStorage.getItem('dominoes_progress')||'0');}catch(e){return 0;}
+}
+
+// ===== INIT =====
+function init(){
+  GS.unlocked=isUnlocked();
+  GS.progress=loadProgress();
+  GS.freeOpponents=2;
+
+  // Close modal on overlay click
+  document.getElementById('modalOverlay').addEventListener('click',(e)=>{
+    if(e.target===document.getElementById('modalOverlay')){
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+  });
+
+  // Code input enter key
+  document.getElementById('codeInput').addEventListener('keydown',(e)=>{
+    if(e.key==='Enter') submitCode();
+  });
+
+  if(GS.unlocked){
+    goToCharSelect();
+  } else {
+    showScreen('paywall');
+  }
+}
+
+// Update player display on game screen
+function updatePlayerDisplayOnGame(){
+  const p=GS.player;
+  if(!p) return;
+  const av=document.getElementById('playerAvatarSm');
+  const nm=document.getElementById('playerNameDisplay');
+  if(av) av.textContent=p.avatar;
+  if(nm) nm.textContent=p.name.toUpperCase();
+}
+
+// Override startMatch to also update player display
+const _startMatch=startMatch;
+window.startMatch=function(idx){
+  _startMatch(idx);
+  setTimeout(updatePlayerDisplayOnGame,100);
+};
+
+window.addEventListener('load',init);
+</script>
+</body>
+</html>
