@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Championship Chess V6 — Nested Thirds</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0a0a0f; --bg2:#12121a; --bg3:#1a1a24; --gold:#d4a574; --gold2:#f0c987;
+  --gold3:#8b6914; --white:#f5f5f5; --dim:#6a6a7a; --lsq:#ecd9b9; --dsq:#ae8a68;
+  --ok:#4a9c6a; --lock:#4a4a4a; --frac:#e8a84a; --pres:#e05050; --shft:#9b59b6;
+}
+body { font-family:'Cormorant Garamond',Georgia,serif; background:var(--bg); min-height:100vh; color:var(--white); }
+.screen { display:none; min-height:100vh; padding:40px 20px; }
+.screen.active { display:flex; flex-direction:column; justify-content:center; align-items:center; }
+
+/* ── CHARACTER SCREEN ── */
+#charScreen { background:radial-gradient(ellipse at 50% 15%,rgba(212,165,116,.09) 0%,transparent 60%),var(--bg); }
+.char-hd { text-align:center; margin-bottom:36px; }
+.char-hd h1 { font-family:'Cinzel',serif; font-size:2em; color:var(--gold2); letter-spacing:5px; }
+.char-hd p  { color:var(--dim); font-style:italic; margin-top:8px; font-size:1.05em; }
+.arch-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; max-width:860px; width:100%; margin-bottom:28px; }
+@media(max-width:700px){ .arch-grid { grid-template-columns:repeat(3,1fr); } }
+@media(max-width:500px){ .arch-grid { grid-template-columns:repeat(2,1fr); } }
+.arch-card { background:var(--bg3); border:2px solid rgba(212,165,116,.18); border-radius:10px; padding:18px 12px; text-align:center; cursor:pointer; transition:all .22s; }
+.arch-card:hover { border-color:var(--gold); transform:translateY(-3px); box-shadow:0 8px 22px rgba(212,165,116,.18); }
+.arch-card.sel { border-color:var(--gold2); background:rgba(212,165,116,.1); box-shadow:0 0 28px rgba(212,165,116,.22); }
+.arch-em  { font-size:2em; margin-bottom:7px; }
+.arch-lbl { font-family:'Cinzel',serif; font-size:.72em; color:var(--gold); letter-spacing:2px; text-transform:uppercase; }
+.wound-panel { max-width:560px; width:100%; background:var(--bg3); border:2px solid var(--gold3); border-radius:12px; padding:28px; margin:0 auto 26px; display:none; }
+.wound-panel.vis { display:block; }
+.wp-title { font-family:'Cinzel',serif; font-size:1.5em; color:var(--gold2); text-align:center; margin-bottom:18px; }
+.wp-row   { margin-bottom:13px; padding-bottom:13px; border-bottom:1px solid rgba(212,165,116,.11); }
+.wp-row:last-of-type { border-bottom:none; margin-bottom:0; }
+.wp-lbl   { font-family:'Cinzel',serif; font-size:.62em; letter-spacing:3px; color:var(--dim); text-transform:uppercase; margin-bottom:5px; }
+.wp-val   { font-size:1.02em; line-height:1.6; }
+.wp-wound { color:var(--frac); } .wp-desire { color:var(--gold); } .wp-fear { color:var(--pres); }
+.gold-btn { display:block; width:100%; padding:14px; margin-top:20px; background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#000; border:none; border-radius:6px; font-family:'Cinzel',serif; font-size:1.08em; font-weight:700; cursor:pointer; letter-spacing:3px; text-transform:uppercase; transition:all .2s; }
+.gold-btn:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(240,201,135,.38); }
+.gold-btn:focus { outline:2px solid var(--gold); outline-offset:2px; }
+.ghost-btn { display:block; width:100%; padding:12px; margin-top:12px; background:rgba(212,165,116,.06); color:var(--gold); border:1px solid var(--gold3); border-radius:6px; font-family:'Cinzel',serif; font-size:.95em; cursor:pointer; letter-spacing:2px; text-transform:uppercase; transition:all .2s; }
+.ghost-btn:hover { background:rgba(212,165,116,.12); }
+#versionStep { max-width:810px; width:100%; }
+.ver-hd { text-align:center; margin-bottom:26px; }
+.ver-hd h2 { font-family:'Cinzel',serif; font-size:1.75em; color:var(--gold2); }
+.ver-hd p  { color:var(--dim); font-style:italic; margin-top:7px; font-size:.97em; }
+.ver-list { display:grid; gap:13px; }
+.ver-card { background:var(--bg3); border:2px solid rgba(212,165,116,.18); border-radius:10px; padding:20px 24px; cursor:pointer; transition:all .22s; display:grid; grid-template-columns:36px 1fr 24px; gap:18px; align-items:center; }
+.ver-card:hover { border-color:var(--gold); transform:translateX(5px); box-shadow:0 0 18px rgba(212,165,116,.14); }
+.ver-num  { font-family:'Cinzel',serif; font-size:1.4em; color:var(--gold3); font-weight:700; }
+.ver-name { font-family:'Cinzel',serif; font-size:1em; color:var(--gold2); margin-bottom:4px; }
+.ver-path { font-style:italic; color:var(--dim); font-size:.9em; line-height:1.5; }
+.ver-arr  { color:var(--gold3); font-size:1.2em; }
+
+/* ── INTRO SCREEN ── */
+#introScreen { background:linear-gradient(180deg,#0a0a0f 0%,#1a0a2e 50%,#0a0a0f 100%); }
+.intro-card { background:var(--bg3); border:3px solid var(--gold); border-radius:12px; padding:50px; max-width:700px; width:100%; box-shadow:0 30px 80px rgba(0,0,0,.8); text-align:center; }
+.intro-card h1 { font-family:'Cinzel',serif; font-size:3.2em; margin-bottom:18px; color:var(--gold2); }
+.intro-sub { font-size:1.35em; color:var(--gold); margin-bottom:36px; font-style:italic; }
+.intro-story { background:rgba(0,0,0,.4); border-left:4px solid var(--gold); padding:28px; margin:28px 0; line-height:1.85; font-size:1.08em; color:var(--white); text-align:left; }
+.intro-story p { margin-bottom:18px; } .intro-story p:last-child { margin-bottom:0; }
+.hl { color:var(--gold2); font-weight:600; }
+.intro-q { background:linear-gradient(135deg,rgba(212,165,116,.1),rgba(212,165,116,.05)); border:2px solid var(--gold); border-radius:8px; padding:22px; margin:28px 0; font-size:1.25em; font-family:'Cinzel',serif; color:var(--gold2); }
+.name-row { margin:26px 0; }
+.name-row input { width:100%; padding:14px; background:var(--bg2); border:2px solid var(--gold3); color:var(--white); font-family:'Cormorant Garamond',Georgia,serif; font-size:1.18em; border-radius:6px; text-align:center; outline:none; transition:border .2s; }
+.name-row input:focus { border-color:var(--gold); }
+.start-btn { width:100%; padding:17px; font-size:1.35em; background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#000; border:none; border-radius:6px; font-family:'Cinzel',serif; font-weight:700; cursor:pointer; margin-top:18px; text-transform:uppercase; letter-spacing:3px; transition:all .2s; }
+.start-btn:hover { transform:translateY(-2px); box-shadow:0 14px 38px rgba(240,201,135,.38); }
+.start-btn:focus { outline:2px solid var(--gold); outline-offset:2px; }
+
+/* ── TOURNAMENT SCREEN ── */
+#tournScreen { background:linear-gradient(135deg,rgba(21,21,32,.96) 0%,rgba(26,26,38,.96) 100%); }
+.t-header { text-align:center; margin-bottom:26px; max-width:700px; }
+.t-header h1 { font-family:'Cinzel',serif; font-size:2.6em; color:var(--gold2); }
+.p-card { text-align:center; margin-bottom:18px; padding:18px 24px; background:var(--bg3); border:3px solid var(--gold); border-radius:8px; max-width:620px; width:100%; }
+.p-av { font-size:2.8em; margin:8px 0 4px; } .p-name { font-family:'Cinzel',serif; font-size:1.75em; color:var(--gold2); }
+.p-arch { font-size:.83em; color:var(--gold); margin-top:4px; letter-spacing:2px; }
+.p-wound { font-style:italic; color:var(--dim); font-size:.88em; margin-top:7px; padding-top:9px; border-top:1px solid rgba(212,165,116,.14); }
+.round-beat { max-width:600px; width:100%; text-align:center; padding:14px 22px; margin-bottom:16px; background:rgba(212,165,116,.06); border-left:3px solid var(--gold); border-radius:4px; font-style:italic; font-size:1.08em; color:var(--gold); display:none; }
+.round-beat.vis { display:block; }
+.save-notice { max-width:600px; width:100%; text-align:center; padding:8px 18px; margin-bottom:10px; background:rgba(74,156,106,.08); border:1px solid rgba(74,156,106,.3); border-radius:4px; font-size:.8em; color:var(--ok); display:none; }
+.save-notice.vis { display:block; }
+.t-bracket { max-width:660px; width:100%; margin-bottom:28px; }
+.b-title { font-family:'Cinzel',serif; font-size:1.35em; color:var(--gold2); margin-bottom:14px; text-align:center; }
+.opp-list { display:grid; gap:13px; }
+.opp-card { background:var(--bg3); border:3px solid; border-radius:8px; padding:16px 18px; cursor:pointer; transition:all .28s; display:flex; justify-content:space-between; align-items:center; }
+.opp-card.locked { border-color:var(--lock); opacity:.35; cursor:not-allowed; }
+.opp-card.locked:hover { transform:none; }
+.opp-card.gated { border-color:var(--gold3); opacity:.7; cursor:pointer; }
+.opp-card.bronze { border-color:#cd7f32; } .opp-card.silver { border-color:#c0c0c0; }
+.opp-card.gold { border-color:#ffd700; } .opp-card.champ { border-color:#a855f7; }
+.opp-card:not(.locked):not(.gated):hover { transform:translateY(-3px); box-shadow:0 8px 22px rgba(212,165,116,.28); }
+.opp-card.gated:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(212,165,116,.18); }
+.opp-av { font-size:2.1em; margin-right:13px; } .opp-info { flex:1; }
+.opp-nm { font-family:'Cinzel',serif; font-size:1.07em; color:var(--gold); margin-bottom:3px; }
+.opp-ci { font-size:.82em; color:var(--dim); }
+.opp-st { text-align:right; font-size:.9em; font-weight:600; }
+.s-won { color:var(--ok); } .s-lock { color:var(--lock); } .s-avail { color:var(--gold2); } .s-gate { color:var(--gold); }
+
+/* ── GAME SCREEN ── */
+#gameScreen { background:linear-gradient(135deg,rgba(21,21,32,.96) 0%,rgba(26,26,38,.96) 100%); }
+.game-hdr { display:flex; justify-content:space-between; align-items:center; max-width:1050px; width:100%; margin-bottom:14px; padding:0 4px; }
+.game-back-btn { font-family:'Cinzel',serif; font-size:.78em; color:var(--gold3); background:transparent; border:1px solid var(--gold3); border-radius:5px; padding:7px 14px; cursor:pointer; letter-spacing:2px; text-transform:uppercase; transition:all .2s; }
+.game-back-btn:hover { color:var(--gold); border-color:var(--gold); background:rgba(212,165,116,.07); }
+.game-hdr-title { font-family:'Cinzel',serif; font-size:.85em; color:var(--dim); letter-spacing:4px; text-transform:uppercase; }
+.game-move-ctr { font-family:'Cinzel',serif; font-size:.78em; color:var(--gold3); letter-spacing:1px; }
+.game-wrap { display:grid; grid-template-columns:1fr 314px; gap:26px; max-width:1050px; width:100%; }
+@media(max-width:1000px){ .game-wrap { grid-template-columns:1fr; } }
+@media(max-width:600px){ .char-hd h1,.intro-card h1 { font-size:1.8em; } .arch-card { padding:14px 8px; } .opp-card { padding:12px 14px; } .dlg { min-height:auto; padding:12px; font-size:.87em; } .sidebar { padding:14px; } }
+.p-strip { background:rgba(212,165,116,.05); border:1px solid rgba(212,165,116,.18); border-radius:8px; padding:9px 15px; margin-bottom:11px; display:flex; align-items:center; gap:12px; }
+.strip-em { font-size:1.55em; } .strip-nm { font-family:'Cinzel',serif; font-size:.93em; color:var(--gold2); } .strip-wd { font-style:italic; color:var(--dim); font-size:.77em; margin-top:2px; }
+.board { display:grid; grid-template-columns:repeat(8,1fr); background:var(--dsq); border:4px solid var(--gold); padding:4px; border-radius:8px; }
+.sq { aspect-ratio:1; display:flex; justify-content:center; align-items:center; font-size:2.4em; cursor:pointer; user-select:none; transition:background .1s; }
+.sq.lt { background:var(--lsq); } .sq.dk { background:var(--dsq); }
+.sq.sel { background:rgba(240,201,135,.78) !important; } .sq.vm { background:rgba(74,200,120,.42) !important; cursor:pointer; }
+.sq.vc { background:rgba(220,60,60,.54) !important; cursor:crosshair; } .sq.lmf { background:rgba(212,165,116,.24) !important; }
+.sq.lmt { background:rgba(212,165,116,.42) !important; } .sq.chk { background:rgba(220,60,60,.65) !important; }
+.board-foot { text-align:center; margin-top:11px; }
+.b-vs { color:var(--gold); font-family:'Cinzel',serif; font-size:1em; }
+.b-ind { color:var(--dim); font-style:italic; font-size:.8em; margin-top:4px; min-height:20px; }
+#moveInd { transition:color .3s; font-weight:500; }
+.sidebar { background:var(--bg3); border:3px solid var(--gold); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:13px; }
+.opp-game-hd { text-align:center; border-bottom:2px solid var(--gold3); padding-bottom:13px; }
+.opp-game-av { font-size:3em; margin:6px 0; } .opp-game-nm { font-family:'Cinzel',serif; font-size:1.28em; color:var(--gold2); }
+.ps-label { font-size:.63em; font-family:'Cinzel',serif; letter-spacing:3px; text-transform:uppercase; text-align:center; margin-top:5px; transition:color .7s; }
+.ps-base { color:var(--dim); } .ps-frac { color:var(--frac); } .ps-pres { color:var(--pres); } .ps-shft { color:var(--shft); }
+.wiper { display:flex; gap:4px; justify-content:center; margin-top:7px; }
+.wdot { width:8px; height:8px; border-radius:50%; background:var(--bg2); border:1px solid var(--gold3); transition:background .4s; }
+.wdot.on { background:var(--gold); }
+.dlg { background:var(--bg2); border:2px solid var(--gold3); border-radius:6px; padding:15px; min-height:98px; font-size:.91em; line-height:1.62; color:var(--white); transition:border-color .7s; }
+.dlg.f { border-color:var(--frac); } .dlg.p { border-color:var(--pres); } .dlg.s { border-color:var(--shft); }
+.dlg-sp { color:var(--gold2); font-family:'Cinzel',serif; font-weight:700; margin-bottom:6px; font-size:.85em; }
+.pw-block { background:rgba(212,165,116,.04); border:1px solid rgba(212,165,116,.14); border-radius:6px; padding:11px; font-size:.79em; }
+.pw-title { font-family:'Cinzel',serif; font-size:.67em; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-bottom:7px; }
+.pw-row { margin-bottom:4px; } .pw-lbl { color:var(--dim); } .pw-val { color:var(--white); font-style:italic; }
+.cap-row { display:flex; justify-content:space-between; font-size:.77em; color:var(--dim); }
+.adv-wrap { display:flex; flex-direction:column; gap:4px; }
+.adv-lbl { font-size:.67em; font-family:'Cinzel',serif; letter-spacing:2px; color:var(--dim); text-align:center; }
+.adv-bg { background:rgba(255,255,255,.07); border-radius:4px; height:6px; overflow:hidden; position:relative; }
+.adv-bar { height:100%; border-radius:4px; transition:width .5s,background .5s; position:absolute; }
+.adv-bar.ply { background:var(--gold); left:50%; } .adv-bar.opp { background:var(--pres); right:50%; }
+.retort-wrap { display:flex; flex-direction:column; gap:5px; }
+.retort-lbl { font-size:.63em; font-family:'Cinzel',serif; letter-spacing:2px; color:var(--dim); text-align:center; margin-bottom:2px; }
+.retort-btn { padding:8px 10px; background:rgba(212,165,116,.04); color:var(--dim); border:1px solid rgba(212,165,116,.18); border-radius:5px; font-family:'Cormorant Garamond',Georgia,serif; font-size:.83em; cursor:pointer; text-align:left; transition:all .2s; font-style:italic; line-height:1.4; }
+.retort-btn:hover:not(:disabled) { background:rgba(212,165,116,.1); color:var(--gold); border-color:var(--gold3); }
+.retort-btn:disabled { opacity:.12; cursor:not-allowed; }
+.retort-btn:focus { outline:2px solid var(--gold3); outline-offset:2px; }
+input:focus { outline:2px solid var(--gold); outline-offset:2px; }
+.dlg.plr { border-color:var(--gold2); }
+
+/* ── CHAMPION SCREEN ── */
+#champScreen { background:radial-gradient(ellipse at 50% 25%,rgba(212,165,116,.16) 0%,transparent 60%),var(--bg); }
+.champ-card { max-width:670px; width:100%; text-align:center; padding:55px 46px; background:var(--bg3); border:3px solid var(--gold2); border-radius:16px; box-shadow:0 0 80px rgba(212,165,116,.18); }
+.champ-trophy { font-size:5em; margin-bottom:18px; animation:glow 2s infinite; }
+@keyframes glow { 0%,100% { filter:drop-shadow(0 0 15px rgba(212,165,116,.5)); } 50% { filter:drop-shadow(0 0 42px rgba(212,165,116,.95)); } }
+.champ-title  { font-family:'Cinzel',serif; font-size:2.7em; color:var(--gold2); letter-spacing:7px; margin-bottom:8px; }
+.champ-name   { font-family:'Cinzel',serif; font-size:1.75em; color:var(--gold); margin-bottom:4px; }
+.champ-arch   { color:var(--dim); font-size:.95em; margin-bottom:26px; letter-spacing:2px; }
+.champ-div    { border:none; border-top:1px solid rgba(212,165,116,.22); margin:22px 0; }
+.champ-ver    { font-family:'Cinzel',serif; font-size:1.05em; color:var(--shft); letter-spacing:3px; text-transform:uppercase; margin-bottom:11px; }
+.champ-line   { font-size:1.26em; font-style:italic; color:var(--gold2); line-height:1.82; max-width:490px; margin:0 auto 26px; }
+.arc-stage-row { display:flex; justify-content:space-between; font-family:'Cinzel',serif; font-size:.65em; letter-spacing:1px; margin-bottom:8px; max-width:440px; margin-left:auto; margin-right:auto; }
+.arc-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:0 auto 26px; max-width:440px; }
+.arc-beat { background:rgba(212,165,116,.05); border:1px solid rgba(212,165,116,.18); border-radius:7px; padding:9px 4px; font-size:.65em; color:var(--dim); text-align:center; }
+.arc-beat.f { border-color:var(--frac); color:var(--frac); background:rgba(232,168,74,.1); }
+.arc-beat.p { border-color:var(--pres); color:var(--pres); background:rgba(224,80,80,.1); }
+.arc-beat.s { border-color:var(--shft); color:var(--shft); background:rgba(155,89,182,.1); }
+.replay-btn { padding:13px 48px; background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#000; border:none; border-radius:8px; font-family:'Cinzel',serif; font-size:1.08em; font-weight:700; cursor:pointer; letter-spacing:3px; text-transform:uppercase; transition:all .2s; }
+.replay-btn:hover { transform:translateY(-3px); box-shadow:0 14px 38px rgba(240,201,135,.38); }
+.replay-btn:focus { outline:2px solid var(--gold); outline-offset:2px; }
+
+/* ── GATE OVERLAY ── */
+.gate-overlay { position:fixed; inset:0; background:rgba(5,3,10,.93); backdrop-filter:blur(14px); z-index:9000; display:none; align-items:center; justify-content:center; }
+.gate-overlay.vis { display:flex; }
+.gate-box { background:linear-gradient(135deg,#12101e,#1c162e); border:2px solid var(--gold); border-radius:16px; padding:44px 40px; max-width:460px; width:90%; text-align:center; box-shadow:0 0 70px rgba(212,165,116,.22); }
+.gate-crown { font-size:3.4em; margin-bottom:14px; animation:glow 2s infinite; }
+.gate-title { font-family:'Cinzel',serif; font-size:1.7em; color:var(--gold2); letter-spacing:4px; margin-bottom:8px; }
+.gate-sub   { color:var(--dim); font-size:1em; font-style:italic; margin-bottom:8px; }
+.gate-free  { color:var(--ok); font-size:.88em; margin-bottom:24px; }
+.gate-price { font-family:'Cinzel',serif; font-size:3em; color:var(--gold2); margin-bottom:4px; }
+.gate-once  { color:var(--dim); font-size:.8em; margin-bottom:22px; }
+.gate-buy   { display:block; padding:16px; background:linear-gradient(135deg,var(--gold),var(--gold2)); border:none; border-radius:8px; font-family:'Cinzel',serif; font-size:1.15em; font-weight:700; color:#000; cursor:pointer; width:100%; margin-bottom:22px; text-decoration:none; letter-spacing:3px; text-transform:uppercase; transition:all .25s; }
+.gate-buy:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(212,165,116,.4); }
+.gate-div   { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.gate-div::before,.gate-div::after { content:''; flex:1; height:1px; background:rgba(212,165,116,.15); }
+.gate-div span { color:var(--dim); font-size:.82em; font-style:italic; }
+.gate-code-row { display:flex; gap:8px; margin-bottom:8px; }
+.gate-code-inp { flex:1; padding:11px 13px; background:var(--bg); border:2px solid var(--gold3); border-radius:7px; color:var(--white); font-family:'Cinzel',serif; font-size:.9em; letter-spacing:2px; text-transform:uppercase; outline:none; transition:border .2s; }
+.gate-code-inp:focus { border-color:var(--gold); }
+.gate-code-inp::placeholder { text-transform:none; letter-spacing:0; color:var(--dim); font-family:'Cormorant Garamond',Georgia,serif; font-style:italic; }
+.gate-unlock-btn { padding:11px 16px; background:linear-gradient(135deg,#6a3ab5,#9b59b6); border:none; border-radius:7px; color:var(--white); font-family:'Cinzel',serif; font-weight:700; cursor:pointer; font-size:.9em; letter-spacing:1px; white-space:nowrap; transition:all .2s; }
+.gate-unlock-btn:hover { background:linear-gradient(135deg,#7b4ac6,#ab69c6); }
+.gate-err  { color:var(--pres); font-size:.82em; margin-bottom:8px; min-height:18px; font-style:italic; }
+.gate-note { color:var(--dim); font-size:.76em; font-style:italic; }
+.gate-close { background:transparent; border:none; color:var(--dim); cursor:pointer; font-size:1.3em; position:absolute; top:16px; right:20px; transition:color .2s; }
+.gate-close:hover { color:var(--gold); }
+
+/* ── RESUME MODAL ── */
+.resume-overlay { position:fixed; inset:0; background:rgba(5,3,10,.93); backdrop-filter:blur(14px); z-index:8900; display:none; align-items:center; justify-content:center; }
+.resume-overlay.vis { display:flex; }
+.resume-box { background:linear-gradient(135deg,#12101e,#1c162e); border:2px solid var(--gold3); border-radius:14px; padding:38px 36px; max-width:420px; width:90%; text-align:center; }
+.resume-title { font-family:'Cinzel',serif; font-size:1.5em; color:var(--gold2); letter-spacing:3px; margin-bottom:16px; }
+.resume-body  { color:var(--dim); font-size:1em; font-style:italic; line-height:1.7; margin-bottom:26px; }
+.resume-btns  { display:flex; gap:12px; }
+.resume-yes   { flex:1; padding:13px; background:linear-gradient(135deg,var(--gold),var(--gold2)); border:none; border-radius:7px; font-family:'Cinzel',serif; font-size:.95em; font-weight:700; color:#000; cursor:pointer; letter-spacing:2px; text-transform:uppercase; transition:all .2s; }
+.resume-yes:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(212,165,116,.35); }
+.resume-no    { flex:1; padding:13px; background:transparent; border:1px solid var(--gold3); border-radius:7px; font-family:'Cinzel',serif; font-size:.95em; color:var(--gold3); cursor:pointer; letter-spacing:2px; text-transform:uppercase; transition:all .2s; }
+.resume-no:hover { background:rgba(212,165,116,.07); color:var(--gold); border-color:var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- GATE OVERLAY -->
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-box" style="position:relative">
+    <button class="gate-close" onclick="closeGate()">✕</button>
+    <div class="gate-crown">♚</div>
+    <div class="gate-title">FULL ACCESS</div>
+    <div class="gate-sub">The first two opponents are yours — free.</div>
+    <div class="gate-free">✓ Timmy & Betty unlocked · 5 more await</div>
+    <div class="gate-price">$9.99</div>
+    <div class="gate-once">One-time purchase · All 7 opponents · No subscription</div>
+    <a class="gate-buy" href="https://gum.co/champchess" target="_blank" rel="noopener">UNLOCK ON GUMROAD</a>
+    <div class="gate-div"><span>or enter your code</span></div>
+    <div class="gate-code-row">
+      <input class="gate-code-inp" id="gateCodeInp" placeholder="Enter unlock code..." maxlength="22" onkeydown="if(event.key==='Enter')tryUnlockCode()">
+      <button class="gate-unlock-btn" onclick="tryUnlockCode()">UNLOCK</button>
+    </div>
+    <div class="gate-err" id="gateErr"></div>
+    <div class="gate-note">Have a code from a friend? It works above.</div>
+  </div>
+</div>
+
+<!-- RESUME MODAL -->
+<div class="resume-overlay" id="resumeOverlay">
+  <div class="resume-box">
+    <div class="resume-title">WELCOME BACK</div>
+    <div class="resume-body" id="resumeBody">You left mid-gauntlet. Continue your run?</div>
+    <div class="resume-btns">
+      <button class="resume-yes" onclick="doResume(true)">CONTINUE</button>
+      <button class="resume-no"  onclick="doResume(false)">START OVER</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 1 — CHARACTER ENGINE -->
+<div id="charScreen" class="screen active">
+  <div class="char-hd">
+    <h1>WHO ARE YOU, CHALLENGER?</h1>
+    <p>Choose your archetype. The board will know.</p>
+  </div>
+  <div id="archetypeStep" style="max-width:860px;width:100%">
+    <div class="arch-grid" id="archGrid"></div>
+    <div class="wound-panel" id="woundPanel">
+      <div class="wp-title" id="wpTitle"></div>
+      <div class="wp-row"><div class="wp-lbl">WOUND</div><div class="wp-val wp-wound"  id="wpWound"></div></div>
+      <div class="wp-row"><div class="wp-lbl">DESIRE</div><div class="wp-val wp-desire" id="wpDesire"></div></div>
+      <div class="wp-row"><div class="wp-lbl">FEAR</div>  <div class="wp-val wp-fear"   id="wpFear"></div></div>
+      <button class="gold-btn" onclick="showVersionStep()">CHOOSE YOUR PATH →</button>
+    </div>
+    <button class="ghost-btn" style="max-width:560px;margin:0 auto;display:block" onclick="skipCharacter()">SKIP — ENTER AS UNKNOWN CHALLENGER</button>
+  </div>
+  <div id="versionStep" style="display:none;max-width:810px;width:100%">
+    <div class="ver-hd">
+      <h2>FIVE PATHS FORWARD</h2>
+      <p id="verSubtitle">Same wound. Five different lives from this point.</p>
+    </div>
+    <div class="ver-list" id="verList"></div>
+    <button class="ghost-btn" style="margin-top:16px" onclick="goBackToArchetypes()">← CHOOSE DIFFERENT ARCHETYPE</button>
+  </div>
+</div>
+
+<!-- SCREEN 2 — INTRO -->
+<div id="introScreen" class="screen">
+  <div class="intro-card">
+    <h1>CHAMPIONSHIP CHESS</h1>
+    <p class="intro-sub">Do You Have What It Takes?</p>
+    <div class="intro-story" id="introStory">
+      <p>I don't know why you're here.</p>
+      <p>We took one look at you and thought... <span class="hl">maybe.</span></p>
+      <p>Seven opponents stand between you and the championship. Seven players who have crushed everyone before them.</p>
+      <p>The weakest first. <span class="hl">Beat them.</span></p>
+      <p>But can you really do this? <span class="hl">Do you have what it takes?</span></p>
+      <p style="margin-top:26px;color:var(--gold2)">Only one way to find out.</p>
+    </div>
+    <div class="intro-q">What is your name, challenger?</div>
+    <div class="name-row"><input type="text" id="playerName" placeholder="Enter your name..." autofocus></div>
+    <button class="start-btn" onclick="beginChallenge()">ACCEPT THE CHALLENGE</button>
+  </div>
+</div>
+
+<!-- SCREEN 3 — TOURNAMENT -->
+<div id="tournScreen" class="screen">
+  <div class="t-header"><h1>THE GAUNTLET</h1></div>
+  <div class="p-card">
+    <div class="p-av"  id="pAv"></div>
+    <div class="p-name" id="pName"></div>
+    <div class="p-arch" id="pArch"></div>
+    <div class="p-wound" id="pWound"></div>
+  </div>
+  <div class="round-beat" id="roundBeat"></div>
+  <div class="save-notice" id="saveNotice">✓ Progress saved — you can close and return</div>
+  <div class="t-bracket">
+    <div class="b-title">Defeat each opponent to unlock the next</div>
+    <div class="opp-list" id="oppList"></div>
+  </div>
+</div>
+
+<!-- SCREEN 4 — GAME -->
+<div id="gameScreen" class="screen">
+  <div class="game-hdr">
+    <button class="game-back-btn" onclick="abandonGame()">← Gauntlet</button>
+    <div class="game-hdr-title">Championship Chess</div>
+    <div class="game-move-ctr" id="moveCtr">Move 0</div>
+  </div>
+  <div class="game-wrap">
+    <div>
+      <div class="p-strip">
+        <span class="strip-em" id="stripEm"></span>
+        <div><div class="strip-nm" id="stripNm"></div><div class="strip-wd" id="stripWd"></div></div>
+      </div>
+      <div class="board" id="board"></div>
+      <div class="board-foot">
+        <div class="b-vs"><span id="pDisp"></span> vs <span id="oDisp"></span></div>
+        <div class="b-ind" id="moveInd">Click a piece to begin</div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="opp-game-hd">
+        <div class="opp-game-av" id="gAv"></div>
+        <div class="opp-game-nm" id="gNm"></div>
+        <div class="ps-label ps-base" id="psLabel">Studying You</div>
+        <div class="wiper" id="wiperBar"></div>
+      </div>
+      <div class="dlg" id="dlg">
+        <div class="dlg-sp" id="dlgSp"></div>
+        <div id="dlgTx">The match awaits...</div>
+      </div>
+      <div class="pw-block">
+        <div class="pw-title">YOUR FIGHTER PROFILE</div>
+        <div class="pw-row"><span class="pw-lbl">Wound: </span><span class="pw-val" id="gWound"></span></div>
+        <div class="pw-row"><span class="pw-lbl">Desire: </span><span class="pw-val" id="gDesire"></span></div>
+      </div>
+      <div class="cap-row"><span id="pCaps">You: —</span><span id="oCaps">Them: —</span></div>
+      <div class="adv-wrap">
+        <div class="adv-lbl">BOARD ADVANTAGE</div>
+        <div class="adv-bg">
+          <div class="adv-bar ply" id="advPly" style="width:0%"></div>
+          <div class="adv-bar opp" id="advOpp" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="retort-wrap" id="retortWrap" style="display:none">
+        <div class="retort-lbl">YOUR MOVE — SAY SOMETHING</div>
+        <button class="retort-btn" id="retortBtn0" onclick="doRetort(0)"></button>
+        <button class="retort-btn" id="retortBtn1" onclick="doRetort(1)"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 5 — CHAMPION -->
+<div id="champScreen" class="screen">
+  <div class="champ-card">
+    <div class="champ-trophy">🏆</div>
+    <div class="champ-title">CHAMPION</div>
+    <div class="champ-name" id="cName"></div>
+    <div class="champ-arch" id="cArch"></div>
+    <hr class="champ-div">
+    <div class="champ-ver"  id="cVer"></div>
+    <div class="champ-line" id="cLine"></div>
+    <div class="arc-stage-row">
+      <span style="color:var(--frac)">FRACTURE</span>
+      <span style="color:var(--pres)">PRESSURE</span>
+      <span style="color:var(--shft)">SHIFT</span>
+    </div>
+    <div class="arc-grid" id="arcGrid"></div>
+    <button class="replay-btn" onclick="restartAll()">PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  PAYWALL
+// ═══════════════════════════════════════════════════════════════
+const FREE_COUNT = 2; // Timmy + Betty free
+const GATE_CODES = new Set([
+  'CHESSCHAMP99','DROME7207VIP','NESTED3RDS','1JAZZY2PICKLE3',
+  '1TURKEY2CHICKEN3','1ROCKY2TACO3','1FUNKY2MONKEY3','CHAMPION2026'
+]);
+const GATE_URL = 'https://gum.co/champchess';
+
+function isUnlocked() { try { return localStorage.getItem('cc_v6_full')==='true'; } catch(e){ return false; } }
+function unlockFull()  { try { localStorage.setItem('cc_v6_full','true'); } catch(e){} }
+
+function showGate()  { document.getElementById('gateOverlay').classList.add('vis'); document.getElementById('gateErr').textContent=''; document.getElementById('gateCodeInp').value=''; }
+function closeGate() { document.getElementById('gateOverlay').classList.remove('vis'); }
+
+function tryUnlockCode() {
+  var code = document.getElementById('gateCodeInp').value.trim().toUpperCase().replace(/\s+/g,'');
+  if (GATE_CODES.has(code)) {
+    unlockFull();
+    closeGate();
+    drawTournament(); // Refresh tournament to show unlocked opponents
+  } else {
+    document.getElementById('gateErr').textContent = 'That code is not valid. Try again or purchase below.';
+  }
+}
+
+// Close gate when clicking backdrop
+document.getElementById('gateOverlay').addEventListener('click', function(e){
+  if (e.target === this) closeGate();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  ARCHETYPES & VERSION ENGINE
+// ═══════════════════════════════════════════════════════════════
+const ARCHETYPES = {
+  biker:    { em:"🏍️", label:"The Biker",     wound:"Confuses loyalty with losing herself.",                         desire:"To ride toward something instead of away from it.",       fear:"That if she slows down long enough to think, she won't like what she finds.",        history:"Grew up around bikes and people who lived by their own rules. Freedom was the religion. Consequences were someone else's problem." },
+  nurse:    { em:"🩺",  label:"The Nurse",     wound:"Believes her own pain is never the priority.",                  desire:"To be taken care of for once.",                            fear:"That needing something makes her weak.",                                             history:"Spent years keeping other people alive. Good at crisis. Bad at asking for help herself." },
+  runaway:  { em:"🌅",  label:"The Runaway",   wound:"Doesn't know how to stay.",                                     desire:"A place that feels like home.",                             fear:"That she left the good thing behind and didn't know it at the time.",               history:"Left before anyone could push her out. Has been moving since she was old enough to pack a bag." },
+  artist:   { em:"🎨",  label:"The Artist",    wound:"Ties her worth entirely to whether the work is good.",          desire:"To make something that outlasts her.",                     fear:"That she's already made her best thing.",                                            history:"Made things since she could hold a pencil. Was told it wasn't practical. Did it anyway." },
+  mother:   { em:"🌿",  label:"The Mother",    wound:"Gave herself away in pieces and doesn't know how to ask for them back.", desire:"To be seen as a person, not just a role.",       fear:"That wanting something for herself makes her a bad mother.",                        history:"Became someone's whole world before she finished becoming her own person." },
+  soldier:  { em:"🎖️", label:"The Soldier",   wound:"Doesn't trust peace. Keeps waiting for the thing that breaks it.", desire:"To stop being on guard.",                            fear:"That she's only good at the version of herself that survives things.",               history:"Trained to follow orders, hold the line, and not feel it until later. Later came." },
+  addict:   { em:"🌊",  label:"The Addict",    wound:"Believes she is too far gone to be worth saving.",              desire:"One day that doesn't feel like fighting herself.",          fear:"That she'll get clean and still be empty.",                                          history:"Found the thing that made everything quiet. Held onto it past the point it helped." },
+  heiress:  { em:"💎",  label:"The Heiress",   wound:"Doesn't know if she's loved or useful.",                        desire:"To earn something.",                                        fear:"That without the money she's nobody.",                                               history:"Had everything handed to her. Spent years not knowing if any of it was real." },
+  teacher:  { em:"📖",  label:"The Teacher",   wound:"Believes her job is to disappear into other people's growth.",  desire:"To be a student again. To not know something yet.",        fear:"That it's too late to start over.",                                                  history:"Poured herself into other people's potential. Quietly shelved her own." },
+  orphan:   { em:"🌑",  label:"The Orphan",    wound:"Pushes people away before they can go on their own.",           desire:"A family she chose and that chose her back.",              fear:"That she's too damaged to be someone's person.",                                     history:"Learned early that people leave. Built walls accordingly." },
+  criminal: { em:"⚡",  label:"The Criminal",  wound:"Believes the system was never built for her, so she built her own.", desire:"To stop looking over her shoulder.",              fear:"That going straight means admitting everything she did was wrong.",                   history:"Learned to take what she needed because asking didn't work." },
+  immigrant:{ em:"🧭",  label:"The Immigrant", wound:"Belongs fully to neither place.",                                desire:"To stop translating herself for other people.",            fear:"That she sacrificed too much of where she came from.",                               history:"Left one world to build another. Carries both everywhere she goes." }
+};
+
+function generateVersions(key) {
+  var a=ARCHETYPES[key], d=a.desire.toLowerCase();
+  return [
+    { num:1, name:"THE ADVENTURER",   path:"You stop waiting for permission.",             summary:"Something cracks open. You take the first risk nobody expected. It works. You take another. The old self stops fitting.",                                                         finalLine:"You wanted "+d+" — and you stopped asking if you deserved it." },
+    { num:2, name:"THE REBUILT",       path:"You become someone you actually respect.",      summary:"The wound stops making decisions for you. It costs you some things you used to hold onto. What's left is stronger.",                                                              finalLine:"You wanted "+d+" — and you built the person capable of holding it." },
+    { num:3, name:"THE FRACTURE LINE", path:"You go down. Not all the way. But far enough.", summary:"Something quiets the wound. It costs you. You see yourself from outside and don't look away. The climb back is slow and unglamorous.",                                           finalLine:"You wanted "+d+" — and you had to lose yourself first to understand why." },
+    { num:4, name:"THE GHOST",         path:"You disappear into the game. Then find your way back.", summary:"You forget who you are somewhere in the middle. What you rebuild is stranger — and actually yours.",                                                                 finalLine:"You wanted "+d+" — and you had to stop playing someone else to find out." },
+    { num:5, name:"THE LONG GAME",     path:"You become formidable so quietly nobody sees it.", summary:"The wound taught you how to wait, how to read a room, how to survive. You stop seeing that as damage. You start seeing it as data.",                                         finalLine:"You wanted "+d+" — and you became the person the board had to eventually deal with." }
+  ];
+}
+
+const ROUND_BEATS = ["","Something cracked open.","The wound is visible now. You're still playing.","The real test starts here.","You're in it now. No easy moves from here.","Two more. You can feel the change coming.","One more. Then the thing you came here for.",""];
+
+// ═══════════════════════════════════════════════════════════════
+//  PERSONALITIES
+// ═══════════════════════════════════════════════════════════════
+const PERSONALITIES = {
+  timmy: { wound:"Doesn't believe he deserves to win.", desire:"To finish something he started.", fear:"That everyone already knew he'd lose.", states: { baseline:["H-here we go! I've been practicing all week!","Okay okay okay. I can do this. I can definitely do this.","Don't be nervous. Don't be nervous. Be... not nervous.","Is it bad that I have a lucky rabbit's foot in my pocket?","I practiced this opening for two weeks. I am absolutely ready. I think."], fracture:["Wait, that wasn't— I didn't see that coming.","Okay. Okay that's fine. I have a plan. I definitely have a plan.","Is it hot in here? It feels hot in here.","I DEFINITELY had a plan. I just need to remember what it was.","Stop looking at me like that. I'm fine. I'm completely fine."], pressure:["I'm okay. I'm totally okay. This is part of my strategy.","You know what, I think I just need to... think for a second.","My hands are shaking a little. Is that normal?","I've been here before. In a dream. I lost in the dream too.","One move at a time. One move at a time. One move at a time."], shift:["...You know what? Even if I lose, I actually played today. That's something.","I don't know how you did that. But I'm not mad. I'm just... I came here.","Okay. Yeah. Good game. I mean it.","I'm coming back smarter. I need you to know that.","I actually showed up and played. That's not nothing. That used to be everything."], on_player_capture:["No no no wait—","Oh. Oh no.","That was my piece. That was definitely my piece.","I saw that coming. I just... didn't stop it.","Okay. Okay. I can still do this."], on_ai_capture:["YES! Okay! I see you! I see what I'm doing!","Did you see that? I did a thing!","OKAY. OKAY. We're doing this.","I take it back! The rabbit's foot is working!","THAT was the plan. THAT was always the plan."] }, player_retorts:["Still nervous? Good.","Keep your head. I'll wait."], retort_comebacks:["W-well. Okay. But I'm still here.","That's... that's fair actually.","I know. But I'm not done yet."] },
+  betty: { wound:"Always puts everyone else first. Never herself.", desire:"To be taken seriously at this table.", fear:"That being warm means being weak.", states: { baseline:["Oh wonderful, a new challenger! Don't you dare go easy on me.","People underestimate me. It never ends well for them.","I've played this game longer than you've been alive, dear.","I've been sitting at this table since before your parents thought to have you. Sit down.","You look surprised I'm here. That's your first mistake."], fracture:["Oh my. That was quite a move.","Goodness. I may have misjudged you slightly.","That's alright. That's alright. I adjust.","Well. You're not what I expected. I mean that as a compliment.","I've adjusted to harder things than you, dear. Give me a moment."], pressure:["People always assume I'm not paying attention. I always am.","I raised three children who thought they were smarter than me.","They weren't.","My late husband said I had ice water in my veins. He wasn't wrong.","You think I got to my age by being rattled? Try again, sweetheart."], shift:["Alright. You've earned this one. But don't you dare go easy on the next person.","Well played. I want you to remember this when you think someone isn't dangerous.","Come back sometime. I'll have something stronger than tea.","This is exactly the kind of game I come here for.","You're going to be something someday. Not today. But someday."], on_player_capture:["Oh! Well. That's inconvenient.","Hm. I see what you're doing.","That's fine. I have contingencies.","Bold. I'll give you that.","Mm. That one stings a little."], on_ai_capture:["There we are. Nice and tidy.","See? I'm not just here for pleasantries.","Mm. Good.","That's better. That's how we do it.","I've still got it, dear. Don't look so surprised."] }, player_retorts:["I don't underestimate anyone, dear.","Your contingencies don't cover me."], retort_comebacks:["Is that right.","Bold words from someone still sitting across from me.","We'll see about that, dear."] },
+  pete:  { wound:"The world moved on without asking him.", desire:"One more moment of being the best.", fear:"That his best days are behind him.", states: { baseline:["Back in '89 I beat four grandmasters in a single weekend. Sit down.","You remind me of someone I played in Minsk. He lost too.","I've forgotten more chess than you've ever learned, son.","I've beaten men who would eat you for breakfast. Try to keep up.","Young players always come in here like the game changed. It didn't."], fracture:["Hmph. Haven't seen that in a while.","...'89. I made a similar mistake in '89. Took me two years to forgive myself.","You've been studying. I can tell. Someone taught you well.","In '94 I played someone with your instincts. I still beat him, but I remembered him.","That's an interesting choice. Risky. But interesting."], pressure:["Don't rush me. I'm thinking.","I'm still in this. Don't you dare write me off.","The old dog has a few moves left. You'll see.","I can feel the rust coming off. Don't think that's good news for you.","You're making me work. Nobody makes me work anymore."], shift:["...You know, I don't say this often. But that was good chess.","In forty years, I can count on one hand the players who made me work like that.","Go on. You earned it. But don't forget the old man who made you earn it.","I don't say this to young players. But you might be the real thing.","Forty years at this table and you still managed to surprise me. That's something."], on_player_capture:["Hmph.","Bold. In '89 that move would've cost you.","...I'll remember that.","Careful. I've seen that trap spring both ways.","You got lucky. Don't let it go to your head."], on_ai_capture:["That's more like it.","Back in the game.","There it is. That old feeling.","Still got the touch.","I've been waiting for that all game."] }, player_retorts:["The board doesn't care what year it is.","Tell me when you're playing today."], retort_comebacks:["Hmph. You've got nerve, I'll give you that.","Watch yourself, kid.","...Fair enough. Now play."] },
+  carlos:{ wound:"Can't slow down long enough to feel anything.", desire:"The rush of winning fast.", fear:"Going quiet. Being still.", states: { baseline:["LETSGOLETSGOLETSGO triple espresso LET'S PLAY","Already saw your next six moves bro LET'S MOVE","Four shots, two hours sleep, PEAK PERFORMANCE, LET'S GO","I solved your opening in 0.3 seconds LET'S GOOOO","No hesitation, no mercy, PURE CHESS VELOCITY, COME ON"], fracture:["WAIT no no no hang on HANG ON—","Okay that was fast. That was REALLY fast. RESPOND.","Did NOT see that okay RECALCULATING","WAIT WAIT WAIT that wasn't in my simulation—","did I just miscalculate? That NEVER happens. RECALIBRATING."], pressure:["...okay. okay okay okay. slowing... down.","when did I last eat. NOT RELEVANT. FOCUS.","I can feel the crash coming and I refuse to let it win before you do.","I can hear my heartbeat. That's... new.","okay. OKAY. waaaaay down. think. actually think."], shift:["...huh.","That's the first time I've been quiet all day.","You beat the coffee. I didn't think that was possible. Respect.","you beat the noise. I didn't think that was possible.","...okay. I'm gonna sit with this one."], on_player_capture:["NO—okay—okay—OKAY—","WAS THAT LEGAL? It was legal. I know it was legal.","FINE. FINE. ADAPTING.","NO NO NO—okay—ADAPTING—","that was MY piece and I am FINE about it—"], on_ai_capture:["YESYESYES LET'S GO","COFFEE POWERED CHESS BABY","I AM INEVITABLE","TAKE THAT, TAKE THAT, LET'S GO—","SPEED AND PRECISION BABY WE'RE BACK—"] }, player_retorts:["You're burning out. I'm just getting warm.","All that noise — and I can still think."], retort_comebacks:["OKAY OKAY I HEAR YOU—MOVING ON—","That's COLD. I respect it. RESPONDING.","...noted. I said NOTED. Let's GO."] },
+  sasha: { wound:"Mistakes feel like character flaws.", desire:"Perfect execution. Every time.", fear:"Being seen improvising.", states: { baseline:["I have calculated your defeat. This is not cruelty. It is mathematics.","You have seventeen viable responses to my opening. Fourteen lose immediately.","I don't enjoy winning. I simply cannot tolerate the alternative.","I have played this game 4,200 times. Your pattern is not new to me.","Emotion is a liability at this table. I have none."], fracture:["That was not in the primary model.","Interesting. You've deviated from expected play.","I am adjusting. This is not concern. This is recalibration.","You have introduced a variable I had not weighted properly.","I am running a secondary analysis. Do not mistake that for uncertainty."], pressure:["Stop.","You are making this significantly more complicated than it needs to be.","This is not how this game was supposed to go.","You are not playing chess. You are playing something else. I am working to identify what.","This is inefficient. I do not like inefficiency."], shift:["Who taught you to play like this.","I had six contingencies. You found the seventh path.","I don't know what I'm feeling right now. I find that... unacceptable.","I have introduced a new category for you. I am still naming it.","I do not know what I am feeling. I cannot make it stop."], on_player_capture:["Suboptimal.","I have accounted for this.","...Noted.","This falls within acceptable deviation.","I have seventeen responses to this. Selecting."], on_ai_capture:["Correct.","As calculated.","Proceeding.","Within parameters.","This is the only logical outcome."] }, player_retorts:["I'm the variable you didn't calculate.","Your model had a blind spot."], retort_comebacks:["Irrelevant.","That statement contains no actionable data.","...Noted. Recalibrating."] },
+  chen:  { wound:"Ties his worth entirely to the quality of his play.", desire:"A game worthy of remembering.", fear:"Losing to someone who doesn't understand what they've done.", states: { baseline:["The board is a mirror. Show me who you are.","A thousand games have brought me here. What has brought you?","I don't play to win. I play to find the game inside the game.","Every piece you touch tells me something. I am listening carefully.","The board is honest. Players rarely are. Let us see which you are."], fracture:["...You see something I didn't expect you to see.","The dragon pauses. This is rare.","Tell me — did you calculate that, or did you feel it?","You play with intention. That is rarer than you know.","The game I prepared for is not the game that is happening. I am grateful."], pressure:["This game is becoming something. I don't know what yet.","I have not played someone like you in a long time.","Every move you make — I ask myself what you're building toward.","I think you understand something about loss that informs how you play.","The board between us is becoming a conversation. I am listening."], shift:["This is the game I came here for.","Win or lose — this will stay with me.","You don't know what you've done today. But you've done something real.","I came here for a worthy opponent. I found something rarer.","I will remember this game. That does not happen often anymore."], on_player_capture:["The river changes course. So must I.","An interesting sacrifice.","...Yes. I see it now.","You are not afraid to give something up. That tells me everything.","The game shifts. Good."], on_ai_capture:["The dragon moves forward.","Balance shifts, for a moment.","The board breathes.","This is how the pattern continues.","Each piece finds its place."] }, player_retorts:["I felt it too.","I'm building toward something you haven't seen yet."], retort_comebacks:["...Yes. I think that's true.","The board heard you.","Then show me."] },
+  magnus:{ wound:"Has beaten everyone. Wonders if anyone is left worth beating.", desire:"To be surprised.", fear:"That chess has nothing left to teach him.", states: { baseline:["So you made it here. Seven opponents. You must be something.","I've been waiting a long time to be interested. Convince me.","I don't lose. But I've forgotten what it feels like to almost lose.","I stopped being nervous about games seven years ago. I miss it. Show me why I should miss it.","You made it through six opponents. Prove it means something more than endurance."], fracture:["...","That's new.","I've played ten thousand games. That is new.","I need to look at that again.","When was the last time I said that?"], pressure:["You have my full attention. That's not nothing.","I'm actually thinking. Do you understand how long it's been?","Don't stop. Whatever you're doing — don't stop.","Don't hold back. Whatever you have — use it now.","You've been building to something. I can feel it. Don't stop now."], shift:["There it is.","I came here wondering if this would mean anything. It means something.","I don't know if you win this. But you woke me up. And that hasn't happened in years.","This is what I came here for. I forgot it existed.","I don't know what happens next. That hasn't happened in a long time."], on_player_capture:["Interesting.","...I didn't expect that move.","You made me react. That's rare.","I haven't had to lean forward in years.","...Go on."], on_ai_capture:["Force of habit.","I've done this ten thousand times.","Don't take it personally.","This is what I do.","Reflex. Nothing more."] }, player_retorts:["Here's your surprise.","I'm not done. Stay with me."], retort_comebacks:["...Good.","Now we're talking.","Alright. Show me."] }
+};
+
+const OPPONENTS = [
+  { id:"timmy",  name:"Timmy Tumbles",      circuit:"bronze", av:"🤷", elo:400,  agg:0.30, depth:0 },
+  { id:"betty",  name:"Betty Blunder",      circuit:"bronze", av:"😅", elo:500,  agg:0.35, depth:0 },
+  { id:"pete",   name:"Old Pete",           circuit:"bronze", av:"👴", elo:700,  agg:0.42, depth:0 },
+  { id:"carlos", name:"Carlos Triple Shot", circuit:"silver", av:"☕", elo:950,  agg:0.52, depth:1 },
+  { id:"sasha",  name:"Sasha Stratanova",   circuit:"silver", av:"🧊", elo:1150, agg:0.60, depth:1 },
+  { id:"chen",   name:"Master Chen Wei",    circuit:"gold",   av:"🐉", elo:1550, agg:0.68, depth:2 },
+  { id:"magnus", name:"Marcus The Mind",    circuit:"champ",  av:"🧠", elo:2100, agg:0.78, depth:2 }
+];
+
+const WIPER = { bronze:3, silver:5, gold:7, champ:7 };
+const PV = { p:1, n:3, b:3, r:5, q:9, k:0 };
+const PE = { K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟" };
+const AVS = ["⚔️","👑","🧙","🎭","🌟","⚡","🔮","🏆"];
+
+// ═══════════════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════════════
+let gs = {
+  archKey:null, archData:null, version:null,
+  player:null, wins:[], arcPeaks:{},
+  opp:null, board:[], sel:null,
+  lmf:null, lmt:null, pCaps:[], oCaps:[],
+  adv:0, moves:0, aiOn:false, lastOppLine:"",
+  castle:{ wK:true, bK:true, wRQ:true, wRK:true, bRQ:true, bRK:true },
+  enPassant:null,
+  pState:"baseline", shiftDone:false,
+  lastLines:{}, typInt:null, wiperN:0,
+  inCheck:false
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  SAVE / RESTORE
+// ═══════════════════════════════════════════════════════════════
+const SAVE_KEY = "cc_v6_save";
+
+function saveProgress() {
+  if (!gs.player) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ archKey:gs.archKey, version:gs.version, player:gs.player, wins:gs.wins, arcPeaks:gs.arcPeaks })); } catch(e){}
+}
+
+function loadProgress() {
+  try {
+    var raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    var save = JSON.parse(raw);
+    if (!save || !save.player) return false;
+    gs.archKey=save.archKey||null; gs.archData=save.archKey?ARCHETYPES[save.archKey]:null;
+    gs.version=save.version||null; gs.player=save.player; gs.wins=save.wins||[]; gs.arcPeaks=save.arcPeaks||{};
+    return true;
+  } catch(e){ return false; }
+}
+
+function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch(e){} }
+
+// ═══════════════════════════════════════════════════════════════
+//  CHARACTER ENGINE UI
+// ═══════════════════════════════════════════════════════════════
+var selArch = null;
+
+function buildArchGrid() {
+  var g=document.getElementById("archGrid"); g.innerHTML="";
+  Object.keys(ARCHETYPES).forEach(function(k){
+    var a=ARCHETYPES[k], c=document.createElement("div");
+    c.className="arch-card"; c.id="ac-"+k;
+    c.innerHTML='<div class="arch-em">'+a.em+'</div><div class="arch-lbl">'+a.label+'</div>';
+    c.onclick=function(){ selectArch(k); };
+    g.appendChild(c);
+  });
+}
+
+function selectArch(k) {
+  selArch=k; var a=ARCHETYPES[k];
+  document.querySelectorAll(".arch-card").forEach(function(c){ c.classList.remove("sel"); });
+  document.getElementById("ac-"+k).classList.add("sel");
+  document.getElementById("wpTitle").textContent=a.em+"  "+a.label;
+  document.getElementById("wpWound").textContent=a.wound;
+  document.getElementById("wpDesire").textContent=a.desire;
+  document.getElementById("wpFear").textContent=a.fear;
+  var p=document.getElementById("woundPanel"); p.classList.add("vis");
+  p.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function showVersionStep() {
+  if(!selArch) return;
+  gs.archKey=selArch; gs.archData=ARCHETYPES[selArch];
+  var a=gs.archData, vers=generateVersions(selArch);
+  document.getElementById("verSubtitle").textContent=a.em+" "+a.label+" — "+a.wound;
+  var list=document.getElementById("verList"); list.innerHTML="";
+  vers.forEach(function(v){
+    var c=document.createElement("div"); c.className="ver-card";
+    c.innerHTML='<div class="ver-num">'+v.num+'</div><div><div class="ver-name">'+v.name+'</div><div class="ver-path">"'+v.path+'" — '+v.summary+'</div></div><div class="ver-arr">→</div>';
+    c.onclick=function(){ pickVersion(v); };
+    list.appendChild(c);
+  });
+  document.getElementById("archetypeStep").style.display="none";
+  document.getElementById("versionStep").style.display="block";
+}
+
+function goBackToArchetypes() { document.getElementById("versionStep").style.display="none"; document.getElementById("archetypeStep").style.display="block"; }
+function pickVersion(v) { gs.version=v; updateIntroText(); show("introScreen"); }
+
+function skipCharacter() {
+  gs.archKey=null; gs.archData=null; gs.version=null;
+  document.getElementById("introStory").innerHTML='<p>I don\'t know why you\'re here.</p><p>We took one look at you and thought... <span class="hl">maybe.</span></p><p>Seven opponents stand between you and the championship. Seven players who have crushed everyone before them.</p><p>The weakest first. <span class="hl">Beat them.</span></p><p>But can you really do this? <span class="hl">Do you have what it takes?</span></p><p style="margin-top:26px;color:var(--gold2)">Only one way to find out.</p>';
+  show("introScreen");
+}
+
+function updateIntroText() {
+  if(!gs.archData) return;
+  var a=gs.archData, v=gs.version;
+  document.getElementById("introStory").innerHTML='<p>So. <span class="hl">'+a.label+'</span>. We know the type.</p><p>'+a.history+'</p><p>You carry a wound: <span class="hl">'+a.wound+'</span></p><p>Seven opponents stand between you and the championship.</p>'+(v?'<p>You chose your path: <em>'+v.name+'</em> — "'+v.path+'"</p>':'')+'<p>Show us. <span class="hl">Do you have what it takes?</span></p><p style="margin-top:24px;color:var(--gold2)">Only one way to find out.</p>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INTRO → TOURNAMENT
+// ═══════════════════════════════════════════════════════════════
+function beginChallenge() {
+  var name=document.getElementById("playerName").value.trim();
+  if(!name){ alert("Enter your name, challenger!"); return; }
+  gs.player={name:name,av:AVS[Math.floor(Math.random()*AVS.length)]};
+  gs.wins=[]; gs.arcPeaks={};
+  saveProgress();
+  show("tournScreen"); drawTournament();
+}
+
+document.addEventListener("DOMContentLoaded",function(){
+  var inp=document.getElementById("playerName");
+  if(inp) inp.addEventListener("keypress",function(e){ if(e.key==="Enter") beginChallenge(); });
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  TOURNAMENT — with paywall gating
+// ═══════════════════════════════════════════════════════════════
+function drawTournament() {
+  document.getElementById("pAv").textContent=gs.player.av;
+  document.getElementById("pName").textContent=gs.player.name;
+  if(gs.archData){
+    var a=gs.archData,v=gs.version;
+    document.getElementById("pArch").textContent=a.em+"  "+a.label+(v?"  ·  "+v.name:"");
+    document.getElementById("pWound").textContent="Wound: "+a.wound;
+  } else {
+    document.getElementById("pArch").textContent="Unknown Challenger";
+    document.getElementById("pWound").textContent="";
+  }
+  var beat=ROUND_BEATS[gs.wins.length]||"";
+  var bEl=document.getElementById("roundBeat");
+  if(beat){ bEl.textContent=beat; bEl.classList.add("vis"); } else bEl.classList.remove("vis");
+  if(gs.wins.length>0) document.getElementById("saveNotice").classList.add("vis");
+
+  var unlocked=isUnlocked();
+  var list=document.getElementById("oppList"); list.innerHTML="";
+
+  OPPONENTS.forEach(function(o,i){
+    var won=gs.wins.includes(o.id);
+    var wonPrev=i===0||gs.wins.includes(OPPONENTS[i-1].id);
+    var seqLocked=!wonPrev&&!won;
+    var gated=!unlocked&&i>=FREE_COUNT&&!won;
+
+    var peakBadge="";
+    if(won&&gs.arcPeaks[o.id]){
+      var pk=gs.arcPeaks[o.id];
+      var pkLabel={baseline:"BASELINE",fracture:"FRACTURE",pressure:"PRESSURE",shift:"SHIFT"}[pk]||pk.toUpperCase();
+      var pkColor={baseline:"var(--dim)",fracture:"var(--frac)",pressure:"var(--pres)",shift:"var(--shft)"}[pk]||"var(--dim)";
+      peakBadge=' <span style="font-size:.7em;color:'+pkColor+'">· '+pkLabel+'</span>';
+    }
+
+    var c=document.createElement("div");
+    c.className="opp-card "+o.circuit;
+
+    var st,elig;
+    if(won){ st='<div class="opp-st"><span class="s-won">✓ DEFEATED'+peakBadge+'</span></div>'; elig=true; }
+    else if(seqLocked){ st='<div class="opp-st"><span class="s-lock">🔒 LOCKED</span></div>'; c.classList.add("locked"); elig=false; }
+    else if(gated){ st='<div class="opp-st"><span class="s-gate">💎 UNLOCK</span></div>'; c.classList.add("gated"); elig="gate"; }
+    else { st='<div class="opp-st"><span class="s-avail">CHALLENGE →</span></div>'; elig=true; }
+
+    // Free badge on first two
+    var freeBadge = (i<FREE_COUNT&&!won) ? ' <span style="font-size:.7em;color:var(--ok);border:1px solid var(--ok);padding:2px 6px;border-radius:4px;margin-left:4px;font-family:Cinzel,serif;letter-spacing:1px">FREE</span>' : '';
+
+    c.innerHTML='<span class="opp-av">'+o.av+'</span><div class="opp-info"><div class="opp-nm">'+o.name+freeBadge+'</div><div class="opp-ci">'+o.circuit.toUpperCase()+' · ELO '+o.elo+(o.depth>0?' · '+['','1-ply','2-ply'][o.depth]+' AI':'')+'</div></div>'+st;
+
+    if(elig===true) c.onclick=(function(opp){ return function(){ startGame(opp); }; })(o);
+    else if(elig==="gate") c.onclick=showGate;
+    list.appendChild(c);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GAME INIT
+// ═══════════════════════════════════════════════════════════════
+function startGame(opp) {
+  gs.opp=opp; gs.moves=0; gs.adv=0;
+  gs.pState="baseline"; gs.shiftDone=false;
+  gs.pCaps=[]; gs.oCaps=[];
+  gs.sel=null; gs.lmf=null; gs.lmt=null;
+  gs.aiOn=false; gs.lastLines={};
+  gs.castle={wK:true,bK:true,wRQ:true,wRK:true,bRQ:true,bRK:true};
+  gs.enPassant=null; gs.inCheck=false;
+  gs.prevEval=null; gs.behindStreak=0; gs.lastMajorLoss=false;   // arc tracking
+  gs.halfmove=0; gs.posCounts={}; gs.maxRep=0;                   // draw tracking
+  if(gs.typInt){ clearInterval(gs.typInt); gs.typInt=null; }
+
+  show("gameScreen");
+  document.getElementById("pDisp").textContent=gs.player.av+" "+gs.player.name;
+  document.getElementById("oDisp").textContent=opp.av+" "+opp.name;
+  document.getElementById("gAv").textContent=opp.av;
+  document.getElementById("gNm").textContent=opp.name;
+  document.getElementById("psLabel").textContent="Studying You";
+  document.getElementById("psLabel").className="ps-label ps-base";
+  document.getElementById("dlg").className="dlg";
+  document.getElementById("moveInd").textContent="Click a piece to begin";
+  document.getElementById("moveCtr").textContent="Move 0";
+
+  var per=PERSONALITIES[opp.id];
+  if(per&&per.player_retorts){
+    document.getElementById("retortBtn0").textContent=per.player_retorts[0];
+    document.getElementById("retortBtn1").textContent=per.player_retorts[1];
+    document.getElementById("retortBtn0").disabled=false;
+    document.getElementById("retortBtn1").disabled=false;
+    document.getElementById("retortWrap").style.display="flex";
+  } else { document.getElementById("retortWrap").style.display="none"; }
+
+  buildWiper(opp.circuit);
+
+  if(gs.archData){
+    var a=gs.archData;
+    document.getElementById("stripEm").textContent=a.em;
+    document.getElementById("stripNm").textContent=gs.player.name+" · "+a.label;
+    document.getElementById("stripWd").textContent=a.wound;
+    document.getElementById("gWound").textContent=a.wound;
+    document.getElementById("gDesire").textContent=a.desire;
+  } else {
+    document.getElementById("stripEm").textContent=gs.player.av;
+    document.getElementById("stripNm").textContent=gs.player.name;
+    document.getElementById("stripWd").textContent="";
+    document.getElementById("gWound").textContent="—";
+    document.getElementById("gDesire").textContent="—";
+  }
+
+  initBoard(); updateCaps(); updateAdv();
+  setTimeout(function(){ dlgShow(getLine("baseline"),"baseline"); },700);
+}
+
+function abandonGame() {
+  if(gs.aiOn) return; // Don't abandon during AI turn
+  if(gs.typInt) clearInterval(gs.typInt);
+  gs.aiOn=false;
+  show("tournScreen"); drawTournament();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  WIPER
+// ═══════════════════════════════════════════════════════════════
+function buildWiper(circuit) {
+  var n=WIPER[circuit]||3; gs.wiperN=n;
+  var bar=document.getElementById("wiperBar"); bar.innerHTML="";
+  for(var i=0;i<n;i++){ var d=document.createElement("div"); d.className="wdot"; d.id="wd"+i; bar.appendChild(d); }
+  setWiper(0);
+}
+function setWiper(active) { for(var i=0;i<gs.wiperN;i++){ var d=document.getElementById("wd"+i); if(d) d.classList.toggle("on",i<active); } }
+function wiperForState(s) { var map={baseline:1,fracture:Math.ceil(gs.wiperN*.42),pressure:Math.ceil(gs.wiperN*.72),shift:gs.wiperN}; return map[s]||1; }
+
+// ═══════════════════════════════════════════════════════════════
+//  CHESS ENGINE
+// ═══════════════════════════════════════════════════════════════
+function initBoard() {
+  gs.board=[
+    ["r","n","b","q","k","b","n","r"],
+    ["p","p","p","p","p","p","p","p"],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    ["P","P","P","P","P","P","P","P"],
+    ["R","N","B","Q","K","B","N","R"]
+  ];
+  drawBoard();
+}
+
+function findKing(board,isWhite) {
+  var king=isWhite?"K":"k";
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++) if(board[r][c]===king) return {r:r,c:c};
+  return null;
+}
+
+function isAttacked(board,row,col,byWhite) {
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    var pc=board[r][c]; if(!pc) continue;
+    var pw=pc===pc.toUpperCase()&&pc!==pc.toLowerCase();
+    if(pw!==byWhite) continue;
+    var mvs=rawMoves(board,r,c,null,null);
+    for(var i=0;i<mvs.length;i++) if(mvs[i].r===row&&mvs[i].c===col) return true;
+  }
+  return false;
+}
+
+function isInCheck(board,isWhite) { var k=findKing(board,isWhite); if(!k) return false; return isAttacked(board,k.r,k.c,!isWhite); }
+
+function drawBoard() {
+  var el=document.getElementById("board"); el.innerHTML="";
+  var wk=findKing(gs.board,true);
+  gs.inCheck=isInCheck(gs.board,true);
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    var sq=document.createElement("div");
+    sq.className="sq "+((r+c)%2===0?"lt":"dk");
+    if(gs.sel&&gs.sel.r===r&&gs.sel.c===c) sq.classList.add("sel");
+    if(gs.lmf&&gs.lmf.r===r&&gs.lmf.c===c) sq.classList.add("lmf");
+    if(gs.lmt&&gs.lmt.r===r&&gs.lmt.c===c) sq.classList.add("lmt");
+    if(gs.inCheck&&wk&&wk.r===r&&wk.c===c) sq.classList.add("chk");
+    if(gs.sel){
+      var mv=validMoves(gs.sel.r,gs.sel.c);
+      for(var m=0;m<mv.length;m++) if(mv[m].r===r&&mv[m].c===c) sq.classList.add(gs.board[r][c]?"vc":"vm");
+    }
+    var p=gs.board[r][c]; if(p) sq.textContent=PE[p]||"";
+    (function(rr,cc){ sq.onclick=function(){ clickSq(rr,cc); }; })(r,c);
+    el.appendChild(sq);
+  }
+  if(gs.inCheck){
+    var ind=document.getElementById("moveInd"); ind.textContent="⚠ Your king is in check!"; ind.style.color="var(--pres)";
+  } else {
+    document.getElementById("moveInd").style.color="var(--dim)";
+  }
+}
+
+function isP(p){ return p&&p===p.toUpperCase()&&p!==p.toLowerCase(); }
+function isA(p){ return p&&p===p.toLowerCase()&&p!==p.toUpperCase(); }
+
+function rawMoves(board,r,c,castle,ep) {
+  var mv=[]; var pc=board[r][c]; if(!pc) return mv;
+  var pp=isP(pc); var t=pc.toLowerCase();
+  if(t==="p"){
+    var dir=pp?-1:1,st=pp?6:1,nr=r+dir;
+    if(nr>=0&&nr<8){
+      if(!board[nr][c]){ mv.push({r:nr,c:c}); if(r===st&&!board[r+2*dir][c]) mv.push({r:r+2*dir,c:c}); }
+      [-1,1].forEach(function(dc){ var nc=c+dc; if(nc>=0&&nc<8){ var tg=board[nr][nc]; if(tg&&((pp&&isA(tg))||(!pp&&isP(tg)))) mv.push({r:nr,c:nc}); if(ep&&nr===ep[0]&&nc===ep[1]) mv.push({r:nr,c:nc,ep:true}); } });
+    }
+  } else if(t==="n"){
+    [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(function(d){ var nr=r+d[0],nc=c+d[1]; if(nr>=0&&nr<8&&nc>=0&&nc<8){ var tg=board[nr][nc]; if(!tg||(pp&&isA(tg))||(!pp&&isP(tg))) mv.push({r:nr,c:nc}); } });
+  } else if(t==="k"){
+    [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(function(d){ var nr=r+d[0],nc=c+d[1]; if(nr>=0&&nr<8&&nc>=0&&nc<8){ var tg=board[nr][nc]; if(!tg||(pp&&isA(tg))||(!pp&&isP(tg))) mv.push({r:nr,c:nc}); } });
+    if(castle){
+      if(pp){ if(castle.wK&&castle.wRK&&!board[7][5]&&!board[7][6]&&!isAttacked(board,7,4,false)&&!isAttacked(board,7,5,false)&&!isAttacked(board,7,6,false)) mv.push({r:7,c:6,castle:"wK"}); if(castle.wK&&castle.wRQ&&!board[7][3]&&!board[7][2]&&!board[7][1]&&!isAttacked(board,7,4,false)&&!isAttacked(board,7,3,false)&&!isAttacked(board,7,2,false)) mv.push({r:7,c:2,castle:"wQ"}); }
+      else { if(castle.bK&&castle.bRK&&!board[0][5]&&!board[0][6]&&!isAttacked(board,0,4,true)&&!isAttacked(board,0,5,true)&&!isAttacked(board,0,6,true)) mv.push({r:0,c:6,castle:"bK"}); if(castle.bK&&castle.bRQ&&!board[0][3]&&!board[0][2]&&!board[0][1]&&!isAttacked(board,0,4,true)&&!isAttacked(board,0,3,true)&&!isAttacked(board,0,2,true)) mv.push({r:0,c:2,castle:"bQ"}); }
+    }
+  } else {
+    var dirs=t==="b"?[[-1,-1],[-1,1],[1,-1],[1,1]]:t==="r"?[[-1,0],[1,0],[0,-1],[0,1]]:[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+    dirs.forEach(function(d){ for(var s=1;s<8;s++){ var nr=r+d[0]*s,nc=c+d[1]*s; if(nr<0||nr>=8||nc<0||nc>=8) break; var tg=board[nr][nc]; if(!tg) mv.push({r:nr,c:nc}); else { if((pp&&isA(tg))||(!pp&&isP(tg))) mv.push({r:nr,c:nc}); break; } } });
+  }
+  return mv;
+}
+
+function validMoves(r,c) {
+  var pc=gs.board[r][c]; if(!pc) return [];
+  var pp=isP(pc);
+  return rawMoves(gs.board,r,c,gs.castle,gs.enPassant).filter(function(m){ var b=applyMove(gs.board,r,c,m.r,m.c,m); return !isInCheck(b,pp); });
+}
+
+function applyMove(board,fr,fc,tr,tc,meta) {
+  var b=board.map(function(row){ return row.slice(); });
+  var pc=b[fr][fc]; var pp=isP(pc);
+  b[tr][tc]=pc; b[fr][fc]=null;
+  if(meta&&meta.ep){ var capRow=pp?tr+1:tr-1; b[capRow][tc]=null; }
+  if(pc==="P"&&tr===0) b[tr][tc]="Q";
+  if(pc==="p"&&tr===7) b[tr][tc]="q";
+  if(meta&&meta.castle){ if(meta.castle==="wK"){b[7][5]="R";b[7][7]=null;} if(meta.castle==="wQ"){b[7][3]="R";b[7][0]=null;} if(meta.castle==="bK"){b[0][5]="r";b[0][7]=null;} if(meta.castle==="bQ"){b[0][3]="r";b[0][0]=null;} }
+  return b;
+}
+
+function clickSq(r,c) {
+  if(gs.aiOn) return;
+  var pc=gs.board[r][c];
+  if(!gs.sel){ if(isP(pc)){ gs.sel={r:r,c:c}; drawBoard(); } return; }
+  if(gs.sel.r===r&&gs.sel.c===c){ gs.sel=null; drawBoard(); return; }
+  if(isP(pc)){ gs.sel={r:r,c:c}; drawBoard(); return; }
+  var mv=validMoves(gs.sel.r,gs.sel.c); var hit=null;
+  for(var i=0;i<mv.length;i++) if(mv[i].r===r&&mv[i].c===c){ hit=mv[i]; break; }
+  if(!hit){ gs.sel=null; drawBoard(); return; }
+  doPlayerMove(gs.sel.r,gs.sel.c,r,c,hit);
+}
+
+function doPlayerMove(fr,fc,tr,tc,meta) {
+  var cap=gs.board[tr][tc];
+  if(meta&&meta.ep){ var epCapRow=isP(gs.board[fr][fc])?tr+1:tr-1; cap=gs.board[epCapRow][tc]; }
+  gs.lmf={r:fr,c:fc}; gs.lmt={r:tr,c:tc};
+  updateCastleRights(fr,fc,tr,tc);
+  var pc=gs.board[fr][fc];
+  if((pc==="P"||pc==="p")&&Math.abs(tr-fr)===2) gs.enPassant=[Math.floor((fr+tr)/2),fc];
+  else gs.enPassant=null;
+  gs.board=applyMove(gs.board,fr,fc,tr,tc,meta);
+  gs.sel=null; gs.moves++;
+  document.getElementById("moveCtr").textContent="Move "+gs.moves;
+  if(cap){ gs.pCaps.push(cap); gs.adv+=PV[cap.toLowerCase()]||1; updateCaps(); updateAdv(); setTimeout(function(){ dlgShow(getLine("on_player_capture"),gs.pState,true); },300); }
+  // A captured queen or rook is a shock the opponent's arc should feel.
+  if(cap&&(cap.toLowerCase()==="q"||cap.toLowerCase()==="r")) gs.lastMajorLoss=true;
+  recordPosition(cap||pc==="P"||pc==="p");
+  tickPersonality(); drawBoard();
+  if(checkGameEnd(true)) return;
+  if(checkDraws()) return;
+  if(!cap&&gs.moves>0&&gs.moves%4===0) setTimeout(function(){ dlgShow(getLine(gs.pState),gs.pState); },400);
+  document.getElementById("moveInd").textContent=gs.player.name+" moved · "+gs.opp.name+" is calculating...";
+  gs.aiOn=true;
+  setTimeout(aiTurn,820+Math.random()*680);
+}
+
+function updateCastleRights(fr,fc,tr,tc){
+  if(fr===7&&fc===4) gs.castle.wK=false;
+  if(fr===0&&fc===4) gs.castle.bK=false;
+  if(fr===7&&fc===7||tr===7&&tc===7) gs.castle.wRK=false;
+  if(fr===7&&fc===0||tr===7&&tc===0) gs.castle.wRQ=false;
+  if(fr===0&&fc===7||tr===0&&tc===7) gs.castle.bRK=false;
+  if(fr===0&&fc===0||tr===0&&tc===0) gs.castle.bRQ=false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AI ENGINE
+// ═══════════════════════════════════════════════════════════════
+// Piece-square tables (from White's perspective; row 7 = White home rank).
+// Black reads the mirror (row 7-r). Values are in tenths of a pawn.
+var PST = {
+  p:[[0,0,0,0,0,0,0,0],[50,50,50,50,50,50,50,50],[10,10,20,30,30,20,10,10],[5,5,10,25,25,10,5,5],[0,0,0,20,20,0,0,0],[5,-5,-10,0,0,-10,-5,5],[5,10,10,-20,-20,10,10,5],[0,0,0,0,0,0,0,0]],
+  n:[[-50,-40,-30,-30,-30,-30,-40,-50],[-40,-20,0,0,0,0,-20,-40],[-30,0,10,15,15,10,0,-30],[-30,5,15,20,20,15,5,-30],[-30,0,15,20,20,15,0,-30],[-30,5,10,15,15,10,5,-30],[-40,-20,0,5,5,0,-20,-40],[-50,-40,-30,-30,-30,-30,-40,-50]],
+  b:[[-20,-10,-10,-10,-10,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,10,10,5,0,-10],[-10,5,5,10,10,5,5,-10],[-10,0,10,10,10,10,0,-10],[-10,10,10,10,10,10,10,-10],[-10,5,0,0,0,0,5,-10],[-20,-10,-10,-10,-10,-10,-10,-20]],
+  r:[[0,0,0,0,0,0,0,0],[5,10,10,10,10,10,10,5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[0,0,0,5,5,0,0,0]],
+  q:[[-20,-10,-10,-5,-5,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,5,5,5,0,-10],[-5,0,5,5,5,5,0,-5],[0,0,5,5,5,5,0,-5],[-10,5,5,5,5,5,0,-10],[-10,0,5,0,0,0,0,-10],[-20,-10,-10,-5,-5,-10,-10,-20]],
+  k:[[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-20,-30,-30,-40,-40,-30,-30,-20],[-10,-20,-20,-20,-20,-20,-20,-10],[20,20,0,0,0,0,20,20],[20,30,10,0,0,10,30,20]]
+};
+
+// Positive score favors the AI (Black). 100000+ magnitude == mate.
+function evalBoard(board) {
+  var score=0;
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    var p=board[r][c]; if(!p) continue;
+    var lc=p.toLowerCase(), white=isP(p);
+    var v=(PV[lc]||0)*100;                 // material in centipawns
+    var t=PST[lc]; if(t) v+=white?t[7-r][c]:t[r][c];
+    score+=white?-v:v;                     // AI (black) is positive
+  }
+  return score/100;                        // back to pawn units
+}
+
+// All legal moves for one side. white=true -> White (player).
+function legalMovesFor(board,white,castle,ep) {
+  var out=[];
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    var pc=board[r][c]; if(!pc||isP(pc)!==white) continue;
+    var mvs=rawMoves(board,r,c,castle,ep);
+    for(var i=0;i<mvs.length;i++){ var m=mvs[i]; var nb=applyMove(board,r,c,m.r,m.c,m); if(!isInCheck(nb,white)) out.push({fr:r,fc:c,tr:m.r,tc:m.c,meta:m}); }
+  }
+  return out;
+}
+
+function getAllAIMoves(board) {
+  var all=legalMovesFor(board,false,gs.castle,gs.enPassant), caps=[];
+  for(var i=0;i<all.length;i++){ var m=all[i]; if(board[m.tr][m.tc]||(m.meta&&m.meta.ep)) caps.push(m); }
+  return {all:all,caps:caps};
+}
+
+// Quiescence: keep resolving captures so the static eval is of a "quiet" position.
+function quiesce(board,alpha,beta,maximizing,qdepth) {
+  var stand=evalBoard(board);
+  if(maximizing){ if(stand>=beta) return beta; if(stand>alpha) alpha=stand; }
+  else { if(stand<=alpha) return alpha; if(stand<beta) beta=stand; }
+  if(qdepth<=0) return maximizing?alpha:beta;
+  var moves=legalMovesFor(board,!maximizing,null,null);
+  for(var i=0;i<moves.length;i++){
+    var m=moves[i]; if(!board[m.tr][m.tc]&&!(m.meta&&m.meta.ep)) continue;   // captures only
+    var nb=applyMove(board,m.fr,m.fc,m.tr,m.tc,m.meta);
+    var s=quiesce(nb,alpha,beta,!maximizing,qdepth-1);
+    if(maximizing){ if(s>alpha) alpha=s; if(alpha>=beta) return beta; }
+    else { if(s<beta) beta=s; if(beta<=alpha) return alpha; }
+  }
+  return maximizing?alpha:beta;
+}
+
+// Alpha-beta. maximizing == AI (Black) to move.
+function minimax(board,depth,maximizing,alpha,beta) {
+  if(depth<=0) return quiesce(board,alpha,beta,maximizing,4);
+  var moves=legalMovesFor(board,!maximizing,null,null);
+  if(!moves.length){
+    if(isInCheck(board,!maximizing)) return maximizing?(-100000-depth):(100000+depth); // side to move is mated
+    return 0; // stalemate
+  }
+  if(maximizing){
+    var best=-Infinity;
+    for(var i=0;i<moves.length;i++){ var m=moves[i]; var nb=applyMove(board,m.fr,m.fc,m.tr,m.tc,m.meta); var s=minimax(nb,depth-1,false,alpha,beta); if(s>best)best=s; if(best>alpha)alpha=best; if(alpha>=beta)break; }
+    return best;
+  } else {
+    var best2=Infinity;
+    for(var j=0;j<moves.length;j++){ var m2=moves[j]; var nb2=applyMove(board,m2.fr,m2.fc,m2.tr,m2.tc,m2.meta); var s2=minimax(nb2,depth-1,true,alpha,beta); if(s2<best2)best2=s2; if(best2<beta)beta=best2; if(beta<=alpha)break; }
+    return best2;
+  }
+}
+
+// Search depth + blunder rate scale to each opponent's stated rating.
+function aiSkill(opp){
+  var e=opp.elo||600;
+  if(e<550) return {depth:1,blunder:0.55};
+  if(e<800) return {depth:1,blunder:0.32};
+  if(e<1000) return {depth:2,blunder:0.20};
+  if(e<1300) return {depth:2,blunder:0.10};
+  if(e<1700) return {depth:3,blunder:0.05};
+  return {depth:3,blunder:0.02};
+}
+
+function aiTurn() {
+  var res=getAllAIMoves(gs.board); var all=res.all, caps=res.caps;
+  if(!all.length){ gs.aiOn=false; if(isInCheck(gs.board,false)){ document.getElementById("moveInd").textContent="CHECKMATE — you win!"; winMatch(); } else { document.getElementById("moveInd").textContent="Stalemate — the game is drawn."; setTimeout(function(){ show("tournScreen"); drawTournament(); },2500); } return; }
+
+  var sk=aiSkill(gs.opp), ch=gs.opp.agg||0.4, pick;
+  if(Math.random()<sk.blunder){
+    // Human-like slip: grab a capture if tempted, otherwise any legal move.
+    pick=(caps.length&&Math.random()<ch)?caps[Math.floor(Math.random()*caps.length)]:all[Math.floor(Math.random()*all.length)];
+  } else {
+    var bestScore=-Infinity, bestMoves=[];
+    for(var i=0;i<all.length;i++){
+      var mv=all[i]; var nb=applyMove(gs.board,mv.fr,mv.fc,mv.tr,mv.tc,mv.meta);
+      var score=minimax(nb,sk.depth-1,false,-Infinity,Infinity);
+      if(score>bestScore+0.001){ bestScore=score; bestMoves=[mv]; }
+      else if(Math.abs(score-bestScore)<=0.25) bestMoves.push(mv); // near-best, adds variety
+    }
+    // Aggressive personalities lean toward the sharper (capturing) option among equals.
+    var capChoices=bestMoves.filter(function(m){ return gs.board[m.tr][m.tc]||(m.meta&&m.meta.ep); });
+    if(capChoices.length&&Math.random()<ch) pick=capChoices[Math.floor(Math.random()*capChoices.length)];
+    else pick=bestMoves[Math.floor(Math.random()*bestMoves.length)];
+  }
+
+  var cap=gs.board[pick.tr][pick.tc];
+  if(pick.meta&&pick.meta.ep){ cap=gs.board[pick.tr-1][pick.tc]; }   // ep capture sits behind
+  gs.lmf={r:pick.fr,c:pick.fc}; gs.lmt={r:pick.tr,c:pick.tc};
+  updateCastleRights(pick.fr,pick.fc,pick.tr,pick.tc);
+  var apc=gs.board[pick.fr][pick.fc];
+  if((apc==="p"||apc==="P")&&Math.abs(pick.tr-pick.fr)===2) gs.enPassant=[Math.floor((pick.fr+pick.tr)/2),pick.fc];
+  else gs.enPassant=null;
+  gs.board=applyMove(gs.board,pick.fr,pick.fc,pick.tr,pick.tc,pick.meta);
+  var pieceMoved=apc&&(apc==="p"||apc==="P");
+  if(cap){ gs.oCaps.push(cap); gs.adv-=PV[cap.toLowerCase()]||1; updateCaps(); updateAdv(); setTimeout(function(){ dlgShow(getLine("on_ai_capture"),gs.pState,true); },300); }
+  recordPosition(cap||pieceMoved);
+  tickPersonality(); drawBoard();
+  gs.aiOn=false;
+  if(checkGameEnd(false)) return;
+  if(checkDraws()) return;
+  if(!gs.inCheck) document.getElementById("moveInd").textContent="Your turn";
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PERSONALITY STATE MACHINE — with auto-advance at move 25
+// ═══════════════════════════════════════════════════════════════
+const STATE_ORDER=["baseline","fracture","pressure","shift"];
+
+function tickPersonality() {
+  if(gs.shiftDone) return;
+
+  // Drive the arc from the board, not a timer. Positive eval favors the opponent (Black),
+  // so "behind" is how badly the opponent is doing right now.
+  var oppEval=evalBoard(gs.board);
+  var behind=-oppEval;
+  var swing=(gs.prevEval==null)?0:(oppEval-gs.prevEval); // negative = position just got worse
+  gs.prevEval=oppEval;
+  if(behind>=3) gs.behindStreak=(gs.behindStreak||0)+1; else gs.behindStreak=0;
+
+  var oppInCheck=isInCheck(gs.board,false);
+  var shock=gs.lastMajorLoss||swing<=-3.5||behind>=3; // a sudden break, not a slow drift
+  gs.lastMajorLoss=false;
+
+  var newState;
+  if(behind>=9||(oppInCheck&&behind>=6))           newState="shift";     // the turn: it's decided
+  else if(behind>=5||gs.behindStreak>=4||(oppInCheck&&behind>=2)) newState="pressure"; // sustained trouble
+  else if(shock)                                    newState="fracture";  // first real crack
+  else                                              newState="baseline";
+
+  var curIdx=STATE_ORDER.indexOf(gs.pState), newIdx=STATE_ORDER.indexOf(newState);
+  if(newIdx<=curIdx) return;
+  gs.pState=newState;
+  gs.arcPeaks[gs.opp.id]=newState;
+  if(newState==="shift") gs.shiftDone=true;
+  var lab=document.getElementById("psLabel"),dlg=document.getElementById("dlg");
+  var names={baseline:"Studying You",fracture:"FRACTURE",pressure:"UNDER PRESSURE",shift:"SOMETHING HAS CHANGED"};
+  var cls={baseline:"ps-base",fracture:"ps-frac",pressure:"ps-pres",shift:"ps-shft"};
+  var dc={baseline:"",fracture:"f",pressure:"p",shift:"s"};
+  lab.textContent=names[newState]; lab.className="ps-label "+cls[newState];
+  dlg.className="dlg "+(dc[newState]);
+  setWiper(wiperForState(newState));
+  var rb0=document.getElementById("retortBtn0"),rb1=document.getElementById("retortBtn1");
+  if(rb0) rb0.disabled=false; if(rb1) rb1.disabled=false;
+  setTimeout(function(){ dlgShow(getLine(newState),newState); },500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DIALOGUE ENGINE
+// ═══════════════════════════════════════════════════════════════
+function getLine(state) {
+  var per=PERSONALITIES[gs.opp.id]; if(!per) return "...";
+  var pool=per.states[state]; if(!pool||!pool.length) return "...";
+  var last=gs.lastLines[state];
+  var opts=pool.filter(function(l){ return l!==last; });
+  if(!opts.length) opts=pool;
+  var line=opts[Math.floor(Math.random()*opts.length)];
+  gs.lastLines[state]=line;
+  return line;
+}
+
+function dlgShow(text,state,intr) {
+  if(gs.typInt) clearInterval(gs.typInt);
+  gs.lastOppLine=text;
+  var dc={baseline:"",fracture:"f",pressure:"p",shift:"s"};
+  document.getElementById("dlg").className="dlg"+(dc[state]?" "+dc[state]:"");
+  document.getElementById("dlgSp").textContent=gs.opp?gs.opp.name:"";
+  var tx=document.getElementById("dlgTx"); tx.textContent=""; var i=0;
+  gs.typInt=setInterval(function(){ if(i<text.length){tx.textContent+=text[i];i++;} else{clearInterval(gs.typInt);gs.typInt=null;} },21);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════════
+function updateCaps() {
+  document.getElementById("pCaps").textContent="You: "+(gs.pCaps.map(function(p){ return PE[p]||p; }).join("")||"—");
+  document.getElementById("oCaps").textContent="Them: "+(gs.oCaps.map(function(p){ return PE[p]||p; }).join("")||"—");
+}
+function updateAdv() {
+  var max=15,pct=Math.min(Math.abs(gs.adv)/max*50,50);
+  var pb=document.getElementById("advPly"),ob=document.getElementById("advOpp");
+  if(gs.adv>0){pb.style.width=pct+"%";ob.style.width="0%";}
+  else if(gs.adv<0){pb.style.width="0%";ob.style.width=pct+"%";}
+  else{pb.style.width="0%";ob.style.width="0%";}
+}
+function show(id) { document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); }); document.getElementById(id).classList.add("active"); }
+
+// ═══════════════════════════════════════════════════════════════
+//  PLAYER RETORT
+// ═══════════════════════════════════════════════════════════════
+function doRetort(idx) {
+  var per=PERSONALITIES[gs.opp.id]; if(!per||!per.player_retorts) return;
+  var line=per.player_retorts[idx]; if(!line) return;
+  document.getElementById("retortBtn0").disabled=true;
+  document.getElementById("retortBtn1").disabled=true;
+  var savedClass=document.getElementById("dlg").className;
+  if(gs.typInt) clearInterval(gs.typInt);
+  document.getElementById("dlg").className="dlg plr";
+  document.getElementById("dlgSp").textContent=gs.player?gs.player.name:"You";
+  var tx=document.getElementById("dlgTx"); tx.textContent=""; var i=0,txt="“"+line+"”";
+  gs.typInt=setInterval(function(){ if(i<txt.length){tx.textContent+=txt[i];i++;} else{clearInterval(gs.typInt);gs.typInt=null;} },21);
+  setTimeout(function(){
+    document.getElementById("dlg").className=savedClass;
+    var cb=per.retort_comebacks;
+    if(cb&&cb.length) dlgShow(cb[Math.floor(Math.random()*cb.length)],gs.pState);
+    else dlgShow(gs.lastOppLine||getLine(gs.pState),gs.pState);
+  },2800);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DRAW RULES — threefold repetition, 50-move, insufficient material
+// ═══════════════════════════════════════════════════════════════
+function posKey() {
+  var s=""; for(var r=0;r<8;r++) for(var c=0;c<8;c++) s+=gs.board[r][c]||".";
+  var cs=(gs.castle.wK?"K":"")+(gs.castle.wRK?"H":"")+(gs.castle.wRQ?"A":"")+(gs.castle.bK?"k":"")+(gs.castle.bRK?"h":"")+(gs.castle.bRQ?"a":"");
+  return s+"|"+cs+"|"+(gs.enPassant?gs.enPassant.join(","):"-");
+}
+function recordPosition(resetClock) {
+  gs.halfmove=resetClock?0:(gs.halfmove||0)+1;        // resets on pawn move or capture
+  var k=posKey(); gs.posCounts=gs.posCounts||{};
+  gs.posCounts[k]=(gs.posCounts[k]||0)+1;
+  gs.maxRep=Math.max(gs.maxRep||0,gs.posCounts[k]);
+}
+function insufficientMaterial() {
+  var minors=0, others=0;
+  for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+    var p=gs.board[r][c]; if(!p) continue; var lc=p.toLowerCase();
+    if(lc==="k") continue;
+    if(lc==="b"||lc==="n") minors++; else others++;
+  }
+  return others===0&&minors<=1;   // K vs K, or K+single minor vs K
+}
+function checkDraws() {
+  var why=null;
+  if((gs.maxRep||0)>=3) why="Draw — threefold repetition.";
+  else if((gs.halfmove||0)>=100) why="Draw — fifty-move rule.";
+  else if(insufficientMaterial()) why="Draw — insufficient material.";
+  if(!why) return false;
+  gs.aiOn=false;
+  document.getElementById("moveInd").textContent=why;
+  setTimeout(function(){ show("tournScreen"); drawTournament(); },2600);
+  return true;
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  GAME END
+// ═══════════════════════════════════════════════════════════════
+function checkGameEnd(afterPlayerMove) {
+  if(afterPlayerMove){
+    var res=getAllAIMoves(gs.board);
+    if(res.all.length===0){
+      if(isInCheck(gs.board,false)){ document.getElementById("moveInd").textContent="CHECKMATE — you win!"; winMatch(); }
+      else { document.getElementById("moveInd").textContent="Stalemate — the game is drawn."; setTimeout(function(){ show("tournScreen"); drawTournament(); },2500); }
+      return true;
+    }
+  } else {
+    var hasWhiteMoves=false;
+    outer: for(var r=0;r<8;r++) for(var c=0;c<8;c++){ if(!isP(gs.board[r][c])) continue; if(validMoves(r,c).length>0){hasWhiteMoves=true;break outer;} }
+    if(!hasWhiteMoves){
+      if(isInCheck(gs.board,true)){
+        // Checkmate — player loses. Show opponent shift dialogue, then return
+        document.getElementById("moveInd").textContent="Checkmate — you lose.";
+        dlgShow(getLine("shift"),"shift");
+        setTimeout(function(){ show("tournScreen"); drawTournament(); },3200);
+      } else {
+        document.getElementById("moveInd").textContent="Stalemate — the game is drawn.";
+        setTimeout(function(){ show("tournScreen"); drawTournament(); },2500);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  WIN / CHAMPION
+// ═══════════════════════════════════════════════════════════════
+function winMatch() {
+  if(!gs.arcPeaks[gs.opp.id]) gs.arcPeaks[gs.opp.id]=gs.pState;
+  dlgShow(getLine("shift"),"shift");
+  setTimeout(function(){
+    gs.wins.push(gs.opp.id); saveProgress();
+    if(gs.wins.length===7){ clearSave(); setTimeout(showChampion,400); }
+    else { show("tournScreen"); drawTournament(); }
+  },2200);
+}
+
+function showChampion() {
+  show("champScreen");
+  var name=gs.player?gs.player.name:"Champion";
+  document.getElementById("cName").textContent=name;
+  if(gs.archData){
+    var a=gs.archData,v=gs.version;
+    document.getElementById("cArch").textContent=a.em+"  "+a.label+(v?"  ·  "+v.name:"");
+    document.getElementById("cVer").textContent=v?v.name:"CHAMPION";
+    document.getElementById("cLine").textContent='"'+(v?v.finalLine:"You came here. You stayed. You won.")+'"';
+  } else {
+    document.getElementById("cArch").textContent="Unknown Challenger";
+    document.getElementById("cVer").textContent="CHAMPION";
+    document.getElementById("cLine").textContent='"You came here. You stayed. You won."';
+  }
+  var arc=document.getElementById("arcGrid"); arc.innerHTML="";
+  OPPONENTS.forEach(function(o){
+    var peak=gs.arcPeaks[o.id]||"baseline";
+    var cls={baseline:"",fracture:"f",pressure:"p",shift:"s"}[peak]||"";
+    var lbl={baseline:"B",fracture:"F",pressure:"P",shift:"S"}[peak]||"B";
+    var div=document.createElement("div");
+    div.className="arc-beat"+(cls?" "+cls:"");
+    div.title=o.name+" — "+peak.toUpperCase();
+    div.innerHTML=o.av+'<br><span style="font-size:.75em;opacity:.8">'+lbl+'</span>';
+    arc.appendChild(div);
+  });
+}
+
+function restartAll() {
+  selArch=null; gs.archKey=null; gs.archData=null; gs.version=null;
+  gs.player=null; gs.wins=[]; gs.arcPeaks={};
+  clearSave();
+  document.getElementById("playerName").value="";
+  document.getElementById("woundPanel").classList.remove("vis");
+  document.querySelectorAll(".arch-card").forEach(function(c){ c.classList.remove("sel"); });
+  document.getElementById("archetypeStep").style.display="block";
+  document.getElementById("versionStep").style.display="none";
+  buildArchGrid(); show("charScreen");
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CUSTOM RESUME MODAL (replaces browser confirm)
+// ═══════════════════════════════════════════════════════════════
+function doResume(yes) {
+  document.getElementById("resumeOverlay").classList.remove("vis");
+  if(yes){
+    updateIntroText(); show("tournScreen"); drawTournament();
+  } else {
+    clearSave(); gs.player=null; gs.wins=[]; gs.arcPeaks=[]; gs.archKey=null; gs.archData=null; gs.version=null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+buildArchGrid();
+
+(function(){
+  if(loadProgress()&&gs.player&&gs.wins.length>0){
+    var body="Welcome back, "+gs.player.name+".\n\nYou've defeated "+gs.wins.length+" of 7 opponents.";
+    document.getElementById("resumeBody").textContent=body;
+    document.getElementById("resumeOverlay").classList.add("vis");
+  }
+})();
+</script>
+</body>
+</html>
