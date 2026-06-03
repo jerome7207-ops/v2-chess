@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CandyBabble Games — Play Smart. Play Bold.</title>
+  <meta name="description" content="CandyBabble Games — home of V2 Chess Academy and upcoming AI-powered games. Play smart, play bold.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0a0614;
+      --bg2:       #120d1e;
+      --card:      #1a1228;
+      --card2:     #221838;
+      --gold:      #FFD700;
+      --orange:    #FF9100;
+      --purple:    #E040FB;
+      --cyan:      #00E5FF;
+      --green:     #00E676;
+      --red:       #FF5252;
+      --pink:      #FF4081;
+      --border:    #2e1f4a;
+      --text:      #FFFFFF;
+      --muted:     #8878a8;
+      --sub:       #b8b0c8;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+    /* ── PARTICLES ── */
+    #particles { position:fixed; inset:0; pointer-events:none; z-index:0; }
+    .p { position:absolute; border-radius:50%; opacity:0; animation:rise 20s infinite linear; }
+    @keyframes rise { 0%{transform:translateY(100vh);opacity:0} 5%,90%{opacity:0.5} 100%{transform:translateY(-20vh);opacity:0} }
+
+    /* ── NAV ── */
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      background:rgba(10,6,20,0.85); backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 40px; height:64px;
+    }
+    .nav-logo { display:flex; align-items:center; gap:12px; text-decoration:none; }
+    .nav-logo-icon { font-size:28px; animation:spin 8s linear infinite; }
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    .nav-logo-text { font-size:20px; font-weight:900; background:linear-gradient(135deg,var(--gold),var(--orange)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .nav-links { display:flex; gap:32px; }
+    .nav-links a { color:var(--sub); text-decoration:none; font-size:14px; font-weight:600; transition:color .2s; }
+    .nav-links a:hover { color:var(--text); }
+    .nav-cta { padding:10px 22px; background:linear-gradient(135deg,var(--gold),var(--orange)); border:none; border-radius:10px; color:#0a0614; font-size:13px; font-weight:800; cursor:pointer; text-decoration:none; transition:all .2s; }
+    .nav-cta:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(255,215,0,.35); }
+
+    /* ── HERO ── */
+    .hero {
+      position:relative; z-index:1;
+      min-height:100vh; display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:100px 40px 60px; text-align:center;
+      background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(224,64,251,.12) 0%, transparent 70%),
+                 radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,215,0,.07) 0%, transparent 60%);
+    }
+    .hero-eyebrow { display:inline-flex; align-items:center; gap:8px; background:rgba(224,64,251,.15); border:1px solid rgba(224,64,251,.3); border-radius:20px; padding:6px 16px; font-size:12px; font-weight:700; color:var(--purple); margin-bottom:24px; }
+    .hero-title {
+      font-size:clamp(42px,7vw,88px); font-weight:900; line-height:1.05; margin-bottom:24px;
+    }
+    .hero-title .line1 { display:block; background:linear-gradient(135deg,#fff,#ccc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .hero-title .line2 { display:block; background:linear-gradient(135deg,var(--gold),var(--orange),var(--pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .hero-sub { font-size:18px; color:var(--sub); max-width:560px; line-height:1.7; margin-bottom:40px; }
+    .hero-btns { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:60px; }
+    .btn-primary { padding:16px 36px; background:linear-gradient(135deg,var(--gold),var(--orange)); border:none; border-radius:12px; font-size:16px; font-weight:800; color:#0a0614; cursor:pointer; text-decoration:none; transition:all .25s; display:inline-flex; align-items:center; gap:10px; }
+    .btn-primary:hover { transform:translateY(-3px); box-shadow:0 10px 30px rgba(255,215,0,.4); }
+    .btn-secondary { padding:16px 36px; background:transparent; border:2px solid var(--border); border-radius:12px; font-size:16px; font-weight:700; color:var(--sub); cursor:pointer; text-decoration:none; transition:all .25s; display:inline-flex; align-items:center; gap:10px; }
+    .btn-secondary:hover { border-color:var(--purple); color:var(--text); transform:translateY(-3px); }
+
+    .hero-stats { display:flex; gap:48px; justify-content:center; flex-wrap:wrap; }
+    .stat { text-align:center; }
+    .stat-val { font-size:32px; font-weight:900; background:linear-gradient(135deg,var(--gold),var(--orange)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .stat-lbl { font-size:12px; color:var(--muted); margin-top:4px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+
+    /* ── SECTION ── */
+    section { position:relative; z-index:1; }
+    .section-wrap { max-width:1200px; margin:0 auto; padding:80px 40px; }
+    .section-tag { display:inline-block; padding:5px 14px; background:rgba(255,215,0,.12); border:1px solid rgba(255,215,0,.25); border-radius:20px; font-size:11px; font-weight:800; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; }
+    .section-title { font-size:clamp(28px,4vw,44px); font-weight:900; margin-bottom:12px; }
+    .section-sub { font-size:16px; color:var(--sub); max-width:560px; line-height:1.7; margin-bottom:48px; }
+
+    /* ── FEATURED GAME ── */
+    .featured {
+      background:linear-gradient(135deg,rgba(22,15,40,.9),rgba(30,20,50,.9));
+      border:2px solid var(--border); border-radius:24px;
+      overflow:hidden; display:grid; grid-template-columns:1fr 1fr; gap:0;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+      transition:transform .3s, box-shadow .3s;
+    }
+    .featured:hover { transform:translateY(-6px); box-shadow:0 30px 80px rgba(0,0,0,.6), 0 0 60px rgba(255,215,0,.08); }
+    .featured-visual {
+      background:linear-gradient(135deg,#1a1030,#251540);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:48px 40px; gap:24px; position:relative; overflow:hidden;
+    }
+    .featured-visual::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse at center, rgba(224,64,251,.15) 0%, transparent 70%);
+    }
+    .game-board-preview {
+      display:grid; grid-template-columns:repeat(8,28px); grid-template-rows:repeat(8,28px);
+      gap:0; border:2px solid #8B6914; box-shadow:0 4px 20px rgba(0,0,0,.6); position:relative; z-index:1;
+    }
+    .cell-p { width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+    .cell-p.l { background:#F0D9B5; }
+    .cell-p.d { background:#B58863; }
+    .cell-p.w { color:#fff; filter:drop-shadow(0 1px 3px rgba(0,0,0,.9)); }
+    .cell-p.b { color:#111; filter:drop-shadow(0 1px 2px rgba(255,255,255,.4)); }
+    .featured-badge { position:relative; z-index:1; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+    .badge { padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge.gold  { background:rgba(255,215,0,.15); color:var(--gold); border:1px solid rgba(255,215,0,.3); }
+    .badge.purple{ background:rgba(224,64,251,.15); color:var(--purple); border:1px solid rgba(224,64,251,.3); }
+    .badge.green { background:rgba(0,230,118,.15); color:var(--green); border:1px solid rgba(0,230,118,.3); }
+    .featured-info { padding:48px 48px; display:flex; flex-direction:column; justify-content:center; }
+    .game-tag { display:inline-block; padding:5px 12px; background:linear-gradient(135deg,var(--gold),var(--orange)); border-radius:20px; font-size:10px; font-weight:800; color:#0a0614; text-transform:uppercase; letter-spacing:1px; margin-bottom:20px; }
+    .game-title { font-size:36px; font-weight:900; margin-bottom:12px; }
+    .game-title span { background:linear-gradient(135deg,var(--gold),var(--orange)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .game-desc { font-size:15px; color:var(--sub); line-height:1.75; margin-bottom:28px; }
+    .game-features { display:flex; flex-direction:column; gap:10px; margin-bottom:32px; }
+    .feat-row { display:flex; align-items:center; gap:10px; font-size:14px; color:var(--sub); }
+    .feat-row span:first-child { font-size:16px; }
+    .feat-row strong { color:var(--text); }
+    .game-cta { display:flex; gap:12px; flex-wrap:wrap; }
+    .price-tag { display:flex; align-items:center; gap:8px; }
+    .price-main { font-size:28px; font-weight:900; color:var(--gold); }
+    .price-note { font-size:11px; color:var(--muted); line-height:1.4; }
+
+    /* ── COMING SOON ── */
+    .coming-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:20px; }
+    .coming-card {
+      background:var(--card); border:2px solid var(--border); border-radius:20px;
+      padding:32px 28px; position:relative; overflow:hidden; transition:all .3s;
+    }
+    .coming-card:hover { border-color:var(--border); transform:translateY(-4px); box-shadow:0 16px 40px rgba(0,0,0,.4); }
+    .coming-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+    .coming-card.c1::before { background:linear-gradient(90deg,#E040FB,#9C27B0); }
+    .coming-card.c2::before { background:linear-gradient(90deg,#00E5FF,#0097A7); }
+    .coming-card.c3::before { background:linear-gradient(90deg,#FF5252,#D32F2F); }
+    .coming-card.c4::before { background:linear-gradient(90deg,#00E676,#00897B); }
+    .coming-icon { font-size:40px; margin-bottom:16px; display:block; }
+    .coming-name { font-size:20px; font-weight:800; margin-bottom:8px; }
+    .coming-desc { font-size:13px; color:var(--sub); line-height:1.65; margin-bottom:20px; }
+    .coming-pill { display:inline-block; padding:5px 14px; background:rgba(255,255,255,.06); border:1px solid var(--border); border-radius:20px; font-size:11px; font-weight:700; color:var(--muted); }
+
+    /* ── WHY SECTION ── */
+    .why-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:20px; }
+    .why-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:28px; transition:all .3s; }
+    .why-card:hover { border-color:rgba(255,215,0,.25); transform:translateY(-3px); }
+    .why-icon { font-size:32px; margin-bottom:14px; }
+    .why-title { font-size:16px; font-weight:800; margin-bottom:8px; }
+    .why-desc { font-size:13px; color:var(--sub); line-height:1.65; }
+
+    /* ── FOOTER ── */
+    footer {
+      position:relative; z-index:1;
+      border-top:1px solid var(--border);
+      padding:40px 40px;
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px;
+    }
+    .footer-brand { display:flex; align-items:center; gap:12px; }
+    .footer-brand-text { font-size:18px; font-weight:900; background:linear-gradient(135deg,var(--gold),var(--orange)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .footer-links { display:flex; gap:24px; }
+    .footer-links a { color:var(--muted); text-decoration:none; font-size:13px; transition:color .2s; }
+    .footer-links a:hover { color:var(--text); }
+    .footer-copy { font-size:12px; color:var(--muted); }
+
+    /* ── DIVIDER ── */
+    .divider { height:1px; background:linear-gradient(90deg,transparent,var(--border),transparent); margin:0 40px; }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:900px) {
+      .featured { grid-template-columns:1fr; }
+      .featured-visual { padding:40px 24px; }
+      .featured-info { padding:32px 28px; }
+      nav { padding:0 20px; }
+      .nav-links { display:none; }
+      footer { flex-direction:column; text-align:center; }
+      .footer-links { flex-wrap:wrap; justify-content:center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Particles -->
+<div id="particles"></div>
+
+<!-- Nav -->
+<nav>
+  <a href="#" class="nav-logo">
+    <span class="nav-logo-icon">🍬</span>
+    <span class="nav-logo-text">CandyBabble Games</span>
+  </a>
+  <div class="nav-links">
+    <a href="#games">Games</a>
+    <a href="#coming">Coming Soon</a>
+    <a href="#why">About</a>
+  </div>
+  <a href="https://gum.co/v2chess" target="_blank" class="nav-cta">🛒 Get Chess $14.99</a>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-eyebrow">🍬 CandyBabble Games — AI-Powered Fun</div>
+  <h1 class="hero-title">
+    <span class="line1">Play Smart.</span>
+    <span class="line2">Play Bold.</span>
+  </h1>
+  <p class="hero-sub">Games built with real AI engines, real coaching, and real learning. No fluff. No filler. Just you getting better every time you play.</p>
+  <div class="hero-btns">
+    <a href="#games" class="btn-primary">♟️ Play Now — Free</a>
+    <a href="#coming" class="btn-secondary">🚀 What's Coming</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-val">5</div><div class="stat-lbl">AI Versions</div></div>
+    <div class="stat"><div class="stat-val">Real</div><div class="stat-lbl">Chess Engine</div></div>
+    <div class="stat"><div class="stat-val">$0</div><div class="stat-lbl">To Try</div></div>
+    <div class="stat"><div class="stat-val">1</div><div class="stat-lbl">Purchase Ever</div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Featured Game -->
+<section id="games">
+  <div class="section-wrap">
+    <div class="section-tag">🎮 Now Playing</div>
+    <h2 class="section-title">Our First Game is Live</h2>
+    <p class="section-sub">V2 Chess Academy is unlike any chess game you've played. Five AI versions compete to coach you, and every move they make is real.</p>
+
+    <div class="featured">
+      <!-- Board Preview -->
+      <div class="featured-visual">
+        <div class="game-board-preview" id="boardPreview"></div>
+        <div class="featured-badge">
+          <span class="badge gold">♟️ Real Chess Engine</span>
+          <span class="badge purple">🔮 5 AI Versions</span>
+          <span class="badge green">✅ Free to Try</span>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="featured-info">
+        <div class="game-tag">🏆 Featured Game</div>
+        <h3 class="game-title"><span>V2 Chess Academy</span></h3>
+        <p class="game-desc">
+          Five parallel AI strategies analyze every move you make — Conservative, Balanced, Aggressive, Experimental, and Synthesizer. A real chess engine powers everything. Five coaches watch your game and speak up when it matters.
+        </p>
+        <div class="game-features">
+          <div class="feat-row"><span>🛡️</span><span><strong>V.A Conservative</strong> — plays it safe, avoids risks</span></div>
+          <div class="feat-row"><span>⚔️</span><span><strong>V.C Aggressive</strong> — goes for your throat</span></div>
+          <div class="feat-row"><span>🔮</span><span><strong>V.E Synthesizer</strong> — plays the objectively best move</span></div>
+          <div class="feat-row"><span>🎯</span><span><strong>Red Line</strong> — tracks your chess principles live</span></div>
+          <div class="feat-row"><span>💬</span><span><strong>Nested Thirds</strong> — pieces speak their final words when captured</span></div>
+        </div>
+        <div class="game-cta">
+          <a href="https://jerome7207-ops.github.io/v2-chess/" target="_blank" class="btn-primary">▶️ Play Free Now</a>
+          <div class="price-tag">
+            <div>
+              <div class="price-main">$14.99</div>
+              <div class="price-note">Unlock everything<br>One time · No sub</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Coming Soon -->
+<section id="coming">
+  <div class="section-wrap">
+    <div class="section-tag">🚀 Coming Soon</div>
+    <h2 class="section-title">More Games on the Way</h2>
+    <p class="section-sub">Every CandyBabble game runs on real AI, real learning loops, and real coaching. These are next up.</p>
+    <div class="coming-grid">
+      <div class="coming-card c1">
+        <span class="coming-icon">🃏</span>
+        <div class="coming-name">Poker IQ</div>
+        <p class="coming-desc">5 AI personalities analyze your hand decisions — tight, loose, bluffer, pot-odds calculator, and GTO solver. Real hand history learning.</p>
+        <span class="coming-pill">🔜 In Development</span>
+      </div>
+      <div class="coming-card c2">
+        <span class="coming-icon">🧠</span>
+        <div class="coming-name">Word Arena</div>
+        <p class="coming-desc">Vocabulary-building battle game. AI opponents adapt to your skill level. Coaches spot patterns in the words you miss and build a learning plan.</p>
+        <span class="coming-pill">💡 Concept Stage</span>
+      </div>
+      <div class="coming-card c3">
+        <span class="coming-icon">🔢</span>
+        <div class="coming-name">Math Sprint</div>
+        <p class="coming-desc">Speed math with an AI that learns your weak spots. Miss a division pattern? It targets it. Red Line tracks your accuracy in real time.</p>
+        <span class="coming-pill">💡 Concept Stage</span>
+      </div>
+      <div class="coming-card c4">
+        <span class="coming-icon">🗺️</span>
+        <div class="coming-name">Strategy Lab</div>
+        <p class="coming-desc">Turn-based strategy game where each opponent is from a different era of military history — with their own AI personality and tactics.</p>
+        <span class="coming-pill">💡 Concept Stage</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Why Section -->
+<section id="why">
+  <div class="section-wrap">
+    <div class="section-tag">⚡ Why CandyBabble Games</div>
+    <h2 class="section-title">Games That Actually Teach</h2>
+    <p class="section-sub">Most games entertain. Ours do both — and they get smarter the more you play.</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">🧠</div>
+        <div class="why-title">Real AI, Not Fake Numbers</div>
+        <p class="why-desc">Every metric you see — Red Line, Wipers, pattern confidence — is calculated from your actual game state. No random dials.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🔀</div>
+        <div class="why-title">5 Parallel Strategies</div>
+        <p class="why-desc">Five AI versions analyze every move simultaneously. Each plays differently so you see the full range of responses your position allows.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🎓</div>
+        <div class="why-title">Coaches That Watch</div>
+        <p class="why-desc">5 AI coaches give position-specific advice — not generic tips. Professor calls out your undeveloped pieces by name. Data shows the real eval.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">💰</div>
+        <div class="why-title">Pay Once, Keep Forever</div>
+        <p class="why-desc">No subscriptions. No monthly fees. One-time purchase, lifetime access. Free to try, fair to buy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-brand">
+    <span style="font-size:24px">🍬</span>
+    <span class="footer-brand-text">CandyBabble Games</span>
+  </div>
+  <div class="footer-links">
+    <a href="#games">Games</a>
+    <a href="https://gum.co/v2chess" target="_blank">Buy Chess</a>
+    <a href="https://candybabble.com" target="_blank">CandyBabble</a>
+  </div>
+  <div class="footer-copy">© 2026 CandyBabble · DROME7207 · All rights reserved</div>
+</footer>
+
+<script>
+  // ── Particles ──────────────────────────────────────────────────────────────
+  (function(){
+    const colors = ['#E040FB','#FFD700','#00E5FF','#FF4081','#00E676','#FF9100'];
+    const c = document.getElementById('particles');
+    for(let i=0;i<18;i++){
+      const d = document.createElement('div');
+      d.className='p';
+      const sz = 2+Math.random()*5;
+      d.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;background:${colors[i%colors.length]};animation-delay:-${Math.random()*20}s;animation-duration:${15+Math.random()*12}s`;
+      c.appendChild(d);
+    }
+  })();
+
+  // ── Chess board preview ────────────────────────────────────────────────────
+  (function(){
+    const start = [
+      ['♜','♞','♝','♛','♚','♝','♞','♜'],
+      ['♟','♟','♟','♟','♟','♟','♟','♟'],
+      [ '','','','','','','','' ],
+      [ '','','','','','','','' ],
+      [ '','','','e','','','','' ],   // e4 pawn
+      [ '','','','','','','','' ],
+      ['♙','♙','♙','♙','♙','♙','♙','♙'],
+      ['♖','♘','♗','♕','♔','♗','♘','♖']
+    ];
+    // Overwrite with a mid-game position for visual interest
+    const pos = [
+      ['♜','','','','♚','','♞','♜'],
+      ['♟','♟','','','','♟','♟','♟'],
+      [ '','','♝','♟','','','',''],
+      [ '','','','','','♛','',''],
+      [ '','♗','','','','','',''],
+      [ '','','♘','','','♘','',''],
+      ['♙','♙','♙','','♙','♙','♙','♙'],
+      ['♖','','','','♔','','','♖']
+    ];
+    const isWhite = p => '♙♖♘♗♕♔'.includes(p);
+    const isBlack = p => '♟♜♞♝♛♚'.includes(p);
+    const board = document.getElementById('boardPreview');
+    pos.forEach((row,r) => row.forEach((piece,c) => {
+      const cell = document.createElement('div');
+      const light = (r+c)%2===0;
+      let cls = `cell-p ${light?'l':'d'}`;
+      if(isWhite(piece)) cls += ' w';
+      if(isBlack(piece)) cls += ' b';
+      cell.className = cls;
+      cell.textContent = piece;
+      board.appendChild(cell);
+    }));
+  })();
+
+  // ── Smooth scroll for nav links ────────────────────────────────────────────
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if(target){ e.preventDefault(); target.scrollIntoView({behavior:'smooth',block:'start'}); }
+    });
+  });
+</script>
+</body>
+</html>
