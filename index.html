@@ -116,7 +116,8 @@ body { font-family:'Cormorant Garamond',Georgia,serif; background:var(--bg); min
 @media(max-width:600px){ .char-hd h1,.intro-card h1 { font-size:1.8em; } .arch-card { padding:14px 8px; } .opp-card { padding:12px 14px; } .dlg { min-height:auto; padding:12px; font-size:.87em; } .sidebar { padding:14px; } }
 .p-strip { background:rgba(212,165,116,.05); border:1px solid rgba(212,165,116,.18); border-radius:8px; padding:9px 15px; margin-bottom:11px; display:flex; align-items:center; gap:12px; }
 .strip-em { font-size:1.55em; } .strip-nm { font-family:'Cinzel',serif; font-size:.93em; color:var(--gold2); } .strip-wd { font-style:italic; color:var(--dim); font-size:.77em; margin-top:2px; }
-.board { display:grid; grid-template-columns:repeat(8,1fr); background:var(--dsq); border:4px solid var(--gold); padding:4px; border-radius:8px; }
+.board { display:grid; grid-template-columns:repeat(8,1fr); background:var(--dsq); border:4px solid var(--gold); padding:4px; border-radius:8px; transition:border-color .35s; }
+.board.ai-turn { border-color:var(--dim); }
 .sq { aspect-ratio:1; display:flex; justify-content:center; align-items:center; font-size:2.4em; cursor:pointer; user-select:none; transition:background .1s; }
 .sq.lt { background:var(--lsq); } .sq.dk { background:var(--dsq); }
 .sq.sel { background:rgba(240,201,135,.78) !important; } .sq.vm { background:rgba(74,200,120,.42) !important; cursor:pointer; }
@@ -134,12 +135,11 @@ body { font-family:'Cormorant Garamond',Georgia,serif; background:var(--bg); min
 /* THE OPPONENT'S MOVE — it used to teleport. Now the two squares glow so you
    can see where it came from and where it landed. */
 @keyframes aiFlash { 0%,100%{ box-shadow:inset 0 0 0 0 rgba(168,85,247,0);} 40%{ box-shadow:inset 0 0 0 4px rgba(168,85,247,.95);} }
-.sq.aimove { animation:aiFlash 1.15s ease-in-out 2; }
+.sq.aimove { animation:aiFlash 1.15s ease-in-out 2; box-shadow:inset 0 0 0 3px rgba(168,85,247,.55); }
 
 /* THE FIRST MOVE — one player clicked everywhere and nothing happened, because
    nobody ever told him to click his own piece. Now his pieces breathe at him. */
-@keyframes nudge { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.16);} }
-.sq.hint .pc { animation:nudge 1.25s ease-in-out infinite; }
+.sq.hint .pc { filter:drop-shadow(0 0 9px rgba(212,165,116,.9)); }
 #howto { text-align:center; color:var(--gold); font-size:.86em; letter-spacing:.16em;
          text-transform:uppercase; margin:10px 0 2px; min-height:1.2em; transition:opacity .4s; }
 .board-foot { text-align:center; margin-top:11px; }
@@ -368,6 +368,7 @@ input:focus { outline:2px solid var(--gold); outline-offset:2px; }
       <div class="board-foot">
         <div class="b-vs"><span id="pDisp"></span> vs <span id="oDisp"></span></div>
         <div class="b-ind" id="moveInd">Your move — click one of your pieces</div>
+        <button class="gold-btn" id="continueBtn" style="display:none;max-width:280px;margin:14px auto 0;" onclick="continueAfterGame()">Continue →</button>
       </div>
     </div>
     <div class="sidebar">
@@ -743,7 +744,8 @@ function startGame(opp) {
   document.getElementById("dlg").className="dlg";
   document.getElementById("moveInd").textContent="Your move — click one of your pieces";
   document.getElementById("moveCtr").textContent="Move 0";
-  gs.aiFrom=null; gs.aiTo=null;
+  gs.aiFrom=null; gs.aiTo=null; gs.pendingEnd=null;
+  var cbtn=document.getElementById("continueBtn"); if(cbtn) cbtn.style.display="none";
   armFirstMoveHint();          // if he stalls, the board will teach him
 
   var per=PERSONALITIES[opp.id];
@@ -779,7 +781,8 @@ function startGame(opp) {
 function abandonGame() {
   if(gs.aiOn) return; // Don't abandon during AI turn
   if(gs.typInt) clearInterval(gs.typInt);
-  gs.aiOn=false;
+  gs.aiOn=false; gs.pendingEnd=null;
+  var cbtn=document.getElementById("continueBtn"); if(cbtn) cbtn.style.display="none";
   show("tournScreen"); drawTournament();
 }
 
@@ -863,6 +866,7 @@ function clearFirstMoveHint(){
 
 function drawBoard() {
   var el=document.getElementById("board"); el.innerHTML="";
+  el.classList.toggle("ai-turn", !!gs.aiOn);
   var wk=findKing(gs.board,true);
   gs.inCheck=isInCheck(gs.board,true);
   for(var r=0;r<8;r++) for(var c=0;c<8;c++){
@@ -952,7 +956,7 @@ function applyMove(board,fr,fc,tr,tc,meta) {
 }
 
 function clickSq(r,c) {
-  if(gs.aiOn) return;
+  if(gs.aiOn||gs.pendingEnd) return; // game's decided -- board is in analysis mode, no more moves
   clearFirstMoveHint();          // he found it. stop nagging.
   var pc=gs.board[r][c];
   if(!gs.sel){ if(isP(pc)){ gs.sel={r:r,c:c}; drawBoard(); } return; }
@@ -996,6 +1000,8 @@ function askPromotion(fr,fc,tr,tc,promos){
 function doPlayerMove(fr,fc,tr,tc,meta) {
   var cap=gs.board[tr][tc];
   if(meta&&meta.ep){ var epCapRow=isP(gs.board[fr][fc])?tr+1:tr-1; cap=gs.board[epCapRow][tc]; }
+  // The opponent's last move stayed marked until right now -- this is that moment.
+  gs.aiFrom=null; gs.aiTo=null;
   gs.lmf={r:fr,c:fc}; gs.lmt={r:tr,c:tc};
   updateCastleRights(fr,fc,tr,tc);
   var pc=gs.board[fr][fc];
@@ -1198,7 +1204,7 @@ function aiSkill(opp){
 
 function aiTurn() {
   var res=getAllAIMoves(gs.board); var all=res.all, caps=res.caps;
-  if(!all.length){ gs.aiOn=false; if(isInCheck(gs.board,false)){ document.getElementById("moveInd").textContent="CHECKMATE — you win!"; winMatch(); } else { document.getElementById("moveInd").textContent="Stalemate — the game is drawn."; setTimeout(function(){ show("tournScreen"); drawTournament(); },2500); } return; }
+  if(!all.length){ gs.aiOn=false; if(isInCheck(gs.board,false)){ document.getElementById("moveInd").textContent="CHECKMATE — you win!"; winMatch(); } else { document.getElementById("moveInd").textContent="Stalemate — the game is drawn."; setTimeout(function(){ showContinueButton({type:'tourn'}); },1000); } return; }
 
   var sk=aiSkill(gs.opp), ch=gs.opp.agg||0.4, pick;
   if(Math.random()<sk.blunder){
@@ -1226,7 +1232,7 @@ function aiTurn() {
   gs.hintSquares=null;
   var sayMove=gs.opp.name+" played "+sqName(pick.fr,pick.fc)+" → "+sqName(pick.tr,pick.tc)+(cap?" ×":"");
   setTimeout(function(){ var mi=document.getElementById("moveInd"); if(mi) mi.textContent=sayMove; },40);
-  setTimeout(function(){ gs.aiFrom=null; gs.aiTo=null; drawBoard(); armFirstMoveHint(); }, 2400);
+  setTimeout(function(){ armFirstMoveHint(); }, 2400);
   updateCastleRights(pick.fr,pick.fc,pick.tr,pick.tc);
   var apc=gs.board[pick.fr][pick.fc];
   if((apc==="p"||apc==="P")&&Math.abs(pick.tr-pick.fr)===2) gs.enPassant=[Math.floor((pick.fr+pick.tr)/2),pick.fc];
@@ -1374,6 +1380,25 @@ function insufficientMaterial() {
   }
   return others===0&&minors<=1;   // K vs K, or K+single minor vs K
 }
+// ═══════════════════════════════════════════════════════════════
+//  END-OF-GAME HOLD — board stays up until the player is ready.
+//  The result text lands, the board stays fully visible to analyze,
+//  and nothing navigates away until Continue is clicked.
+// ═══════════════════════════════════════════════════════════════
+function showContinueButton(action){
+  gs.pendingEnd=action;
+  var btn=document.getElementById("continueBtn");
+  if(btn) btn.style.display="block";
+}
+function continueAfterGame(){
+  var btn=document.getElementById("continueBtn");
+  if(btn) btn.style.display="none";
+  var action=gs.pendingEnd; gs.pendingEnd=null;
+  if(!action) return;
+  if(action.type==="champion") showChampion();
+  else { show("tournScreen"); drawTournament(); }
+}
+
 function checkDraws() {
   var why=null;
   if((gs.maxRep||0)>=3) why="Draw — threefold repetition.";
@@ -1382,7 +1407,7 @@ function checkDraws() {
   if(!why) return false;
   gs.aiOn=false;
   document.getElementById("moveInd").textContent=why;
-  setTimeout(function(){ show("tournScreen"); drawTournament(); },2600);
+  setTimeout(function(){ showContinueButton({type:'tourn'}); },1000);
   return true;
 }
 
@@ -1395,7 +1420,7 @@ function checkGameEnd(afterPlayerMove) {
     var res=getAllAIMoves(gs.board);
     if(res.all.length===0){
       if(isInCheck(gs.board,false)){ document.getElementById("moveInd").textContent="CHECKMATE — you win!"; winMatch(); }
-      else { document.getElementById("moveInd").textContent="Stalemate — the game is drawn."; setTimeout(function(){ show("tournScreen"); drawTournament(); },2500); }
+      else { document.getElementById("moveInd").textContent="Stalemate — the game is drawn."; setTimeout(function(){ showContinueButton({type:'tourn'}); },1000); }
       return true;
     }
   } else {
@@ -1406,10 +1431,10 @@ function checkGameEnd(afterPlayerMove) {
         // Checkmate — player loses. Show opponent shift dialogue, then return
         document.getElementById("moveInd").textContent="Checkmate — you lose.";
         dlgShow(getLine("shift"),"shift");
-        setTimeout(function(){ show("tournScreen"); drawTournament(); },3200);
+        setTimeout(function(){ showContinueButton({type:'tourn'}); },1800);
       } else {
         document.getElementById("moveInd").textContent="Stalemate — the game is drawn.";
-        setTimeout(function(){ show("tournScreen"); drawTournament(); },2500);
+        setTimeout(function(){ showContinueButton({type:'tourn'}); },1000);
       }
       return true;
     }
@@ -1425,8 +1450,8 @@ function winMatch() {
   dlgShow(getLine("shift"),"shift");
   setTimeout(function(){
     gs.wins.push(gs.opp.id); saveProgress();
-    if(gs.wins.length===7){ clearSave(); setTimeout(showChampion,400); }
-    else { show("tournScreen"); drawTournament(); }
+    if(gs.wins.length===7){ clearSave(); showContinueButton({type:'champion'}); }
+    else { showContinueButton({type:'tourn'}); }
   },2200);
 }
 
