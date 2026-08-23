@@ -527,13 +527,13 @@ const PERSONALITIES = {
 };
 
 const OPPONENTS = [
-  { id:"timmy",  name:"Timmy Tumbles",      circuit:"bronze", av:"🤷", elo:400,  agg:0.30, depth:0 },
-  { id:"betty",  name:"Betty Blunder",      circuit:"bronze", av:"😅", elo:500,  agg:0.35, depth:0 },
-  { id:"pete",   name:"Old Pete",           circuit:"bronze", av:"👴", elo:700,  agg:0.42, depth:0 },
-  { id:"carlos", name:"Carlos Triple Shot", circuit:"silver", av:"☕", elo:950,  agg:0.52, depth:1 },
-  { id:"sasha",  name:"Sasha Stratanova",   circuit:"silver", av:"🧊", elo:1150, agg:0.60, depth:1 },
-  { id:"chen",   name:"Master Chen Wei",    circuit:"gold",   av:"🐉", elo:1550, agg:0.68, depth:2 },
-  { id:"magnus", name:"Marcus The Mind",    circuit:"champ",  av:"🧠", elo:2100, agg:0.78, depth:2 }
+  { id:"timmy",  name:"Timmy Tumbles",      circuit:"bronze", av:"🤷", elo:400,  agg:0.30, depth:1 },
+  { id:"betty",  name:"Betty Blunder",      circuit:"bronze", av:"😅", elo:500,  agg:0.35, depth:1 },
+  { id:"pete",   name:"Old Pete",           circuit:"bronze", av:"👴", elo:700,  agg:0.42, depth:2 },
+  { id:"carlos", name:"Carlos Triple Shot", circuit:"silver", av:"☕", elo:950,  agg:0.52, depth:2 },
+  { id:"sasha",  name:"Sasha Stratanova",   circuit:"silver", av:"🧊", elo:1150, agg:0.60, depth:3 },
+  { id:"chen",   name:"Master Chen Wei",    circuit:"gold",   av:"🐉", elo:1550, agg:0.68, depth:5 },
+  { id:"magnus", name:"Marcus The Mind",    circuit:"champ",  av:"🧠", elo:2100, agg:0.78, depth:6 }
 ];
 
 const WIPER = { bronze:3, silver:5, gold:7, champ:7 };
@@ -711,7 +711,7 @@ function drawTournament() {
     // Free badge on first two
     var freeBadge = (i<FREE_COUNT&&!won) ? ' <span style="font-size:.7em;color:var(--ok);border:1px solid var(--ok);padding:2px 6px;border-radius:4px;margin-left:4px;font-family:Cinzel,serif;letter-spacing:1px">FREE</span>' : '';
 
-    c.innerHTML='<span class="opp-av">'+o.av+'</span><div class="opp-info"><div class="opp-nm">'+o.name+freeBadge+'</div><div class="opp-ci">'+o.circuit.toUpperCase()+' · ELO '+o.elo+(o.depth>0?' · '+['','1-ply','2-ply'][o.depth]+' AI':'')+'</div></div>'+st;
+    c.innerHTML='<span class="opp-av">'+o.av+'</span><div class="opp-info"><div class="opp-nm">'+o.name+freeBadge+'</div><div class="opp-ci">'+o.circuit.toUpperCase()+' · ELO '+o.elo+(o.depth>0?' · '+['','1-ply','2-ply','3-ply','4-ply','5-ply','6-ply'][o.depth]+' AI':'')+'</div></div>'+st;
 
     if(elig===true) c.onclick=(function(opp){ return function(){ startGame(opp); }; })(o);
     else if(elig==="gate") c.onclick=showGate;
@@ -1191,15 +1191,107 @@ function minimax(board,depth,maximizing,alpha,beta) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  DEEPER SEARCH LAYER — move ordering + iterative deepening
+//  (added so the top of the ladder is a genuinely hard final boss,
+//  not just a lower-blunder copy of the previous opponent)
+// ═══════════════════════════════════════════════════════════════
+// MVV-LVA-ish move ordering: try captures/promotions first so alpha-beta
+// cuts off far more of the tree per node than raw board-scan order did.
+function moveOrderScore(m,board){
+  var v=0; var victim=board[m.tr][m.tc];
+  if(victim) v+=1000+(PV[victim.toLowerCase()]||0)*10;
+  if(m.meta&&m.meta.ep) v+=1000;
+  if(m.meta&&m.meta.promo==="q") v+=900;
+  return v;
+}
+function orderMoves(moves,board){ return moves.slice().sort(function(a,b){ return moveOrderScore(b,board)-moveOrderScore(a,board); }); }
+
+// Every recursive call is time-boxed, not just the root loop — a shared node
+// counter avoids calling Date.now() on every node while still catching a
+// runaway deep search within a couple hundred nodes of its deadline, so a
+// slow device can never freeze the tab waiting on the champion's move.
+var _TimeUp={timeUp:true};
+function _checkTime(clock){ if(!clock) return; clock.nodes++; if((clock.nodes&127)===0 && Date.now()>clock.deadline) throw _TimeUp; }
+
+// Alpha-beta with move ordering. Functionally the same contract as minimax()
+// above (verified to return identical scores on shared test positions) —
+// this version just prunes far more efficiently and can be time-boxed.
+function minimaxOrdered(board,depth,maximizing,alpha,beta,qdepth,clock){
+  _checkTime(clock);
+  if(depth<=0) return quiesce(board,alpha,beta,maximizing,qdepth);
+  var moves=orderMoves(legalMovesFor(board,!maximizing,null,null),board);
+  if(!moves.length){
+    if(isInCheck(board,!maximizing)) return maximizing?(-100000-depth):(100000+depth);
+    return 0;
+  }
+  if(maximizing){
+    var best=-Infinity;
+    for(var i=0;i<moves.length;i++){ var m=moves[i]; var nb=applyMove(board,m.fr,m.fc,m.tr,m.tc,m.meta); var s=minimaxOrdered(nb,depth-1,false,alpha,beta,qdepth,clock); if(s>best)best=s; if(best>alpha)alpha=best; if(alpha>=beta)break; }
+    return best;
+  } else {
+    var best2=Infinity;
+    for(var j=0;j<moves.length;j++){ var m2=moves[j]; var nb2=applyMove(board,m2.fr,m2.fc,m2.tr,m2.tc,m2.meta); var s2=minimaxOrdered(nb2,depth-1,true,alpha,beta,qdepth,clock); if(s2<best2)best2=s2; if(best2<beta)beta=best2; if(beta<=alpha)break; }
+    return best2;
+  }
+}
+
+// Root search at one fixed depth. Alpha is shared across sibling root moves
+// (the old per-root-move loop reset to -Inf..+Inf every time, which wasted
+// most of the pruning benefit) and near-tied root moves within `tieMargin`
+// pawns of the best are collected for the existing "personality variety" pick.
+function rootSearchFixed(board,depth,qdepth,clock,tieMargin){
+  tieMargin=(tieMargin===undefined)?0.25:tieMargin;
+  var ordered=orderMoves(legalMovesFor(board,false,null,null),board);
+  var alpha=-Infinity, beta=Infinity, bestScore=-Infinity, bestMoves=[];
+  try {
+    for(var i=0;i<ordered.length;i++){
+      var m=ordered[i], nb=applyMove(board,m.fr,m.fc,m.tr,m.tc,m.meta);
+      var s=minimaxOrdered(nb,depth-1,false,alpha,beta,qdepth,clock);
+      if(s>bestScore+0.001){ bestScore=s; bestMoves=[m]; }
+      else if(Math.abs(s-bestScore)<=tieMargin) bestMoves.push(m);
+      if(s>alpha) alpha=s;
+    }
+  } catch(e){
+    if(e===_TimeUp) return {score:bestScore,moves:bestMoves,best:bestMoves[0],complete:false};
+    throw e;
+  }
+  return {score:bestScore,moves:bestMoves,best:bestMoves[0],complete:true};
+}
+
+// Iterative deepening with a wall-clock time budget. Depth-1 always completes
+// near-instantly and seeds the result; each deeper attempt shares one clock,
+// so a slow depth aborts within ~a couple hundred nodes of the deadline no
+// matter where in the tree it currently is — total time stays tightly
+// bounded even when reaching for depth 5-6, and only a *fully completed*
+// depth is ever trusted (a partial deeper search is discarded, not used).
+function rootSearchIterative(board,maxDepth,timeBudgetMs,qdepth,tieMargin){
+  var hardDeadline=Date.now()+timeBudgetMs;
+  var result=rootSearchFixed(board,1,qdepth,null,tieMargin);
+  for(var d=2;d<=maxDepth;d++){
+    if(Date.now()>hardDeadline) break;
+    var clock={deadline:hardDeadline,nodes:0};
+    var r=rootSearchFixed(board,d,qdepth,clock,tieMargin);
+    if(r.complete) result=r; else break;
+  }
+  return result;
+}
+
 // Search depth + blunder rate scale to each opponent's stated rating.
+// This is the real Punch-Out-style ladder: Timmy is a coin-flipping novice
+// (60% of his moves are just picked at random) and Marcus, the final boss,
+// searches 6 plies deep with zero blunders and zero "variety" randomness —
+// he always plays the single best move his search finds. Everything between
+// escalates smoothly so the climb feels earned rather than sudden.
 function aiSkill(opp){
   var e=opp.elo||600;
-  if(e<550) return {depth:1,blunder:0.55};
-  if(e<800) return {depth:1,blunder:0.32};
-  if(e<1000) return {depth:2,blunder:0.20};
-  if(e<1300) return {depth:2,blunder:0.10};
-  if(e<1700) return {depth:3,blunder:0.05};
-  return {depth:3,blunder:0.02};
+  if(e<450) return {depth:1,blunder:0.60,qdepth:4};                                   // Timmy — super easy, first box
+  if(e<600) return {depth:1,blunder:0.42,qdepth:4};                                   // Betty
+  if(e<800) return {depth:2,blunder:0.28,qdepth:4};                                   // Pete
+  if(e<1050) return {depth:2,blunder:0.16,qdepth:4};                                  // Carlos
+  if(e<1300) return {depth:3,blunder:0.08,qdepth:4};                                  // Sasha
+  if(e<1800) return {depth:5,blunder:0.03,qdepth:2,iterative:true,budget:1300};        // Chen — real jump in strength
+  return {depth:6,blunder:0,qdepth:2,iterative:true,budget:2200,noVariety:true};       // Marcus — the final boss
 }
 
 function aiTurn() {
@@ -1211,17 +1303,25 @@ function aiTurn() {
     // Human-like slip: grab a capture if tempted, otherwise any legal move.
     pick=(caps.length&&Math.random()<ch)?caps[Math.floor(Math.random()*caps.length)]:all[Math.floor(Math.random()*all.length)];
   } else {
-    var bestScore=-Infinity, bestMoves=[];
-    for(var i=0;i<all.length;i++){
-      var mv=all[i]; var nb=applyMove(gs.board,mv.fr,mv.fc,mv.tr,mv.tc,mv.meta);
-      var score=minimax(nb,sk.depth-1,false,-Infinity,Infinity);
-      if(score>bestScore+0.001){ bestScore=score; bestMoves=[mv]; }
-      else if(Math.abs(score-bestScore)<=0.25) bestMoves.push(mv); // near-best, adds variety
+    // Real search now (move-ordered alpha-beta; iterative deepening with a
+    // wall-clock budget for the top two tiers, so Chen and especially Marcus
+    // reach genuinely deeper, stronger play instead of sharing Chen's old
+    // 3-ply ceiling). Marcus additionally skips the "variety" pick below and
+    // always plays the single best move his search found — no randomness left
+    // to exploit.
+    var qd=sk.qdepth||4;
+    var result = sk.iterative
+      ? rootSearchIterative(gs.board, sk.depth, sk.budget||1200, qd, sk.noVariety?0:0.25)
+      : rootSearchFixed(gs.board, sk.depth, qd, null, sk.noVariety?0:0.25);
+    var bestMoves = (result.moves&&result.moves.length) ? result.moves : [result.best];
+    if(sk.noVariety){
+      pick=result.best;
+    } else {
+      // Aggressive personalities lean toward the sharper (capturing) option among equals.
+      var capChoices=bestMoves.filter(function(m){ return gs.board[m.tr][m.tc]||(m.meta&&m.meta.ep); });
+      if(capChoices.length&&Math.random()<ch) pick=capChoices[Math.floor(Math.random()*capChoices.length)];
+      else pick=bestMoves[Math.floor(Math.random()*bestMoves.length)];
     }
-    // Aggressive personalities lean toward the sharper (capturing) option among equals.
-    var capChoices=bestMoves.filter(function(m){ return gs.board[m.tr][m.tc]||(m.meta&&m.meta.ep); });
-    if(capChoices.length&&Math.random()<ch) pick=capChoices[Math.floor(Math.random()*capChoices.length)];
-    else pick=bestMoves[Math.floor(Math.random()*bestMoves.length)];
   }
 
   var cap=gs.board[pick.tr][pick.tc];
