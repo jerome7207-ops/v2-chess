@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- ============================================================
-     CHAMPIONSHIP CHESS  v7.1   (built 2026-07-12)
+     GAUNTLET CHESS  v7.1   (built 2026-07-12)
      V7.1 - Masters now understand a question when it MEANS the same thing, even if worded differently or mistyped (fuzzy 'sounds-like' matching). Deep bible answers (family, record, life, mentors, love) that only surface when asked. Branch-tree follow-ups. Engine unchanged from V7.0 (perft 20/400).
      ============================================================ -->
 
@@ -8,7 +8,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Championship Chess V7.1 — Nested Thirds (Conversational)</title>
+<title>Gauntlet Chess V7.1 — Nested Thirds (Conversational)</title>
+<meta name="description" content="Seven opponents. One gauntlet. A conversational chess game where every rival talks back, remembers your archetype, and reacts in character as you climb toward the championship.">
+<meta property="og:title" content="Gauntlet Chess — Do You Have What It Takes?">
+<meta property="og:description" content="Seven opponents stand between you and the championship. Beat the weakest first — if you can. A chess game that talks back.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gauntletchess.com">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gauntlet Chess — Do You Have What It Takes?">
+<meta name="twitter:description" content="Seven opponents. One gauntlet. Chess that talks back.">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -316,7 +324,7 @@ input:focus { outline:2px solid var(--gold); outline-offset:2px; }
 <!-- SCREEN 2 — INTRO -->
 <div id="introScreen" class="screen">
   <div class="intro-card">
-    <h1>CHAMPIONSHIP CHESS</h1>
+    <h1>GAUNTLET CHESS</h1>
     <p class="intro-sub">Do You Have What It Takes?</p>
     <p style="text-align:center;font-size:11px;letter-spacing:1px;opacity:.5;margin-top:2px">VERSION 7.1 &middot; 2026-07-12</p>
     <div class="intro-story" id="introStory">
@@ -354,7 +362,7 @@ input:focus { outline:2px solid var(--gold); outline-offset:2px; }
 <div id="gameScreen" class="screen">
   <div class="game-hdr">
     <button class="game-back-btn" onclick="abandonGame()">← Gauntlet</button>
-    <div class="game-hdr-title">Championship Chess</div>
+    <div class="game-hdr-title">Gauntlet Chess</div>
     <div class="game-move-ctr" id="moveCtr">Move 0</div>
   </div>
   <div class="game-wrap">
